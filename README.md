@@ -15,7 +15,7 @@
   
   本ソフトウェアは２つのプログラムからなっています
   
-  ### １． VKeyboardControl
+### １． VKeyboardControl
   このプログラムは使用者の音声データを登録するためのものです。
   プログラムを起動する前に付属しているファイル"VoiceData.txt"を"/sdcard"フォルダにコピーして下さい。
     
@@ -35,7 +35,7 @@
 ![enter image description here](https://imgur.com/o8jn2To.jpg)
 
 
-  ### ２．VkeyboardService  
+### ２．VkeyboardService  
   
   本ソフトウェアの本体です。
   "VKeyboardControl"で作成した音声データを使って音声を認識してキーボードを打ちます。
@@ -50,29 +50,31 @@
     
   
   
-## ・インストール方法
+#### ・インストール方法
   
-ファイル　"VkeyboardControl.apk"と"VkeyboardService.apk"をファイルマネージャ等で開くとインストールが始まります。
+"VkeyboardControl.apk"と"VkeyboardService.apk"をファイルマネージャ等で開くとインストールが始まります。
   
     
-## ・コンパイル方法
+#### ・コンパイル方法
   
-[ObjectEditor](https://github.com/kousoz80/ObjectEditor)でファイル"VkeyboadControl.prj"や"VkeyboadService.prj"  を開いてコンパイルボタンを押すとコンパイルが始まります
-  
+####方法1
+ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"や"VkeyboadService.prj"  を開いてコンパイルボタンを押すとコンパイルが始まります
   
 ![enter image description here](https://imgur.com/J2oDqz5.jpg)
+
   
-    
-      
-      
   
-  ## ・動作要件
+####方法2
+ディレクトリ"VoiceKeyboardControl"や"VoiceKeyboardService"に入って"./compile"コマンドでコンパイルすることができます。
+
+  
+## ・動作要件
   自分自身にADB接続できるandroid端末が必要です。
   
   それとプログラムの起動のためのパソコンが必要となります。
   
   
-   ## ・謝辞
+## ・謝辞
    
    このソフトウェアを世界中の身体が不自由な方々に捧げます。
    
@@ -81,3 +83,4 @@
    このソフトウェアが大勢の方々のお役に立つことを願っています。
   
   
+
