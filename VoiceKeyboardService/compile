@@ -2,7 +2,7 @@
 
 
 echo aapt:
-aapt p -f -v -M AndroidManifest.xml -F build/resources.res -I android.jar -S res/ -J src
+aapt p -f -v -M AndroidManifest.xml -F build/resources.res -I ../android.jar -S res/ -J src
 
 echo javac:
 javac -classpath ../android.jar -d classes ./src/VKeyBoardService.java ./src/ServiceStartActivity.java ./src/R.java 
