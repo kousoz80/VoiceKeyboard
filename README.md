@@ -67,6 +67,9 @@ ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"�
 ####方法2
 ディレクトリ"VoiceKeyboardControl"や"VoiceKeyboardService"に入って"./compile"コマンドでコンパイルすることができます。
 
+コンパイルする前にandroidプラットフォームのディレクトリからファイル"android.jar"をこのディレクトリにコピーして下さい。
+
+
   
 ## ・動作要件
   自分自身にADB接続できるandroid端末が必要です。
