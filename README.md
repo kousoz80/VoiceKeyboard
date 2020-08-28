@@ -1,6 +1,7 @@
 
 
 
+
 # VoiceKeyboard
   
   本ソフトウェアはandroid端末用の音声キーボードソフトです。 
@@ -57,14 +58,14 @@
     
 #### ・コンパイル方法
   
-####方法1
+#### 方法1
 ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"や"VkeyboadService.prj"  を開いてコンパイルボタンを押すとコンパイルが始まります
   
 ![enter image description here](https://imgur.com/J2oDqz5.jpg)
 
   
   
-####方法2
+#### 方法2
 ディレクトリ"VoiceKeyboardControl"や"VoiceKeyboardService"に入って"./compile"コマンドでコンパイルすることができます。
 
 コンパイルする前にandroidプラットフォームのディレクトリからファイル"android.jar"をこのディレクトリにコピーして下さい。
