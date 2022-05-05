@@ -42,6 +42,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.media.AudioTrack;
 import android.media.AudioManager;
+import android.os.Environment;
 
 public class VKeyboardControl extends Activity {
   VoiceKeyboardControl ap;
@@ -106,7 +107,7 @@ int voice_no = 0; // 音声番号
 double kpenalty = 1.0; //音声の長さ比較用
 
 // 音声テンプレートファイル
-File voice_data_file = new File( "/sdcard/VoiceData.txt" );
+File voice_data_file = new File( Environment.getExternalStorageDirectory(),"VoiceData.txt" );
 
 // 定数
 static final int SAMPLING_RATE = 16000;
@@ -156,7 +157,7 @@ dprint("update display\n");
 }
 
 // デバッグファイル
-String DEBUG_FILE="/sdcard/debug.txt";
+String DEBUG_FILE="debug.txt";
 
 public void Start(){
 IGUI.Start();
@@ -429,64 +430,64 @@ layout.setBackgroundColor(Color.rgb( 255, 255, 255));
 ACTIVITY.setContentView(layout);
 ACTIVITY.setTitle("音声キーボード");
  Isave = new save();
- Isave.setLayoutParams( new AbsoluteLayout.LayoutParams( 156,30,162,4 ) );
+ Isave.setLayoutParams( new AbsoluteLayout.LayoutParams( 312,60,324,8 ) );
  layout.addView( Isave );
  Istore = new store();
- Istore.setLayoutParams( new AbsoluteLayout.LayoutParams( 157,31,0,4 ) );
+ Istore.setLayoutParams( new AbsoluteLayout.LayoutParams( 314,62,0,8 ) );
  layout.addView( Istore );
  Iref_count = new ref_count();
- Iref_count.setLayoutParams( new AbsoluteLayout.LayoutParams( 256,35,66,184 ) );
+ Iref_count.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,70,132,368 ) );
  layout.addView( Iref_count );
  Iprev = new prev();
- Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( 37,140,1,38 ) );
+ Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( 74,280,2,76 ) );
  layout.addView( Iprev );
  Inext = new next();
- Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 39,143,283,36 ) );
+ Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,286,566,72 ) );
  layout.addView( Inext );
  Iseimon0 = new seimon0();
- Iseimon0.setLayoutParams( new AbsoluteLayout.LayoutParams( 119,140,40,38 ) );
+ Iseimon0.setLayoutParams( new AbsoluteLayout.LayoutParams( 238,280,80,76 ) );
  layout.addView( Iseimon0 );
  Iseimon = new seimon();
- Iseimon.setLayoutParams( new AbsoluteLayout.LayoutParams( 118,141,163,38 ) );
+ Iseimon.setLayoutParams( new AbsoluteLayout.LayoutParams( 236,282,326,76 ) );
  layout.addView( Iseimon );
  Itext = new text();
- Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 322,35,0,407 ) );
+ Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 644,70,0,814 ) );
  layout.addView( Itext );
  Iresult = new result();
- Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 323,35,0,448 ) );
+ Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 646,70,0,896 ) );
  layout.addView( Iresult );
  Ixbright = new xbright();
- Ixbright.setLayoutParams( new AbsoluteLayout.LayoutParams( 256,34,65,224 ) );
+ Ixbright.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,68,130,448 ) );
  layout.addView( Ixbright );
  ILABEL10 = new LABEL10();
- ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( 58,33,4,185 ) );
+ ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( 116,66,8,370 ) );
  layout.addView( ILABEL10 );
  ILABEL11 = new LABEL11();
- ILABEL11.setLayoutParams( new AbsoluteLayout.LayoutParams( 59,34,2,221 ) );
+ ILABEL11.setLayoutParams( new AbsoluteLayout.LayoutParams( 118,68,4,442 ) );
  layout.addView( ILABEL11 );
  ILABEL12 = new LABEL12();
- ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 57,34,3,262 ) );
+ ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 114,68,6,524 ) );
  layout.addView( ILABEL12 );
  Ixvstart = new xvstart();
- Ixvstart.setLayoutParams( new AbsoluteLayout.LayoutParams( 256,32,66,261 ) );
+ Ixvstart.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,64,132,522 ) );
  layout.addView( Ixvstart );
  Ixvend = new xvend();
- Ixvend.setLayoutParams( new AbsoluteLayout.LayoutParams( 259,31,62,298 ) );
+ Ixvend.setLayoutParams( new AbsoluteLayout.LayoutParams( 518,62,124,596 ) );
  layout.addView( Ixvend );
  ILABEL15 = new LABEL15();
- ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 65,31,0,293 ) );
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,62,0,586 ) );
  layout.addView( ILABEL15 );
  ILABEL16 = new LABEL16();
- ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 73,32,0,369 ) );
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 146,64,0,738 ) );
  layout.addView( ILABEL16 );
  Iweight = new weight();
- Iweight.setLayoutParams( new AbsoluteLayout.LayoutParams( 242,32,76,370 ) );
+ Iweight.setLayoutParams( new AbsoluteLayout.LayoutParams( 484,64,152,740 ) );
  layout.addView( Iweight );
  ILABEL18 = new LABEL18();
- ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 73,34,0,333 ) );
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 146,68,0,666 ) );
  layout.addView( ILABEL18 );
  Icode = new code();
- Icode.setLayoutParams( new AbsoluteLayout.LayoutParams( 243,34,76,332 ) );
+ Icode.setLayoutParams( new AbsoluteLayout.LayoutParams( 486,68,152,664 ) );
  layout.addView( Icode );
  GUI_created( layout );
 }
@@ -565,7 +566,7 @@ STATE2 = STATE;
 parent.ISetter.code_is(e);
 }
 private void _Ocreate_in(){
-if( STATE2 != 1484673869 ) return;
+if( STATE2 != 210959301 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -577,7 +578,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1484673869;
+STATE = 210959301;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -946,17 +947,31 @@ _O13_in();
 parent.IControl.start();
 }
 private void _O13_in(){
-//音声テンプレートを読み込む
+//音声テンプレートを読み込む(無い場合は作成する)
 
 
 try{
-  dbg = new FileWriter(DEBUG_FILE);
+  dbg = new FileWriter(new File(Environment.getExternalStorageDirectory(), DEBUG_FILE));
 } catch(Exception e){}
 
 
 try{
+
+if(!voice_data_file.exists()){
+  int cnt = 0;
+  InputStream is = ACTIVITY.getResources().openRawResource(R.raw.voicedata);
+  while (is.read()!=-1) cnt++;
+  byte[] b = new byte[cnt];
+  is.reset();
+  is.read(b);
+  is.close();
+  FileOutputStream os = new FileOutputStream(voice_data_file);
+  os.write(b);
+  os.close();
+}
+
 String line = null;
-BufferedReader din = new BufferedReader( new FileReader(voice_data_file ) );
+BufferedReader din = new BufferedReader( new FileReader(voice_data_file));
 
 // 変数を読み込む
 while(true){

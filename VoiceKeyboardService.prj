@@ -6,7 +6,7 @@
 <y0>0</y0>
 <width>200</width>
 <height>100</height>
-<ID_maker>42</ID_maker>
+<ID_maker>45</ID_maker>
 <objectname>VoiceKeyboardService</objectname>
 <description>新規のアプリケーション</description>
 <プロパティ>
@@ -19,17 +19,17 @@
 <MesgWinx0>0</MesgWinx0>
 <MesgWiny0>0</MesgWiny0>
 <MesgWinWidth>1024</MesgWinWidth>
-<MesgWinHeight>745</MesgWinHeight>
-<FileWinx0>80</FileWinx0>
-<FileWiny0>305</FileWiny0>
+<MesgWinHeight>741</MesgWinHeight>
+<FileWinx0>176</FileWinx0>
+<FileWiny0>414</FileWiny0>
 <FileWinWidth>578</FileWinWidth>
 <FileWinHeight>262</FileWinHeight>
 <EditWinx0>347</EditWinx0>
 <EditWiny0>0</EditWiny0>
 <EditWinWidth>676</EditWinWidth>
 <EditWinHeight>541</EditWinHeight>
-<PropWinx0>1</PropWinx0>
-<PropWiny0>1</PropWiny0>
+<PropWinx0>228</PropWinx0>
+<PropWiny0>15</PropWiny0>
 <PropWinWidth>615</PropWinWidth>
 <PropWinHeight>448</PropWinHeight>
 <DividerLocation1>2</DividerLocation1>
@@ -131,7 +131,7 @@ Startup();
 <MoveStep>8</MoveStep>
 <ImageEditCommand></ImageEditCommand>
 <CompilerFileName>javac.exe</CompilerFileName>
-<CompileCommand4>./compile_sample_service VKeyBoardService com example vkeyboard_service</CompileCommand4>
+<CompileCommand4>./compile_vkeyboard_service VKeyboardService com example vkeyboard_service</CompileCommand4>
 <RunCommand4>echo no action</RunCommand4>
 <GUIDesignerCommand4>java -jar guidsin.jar -android</GUIDesignerCommand4>
 <ImportFiles4>package com.example.test;
@@ -164,6 +164,21 @@ import android.widget.Toast;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import java.security.*;
+import java.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import java.nio.charset.StandardCharsets;
+import java.security.interfaces.RSAPrivateKey;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.security.KeyFactory;
+import java.security.spec.PKCS8EncodedKeySpec;
+import android.os.Environment;
+import android.media.MediaPlayer;
 
 public class HelloWorld extends Service {
   %AppName% ap;
@@ -209,17 +224,18 @@ public class HelloWorld extends Service {
   &lt;uses-permission android:name=&quot;android.permission.WRITE_EXTERNAL_STORAGE&quot; /&gt; 
   &lt;uses-permission android:name=&quot;android.permission.INTERNET&quot;/&gt;
   &lt;application android:label=&quot;@string/app_name&quot; &gt;
-    &lt;activity 
-        android:name=&quot;.ServiceStartActivity&quot;
-        android:theme=&quot;@android:style/Theme.Translucent.NoTitleBar&quot;
-        android:label=&quot;@string/app_name&quot; &gt;
-        &lt;intent-filter&gt;
-            &lt;action android:name=&quot;android.intent.action.MAIN&quot; /&gt;
-            &lt;category android:name=&quot;android.intent.category.LAUNCHER&quot; /&gt;
-        &lt;/intent-filter&gt;
-    &lt;/activity&gt;
-    &lt;service android:name=&quot;.HelloWorld&quot;&gt;
-    &lt;/service&gt;
+        &lt;activity
+            android:name=&quot;ServiceStartActivity&quot;
+            android:label=&quot;@string/app_name&quot; &gt;
+            &lt;intent-filter&gt;
+                &lt;action android:name=&quot;android.intent.action.MAIN&quot; /&gt;
+                &lt;category android:name=&quot;android.intent.category.LAUNCHER&quot; /&gt;
+            &lt;/intent-filter&gt;
+        &lt;/activity&gt;
+        &lt;service android:name=&quot;HelloWorld&quot;
+                 android:exported=&quot;true&quot;
+        &gt;
+        &lt;/service&gt;
   &lt;/application&gt;
 &lt;/manifest&gt;
 </NativeHelpCommand4>
@@ -284,7 +300,7 @@ int main( int argc, char** argv ){
 <codeclip>
 <ID>_CSTART</ID>
 <x0>293</x0>
-<y0>223</y0>
+<y0>271</y0>
 <width>130</width>
 <height>20</height>
 <codetext>Service SERVICE;
@@ -292,8 +308,8 @@ int main( int argc, char** argv ){
 </codeclip>
 <pin>
 <ID>_PSTART</ID>
-<x0>33</x0>
-<y0>378</y0>
+<x0>10</x0>
+<y0>425</y0>
 <width>55</width>
 <height>24</height>
 <text>Start()</text>
@@ -303,7 +319,7 @@ int main( int argc, char** argv ){
 <codeclip>
 <ID>_C17</ID>
 <x0>292</x0>
-<y0>40</y0>
+<y0>88</y0>
 <width>284</width>
 <height>89</height>
 <codetext>// 変数
@@ -316,7 +332,7 @@ double[] filter;      // 平滑フィルタ
 <codeclip>
 <ID>_C18</ID>
 <x0>293</x0>
-<y0>133</y0>
+<y0>181</y0>
 <width>285</width>
 <height>85</height>
 <codetext>// 定数
@@ -329,68 +345,22 @@ static final int SOUND_DFT_SIZE = 256;
 <codeclip>
 <ID>_C20</ID>
 <x0>630</x0>
-<y0>309</y0>
+<y0>357</y0>
 <width>291</width>
 <height>38</height>
 <codetext>// デバッグファイル
-String DEBUG_FILE = &quot;/sdcard/debug.txt&quot;;
+String DEBUG_FILE = &quot;debug.txt&quot;;
 </codetext>
 </codeclip>
-<codeclip>
-<ID>_C24</ID>
-<x0>311</x0>
-<y0>388</y0>
-<width>216</width>
-<height>36</height>
-<codetext>// 与えられたコマンドを実行する
-public void exec( String s ){
-
-dprint(&quot;execute: &quot;+s+&quot;\n&quot;);
-
-  Process p=null;
-  try{
-    p = java.lang.Runtime.getRuntime().exec(s);
-  } catch( Exception ie ){ dprint(&quot;can not execute: &quot;+s+&quot;\n&quot;); }
-}
-</codetext>
-</codeclip>
-<operation>
-<ID>_O25</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>311</x0>
-<y0>427</y0>
-<width>235</width>
-<height>68</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(int key)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>45</inpiny0>
-<inpinwidth>79</inpinwidth>
-<inpinheight>22</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>// キーコードを発行する
-exec( KEY_COMMAND + key );
-</codetext>
-</operation>
 <codeclip>
 <ID>_C28</ID>
-<x0>630</x0>
-<y0>351</y0>
+<x0>629</x0>
+<y0>399</y0>
 <width>239</width>
 <height>185</height>
 <codetext>// デバッグ表示
 FileWriter dbg;
-boolean debug_mode = true;
+boolean debug_mode = false;
 public void dprint(String s){
   if(debug_mode){
     try{
@@ -404,7 +374,7 @@ public void dprint(String s){
 <codeclip>
 <ID>_C30</ID>
 <x0>0</x0>
-<y0>40</y0>
+<y0>88</y0>
 <width>287</width>
 <height>263</height>
 <codetext>// 各種パラメータ
@@ -427,9 +397,9 @@ double kpenalty = 1.0; //音声の長さ比較用
 </codeclip>
 <xobject>
 <ID>_X31</ID>
-<x0>119</x0>
-<y0>352</y0>
-<width>173</width>
+<x0>102</x0>
+<y0>402</y0>
+<width>174</width>
 <height>73</height>
 <ID_maker>17</ID_maker>
 <objectname>File_IO</objectname>
@@ -482,7 +452,7 @@ double kpenalty = 1.0; //音声の長さ比較用
 
 
 try{
-  dbg = new FileWriter(DEBUG_FILE);
+  dbg = new FileWriter(new File(Environment.getExternalStorageDirectory(), DEBUG_FILE));
 } catch(Exception e){}
 
 
@@ -547,7 +517,7 @@ while(true){
 }
 
 din.close();
-} catch( Exception e ){}
+} catch( Exception e ){e.printStackTrace();}
 
 voice_no = 0;
 </codetext>
@@ -641,8 +611,8 @@ try{
 </relation>
 <xobject>
 <ID>_X34</ID>
-<x0>119</x0>
-<y0>434</y0>
+<x0>80</x0>
+<y0>491</y0>
 <width>177</width>
 <height>61</height>
 <objectname>Control</objectname>
@@ -795,129 +765,145 @@ class RecordThread extends Thread {
     int start_point, end_point;
     double   a, u, v, x, y, trigger, pow;
 
-dprint(&quot;start rec thread\n&quot;);
+    // 開始音を鳴らす
+    MediaPlayer.create(SERVICE,R.raw.start).start();
 
-    // 音声データのバッファサイズ (byte)を設定
-    int audio_buffer_size = android.media.AudioRecord.getMinBufferSize(
-                     SAMPLING_RATE,
-                     AudioFormat.CHANNEL_IN_MONO,
-                     AudioFormat.ENCODING_PCM_16BIT
-    );
+Log.d(&quot;vkeyboard&quot;,&quot;start rec thread\n&quot;);
 
-    // AudioRecordの作成
-     AudioRecord audioRec = new AudioRecord(
-                     MediaRecorder.AudioSource.MIC,
-                     SAMPLING_RATE,
-                     AudioFormat.CHANNEL_IN_MONO,
-                     AudioFormat.ENCODING_PCM_16BIT,
-                     audio_buffer_size
-     );
-    audioRec.startRecording();	// 録音開始
-    state = NEUTRAL;
-    offset = 0;
-    count = 0;
-    start_point = end_point = 0;
-    short[]    sound_buffer   = new short[ SOUND_DFT_SIZE ];
-    double[] sound_av         = new double[ HEARING_HEIGHT ];
-    double[] hearing_buffer = new double[ HEARING_BUFFER_SIZE ];
+    // 例外が出たら即終了
+    try{
 
-    while(is_running){       
+      // 音声データのバッファサイズ (byte)を設定
+      int audio_buffer_size = android.media.AudioRecord.getMinBufferSize(
+          SAMPLING_RATE,
+          AudioFormat.CHANNEL_IN_MONO,
+          AudioFormat.ENCODING_PCM_16BIT
+      );
 
-      // 録音データを読み込む(SOUND_DFT_SIZEは配列要素の数)
-      audioRec.read( sound_buffer, 0, SOUND_DFT_SIZE );
+      // AudioRecordの作成
+      AudioRecord audioRec = new AudioRecord(
+          MediaRecorder.AudioSource.MIC,
+          SAMPLING_RATE,
+          AudioFormat.CHANNEL_IN_MONO,
+          AudioFormat.ENCODING_PCM_16BIT,
+          audio_buffer_size
+      );
 
-      // 取り込んだ聴覚データをDFTして開けておいたところにセットする
-      trigger = 0.0;
-      for( i = 0; i &lt; HEARING_HEIGHT; i++ ){
-        for( x = y = 0.0, j = 0; j &lt; SOUND_DFT_SIZE; j++ ){
-          a = (double)sound_buffer[ j ];
-          x += a * cos_table[ i ][ j ];
-          y += a * sin_table[ i ][ j ];
-        }
-        hearing_buffer[ i + offset ] = pow = Math.pow( (x * x + y * y) * hosei[ i ], rcompress );
-        sound_av[ i ] = ( (sound_filter - 1.0) * sound_av[ i ]   + pow ) / sound_filter;
-        pow /= sound_av[ i ];
-        if( pow &gt; trigger ) trigger = pow;
-      }
+      // 録音開始
+      audioRec.startRecording();
+      state = NEUTRAL;
+      offset = 0;
+      count = 0;
+      start_point = end_point = 0;
+      short[]    sound_buffer   = new short[ SOUND_DFT_SIZE ];
+      double[] sound_av         = new double[ HEARING_HEIGHT ];
+      double[] hearing_buffer = new double[ HEARING_BUFFER_SIZE ];
 
-      // 状態ごとの動作を以下に記述
-      switch( state ){
-          
-      // NEWTRAL状態：起動してしばらくは各フィルタ変数が安定するのを待つ
-      case NEUTRAL:
-        if( count &gt; startup_time ){
-           state = OFF;
-        }
-        break;
+      while(is_running){       
 
-      // OFF状態
-      case OFF:
-        if( trigger &gt; thresh_trigger_on ){
-          state = SENS_ON;
-          start_point = offset - HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
-          count = 0;
-        }
-        break;
+        // 録音データを読み込む(SOUND_DFT_SIZEは配列要素の数)
+        audioRec.read( sound_buffer, 0, SOUND_DFT_SIZE );
 
-      // OFFからONに遷移する状態
-      case SENS_ON:
-        if( trigger &lt; thresh_trigger_off )  state = OFF;
-        else{
-          if( count &gt; thresh_count_on ) state = ON;
-        }
-        break;
-
-      // ON状態
-      case ON:
-        if( trigger &lt; thresh_trigger_off ){
-          state = SENS_OFF;
-          end_point = offset + HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
-          count = 0;
-        }
-        break;
-
-      // ONからOFFに遷移する状態
-      case SENS_OFF:
-        if( trigger &gt; thresh_trigger_on )  state = ON;
-        else{
-          if( count &gt; thresh_count_off ){
-
-            // サンプリング範囲内のデータを音声データ配列voiceに転送する
-            len = end_point - start_point;
-            if( len &lt; 0 ) len += HEARING_BUFFER_SIZE;
-
-            double[] xvoice = new double[ len ];
-            double sum = 0;
-            for( i = start_point, j = 0; j &lt; len; i++, j++ ){
-
-              // リングバッファ処理
-              if( i &lt; 0 )  i += HEARING_BUFFER_SIZE;
-              if( i &gt;= HEARING_BUFFER_SIZE ) i -=  HEARING_BUFFER_SIZE;
-
-              sum += xvoice[ j ] = hearing_buffer[ i ];
-            }
-            voice = do_filter( xvoice ); // 平滑フィルタ処理
-            state = OFF;
-            is_action = true;  // 音節認識スレッドに処理を渡す
+        // 取り込んだ聴覚データをDFTして開けておいたところにセットする
+        trigger = 0.0;
+        for( i = 0; i &lt; HEARING_HEIGHT; i++ ){
+          for( x = y = 0.0, j = 0; j &lt; SOUND_DFT_SIZE; j++ ){
+            a = (double)sound_buffer[ j ];
+            x += a * cos_table[ i ][ j ];
+            y += a * sin_table[ i ][ j ];
           }
+          hearing_buffer[ i + offset ] = pow = Math.pow( (x * x + y * y) * hosei[ i ], rcompress );
+          sound_av[ i ] = ( (sound_filter - 1.0) * sound_av[ i ]   + pow ) / sound_filter;
+          pow /= sound_av[ i ];
+          if( pow &gt; trigger ) trigger = pow;
         }
-        break;
 
+        // 状態ごとの動作を以下に記述
+        switch( state ){
+          
+        // NEWTRAL状態：起動してしばらくは各フィルタ変数が安定するのを待つ
+        case NEUTRAL:
+          if( count &gt; startup_time ){
+             state = OFF;
+          }
+          break;
+
+        // OFF状態
+        case OFF:
+          if( trigger &gt; thresh_trigger_on ){
+            state = SENS_ON;
+            start_point = offset - HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
+            count = 0;
+          }
+          break;
+
+        // OFFからONに遷移する状態
+        case SENS_ON:
+          if( trigger &lt; thresh_trigger_off )  state = OFF;
+          else{
+            if( count &gt; thresh_count_on ) state = ON;
+          }
+          break;
+
+        // ON状態
+        case ON:
+          if( trigger &lt; thresh_trigger_off ){
+            state = SENS_OFF;
+            end_point = offset + HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
+            count = 0;
+          }
+          break;
+
+        // ONからOFFに遷移する状態
+        case SENS_OFF:
+          if( trigger &gt; thresh_trigger_on )  state = ON;
+          else{
+            if( count &gt; thresh_count_off ){
+
+              // サンプリング範囲内のデータを音声データ配列voiceに転送する
+              len = end_point - start_point;
+              if( len &lt; 0 ) len += HEARING_BUFFER_SIZE;
+
+              double[] xvoice = new double[ len ];
+              double sum = 0;
+              for( i = start_point, j = 0; j &lt; len; i++, j++ ){
+
+                // リングバッファ処理
+                if( i &lt; 0 )  i += HEARING_BUFFER_SIZE;
+                if( i &gt;= HEARING_BUFFER_SIZE ) i -=  HEARING_BUFFER_SIZE;
+
+                sum += xvoice[ j ] = hearing_buffer[ i ];
+              }
+              voice = do_filter( xvoice ); // 平滑フィルタ処理
+              state = OFF;
+              is_action = true;  // 音節認識スレッドに処理を渡す
+            }
+          }
+          break;
+
+        }
+
+        offset += HEARING_HEIGHT;
+        if( offset &gt;= HEARING_BUFFER_SIZE ) offset = 0;
+        count++;
       }
+      audioRec.stop();	// 録音終了
+      audioRec.release();
 
-      offset += HEARING_HEIGHT;
-      if( offset &gt;= HEARING_BUFFER_SIZE ) offset = 0;
-      count++;
+    } catch(Exception e){
+     is_running = false;
+     e.printStackTrace();
     }
-    audioRec.stop();	// 録音終了
-    audioRec.release();
+
+    // 終了音を鳴らす
+    MediaPlayer.create(SERVICE,R.raw.stop).stop();
 
   }//run()
 
 }//RecordThread
 </codetext>
 </codeclip>
-<ID_maker>111</ID_maker>
+<ID_maker>112</ID_maker>
 <pin>
 <ID>_P88</ID>
 <x0>37</x0>
@@ -965,9 +951,6 @@ for(int i = 0; i &lt; HEARING_HEIGHT; i++ ){
     cos_table[ i ][ j ] = Math.cos((double)(i  * j) * 6.2832 / (double)(SOUND_DFT_SIZE));
   }
 }
-
-// 初期化(端末にADB接続する)
-exec( INIT_COMMAND );
 
 // 各スレッドを生成
 record_thread = new RecordThread();
@@ -1046,15 +1029,10 @@ public double[] do_filter( double[] in ){
 <pin1name>_X31(_P12)</pin1name>
 <pin2name>_X34(_P88)</pin2name>
 </relation>
-<relation>
-<ID>_R36</ID>
-<pin1name>_X34(_P102)</pin1name>
-<pin2name>_O25</pin2name>
-</relation>
 <codeclip>
 <ID>_C37</ID>
 <x0>582</x0>
-<y0>40</y0>
+<y0>88</y0>
 <width>389</width>
 <height>259</height>
 <codetext>// 音声テンプレート
@@ -1077,33 +1055,424 @@ class VoiceTemplate{
 </codetext>
 </codeclip>
 <codeclip>
-<ID>_C39</ID>
-<x0>82</x0>
-<y0>514</y0>
-<width>465</width>
-<height>60</height>
-<codetext>// 端末に送るコマンド文字列(OSや端末によって変わるかも)
-String INIT_COMMAND = &quot;adb connect localhost&quot;;
-String KEY_COMMAND = &quot;adb -s localhost:5555 shell input keyevent &quot;;
-</codetext>
-</codeclip>
-<codeclip>
 <ID>_C40</ID>
 <x0>0</x0>
-<y0>312</y0>
-<width>380</width>
-<height>37</height>
+<y0>360</y0>
+<width>597</width>
+<height>38</height>
 <codetext>// 音声テンプレートファイル
-File voice_data_file = new File( &quot;/sdcard/VoiceData.txt&quot; );
+File voice_data_file = new File( Environment.getExternalStorageDirectory(),&quot;VoiceData.txt&quot; );
 </codetext>
 </codeclip>
 <codeclip>
 <ID>_C41</ID>
-<x0>265</x0>
-<y0>3</y0>
-<width>334</width>
-<height>28</height>
-<codetext>// 音声キーボードサービスプログラム for android
+<x0>255</x0>
+<y0>13</y0>
+<width>446</width>
+<height>57</height>
+<codetext>// 音声キーボードサービスプログラム for android  ver 0.2.1
+// 変更点：
+// ADB接続でキー入力コマンドを実行するのでroot権限が必要でなくなった
 </codetext>
 </codeclip>
+<xobject>
+<ID>_X42</ID>
+<x0>299</x0>
+<y0>471</y0>
+<width>138</width>
+<height>80</height>
+<objectname>ADB_keyboad</objectname>
+<description></description>
+<codeclip>
+<ID>_C41</ID>
+<x0>167</x0>
+<y0>60</y0>
+<width>212</width>
+<height>19</height>
+<codetext>byte recv[] = new byte[256];</codetext>
+</codeclip>
+<codeclip>
+<ID>_C40</ID>
+<x0>168</x0>
+<y0>148</y0>
+<width>159</width>
+<height>18</height>
+<codetext>byte close[] ={
+(byte)0x43 ,(byte)0x4c ,(byte)0x53 ,(byte)0x45,
+(byte)0x23 ,(byte)0x0e ,(byte)0x00 ,(byte)0x00,
+(byte)0xaa ,(byte)0x00 ,(byte)0x00 ,(byte)0x00,
+(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00,
+(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00,
+(byte)0xbc ,(byte)0xb3 ,(byte)0xac ,(byte)0xba
+};
+</codetext>
+</codeclip>
+<codeclip>
+<ID>_C39</ID>
+<x0>166</x0>
+<y0>124</y0>
+<width>141</width>
+<height>18</height>
+<codetext>byte open[] = {
+(byte)0x4f ,(byte)0x50 ,(byte)0x45 ,(byte)0x4e,
+(byte)0x0b ,(byte)0x00 ,(byte)0x00 ,(byte)0x00,
+(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00,
+(byte)0x18 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00,
+(byte)0x98 ,(byte)0x08 ,(byte)0x00 ,(byte)0x00,
+(byte)0xb0 ,(byte)0xaf ,(byte)0xba ,(byte)0xb1
+};
+</codetext>
+</codeclip>
+<codeclip>
+<ID>_C38</ID>
+<x0>166</x0>
+<y0>101</y0>
+<width>141</width>
+<height>18</height>
+<codetext>byte auth[] = {
+(byte)0x41 ,(byte)0x55 ,(byte)0x54 ,(byte)0x48
+,(byte)0x02 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00
+,(byte)0x00 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00
+,(byte)0x00 ,(byte)0x01 ,(byte)0x00 ,(byte)0x00
+,(byte)0xa5 ,(byte)0x81 ,(byte)0x00 ,(byte)0x00
+,(byte)0xbe ,(byte)0xaa ,(byte)0xab ,(byte)0xb7
+};
+</codetext>
+</codeclip>
+<codeclip>
+<ID>_C37</ID>
+<x0>166</x0>
+<y0>80</y0>
+<width>141</width>
+<height>18</height>
+<codetext>byte connect[] = {
+(byte)0x43 ,(byte)0x4e ,(byte)0x58 ,(byte)0x4e
+,(byte)0x01 ,(byte)0x00 ,(byte)0x00 ,(byte)0x01
+,(byte)0x00 ,(byte)0x00 ,(byte)0x10 ,(byte)0x00
+,(byte)0xc9 ,(byte)0x00 ,(byte)0x00 ,(byte)0x00
+,(byte)0x24 ,(byte)0x4e ,(byte)0x00 ,(byte)0x00
+,(byte)0xbc ,(byte)0xb1 ,(byte)0xa7 ,(byte)0xb1
+,(byte)0x68 ,(byte)0x6f ,(byte)0x73 ,(byte)0x74
+,(byte)0x3a ,(byte)0x3a ,(byte)0x66 ,(byte)0x65
+,(byte)0x61 ,(byte)0x74 ,(byte)0x75 ,(byte)0x72
+,(byte)0x65 ,(byte)0x73 ,(byte)0x3d ,(byte)0x73
+,(byte)0x68 ,(byte)0x65 ,(byte)0x6c ,(byte)0x6c
+,(byte)0x5f ,(byte)0x76 ,(byte)0x32 ,(byte)0x2c
+,(byte)0x63 ,(byte)0x6d ,(byte)0x64 ,(byte)0x2c
+,(byte)0x73 ,(byte)0x74 ,(byte)0x61 ,(byte)0x74
+,(byte)0x5f ,(byte)0x76 ,(byte)0x32 ,(byte)0x2c
+,(byte)0x6c ,(byte)0x73 ,(byte)0x5f ,(byte)0x76
+,(byte)0x32 ,(byte)0x2c ,(byte)0x66 ,(byte)0x69
+,(byte)0x78 ,(byte)0x65 ,(byte)0x64 ,(byte)0x5f
+,(byte)0x70 ,(byte)0x75 ,(byte)0x73 ,(byte)0x68
+,(byte)0x5f ,(byte)0x6d ,(byte)0x6b ,(byte)0x64
+,(byte)0x69 ,(byte)0x72 ,(byte)0x2c ,(byte)0x61
+,(byte)0x70 ,(byte)0x65 ,(byte)0x78 ,(byte)0x2c
+,(byte)0x61 ,(byte)0x62 ,(byte)0x62 ,(byte)0x2c
+,(byte)0x66 ,(byte)0x69 ,(byte)0x78 ,(byte)0x65
+,(byte)0x64 ,(byte)0x5f ,(byte)0x70 ,(byte)0x75
+,(byte)0x73 ,(byte)0x68 ,(byte)0x5f ,(byte)0x73
+,(byte)0x79 ,(byte)0x6d ,(byte)0x6c ,(byte)0x69
+,(byte)0x6e ,(byte)0x6b ,(byte)0x5f ,(byte)0x74
+,(byte)0x69 ,(byte)0x6d ,(byte)0x65 ,(byte)0x73
+,(byte)0x74 ,(byte)0x61 ,(byte)0x6d ,(byte)0x70
+,(byte)0x2c ,(byte)0x61 ,(byte)0x62 ,(byte)0x62
+,(byte)0x5f ,(byte)0x65 ,(byte)0x78 ,(byte)0x65
+,(byte)0x63 ,(byte)0x2c ,(byte)0x72 ,(byte)0x65
+,(byte)0x6d ,(byte)0x6f ,(byte)0x75 ,(byte)0x6e
+,(byte)0x74 ,(byte)0x5f ,(byte)0x73 ,(byte)0x68
+,(byte)0x65 ,(byte)0x6c ,(byte)0x6c ,(byte)0x2c
+,(byte)0x74 ,(byte)0x72 ,(byte)0x61 ,(byte)0x63
+,(byte)0x6b ,(byte)0x5f ,(byte)0x61 ,(byte)0x70
+,(byte)0x70 ,(byte)0x2c ,(byte)0x73 ,(byte)0x65
+,(byte)0x6e ,(byte)0x64 ,(byte)0x72 ,(byte)0x65
+,(byte)0x63 ,(byte)0x76 ,(byte)0x5f ,(byte)0x76
+,(byte)0x32 ,(byte)0x2c ,(byte)0x73 ,(byte)0x65
+,(byte)0x6e ,(byte)0x64 ,(byte)0x72 ,(byte)0x65
+,(byte)0x63 ,(byte)0x76 ,(byte)0x5f ,(byte)0x76
+,(byte)0x32 ,(byte)0x5f ,(byte)0x62 ,(byte)0x72
+,(byte)0x6f ,(byte)0x74 ,(byte)0x6c ,(byte)0x69
+,(byte)0x2c ,(byte)0x73 ,(byte)0x65 ,(byte)0x6e
+,(byte)0x64 ,(byte)0x72 ,(byte)0x65 ,(byte)0x63
+,(byte)0x76 ,(byte)0x5f ,(byte)0x76 ,(byte)0x32
+,(byte)0x5f ,(byte)0x6c ,(byte)0x7a ,(byte)0x34
+,(byte)0x2c ,(byte)0x73 ,(byte)0x65 ,(byte)0x6e
+,(byte)0x64 ,(byte)0x72 ,(byte)0x65 ,(byte)0x63
+,(byte)0x76 ,(byte)0x5f ,(byte)0x76 ,(byte)0x32
+,(byte)0x5f ,(byte)0x64 ,(byte)0x72 ,(byte)0x79
+,(byte)0x5f ,(byte)0x72 ,(byte)0x75 ,(byte)0x6e
+,(byte)0x5f ,(byte)0x73 ,(byte)0x65 ,(byte)0x6e
+,(byte)0x64
+
+};
+</codetext>
+</codeclip>
+<codeclip>
+<ID>_C36</ID>
+<x0>167</x0>
+<y0>170</y0>
+<width>189</width>
+<height>35</height>
+<codetext>// DigestInfoデータ
+byte digestInfo[] = {
+
+(byte)0x30,(byte)0x21,(byte)0x30,(byte)0x09,
+(byte)0x06,(byte)0x05,(byte)0x2b,(byte)0x0e,
+(byte)0x03,(byte)0x02,(byte)0x1a,(byte)0x05,
+(byte)0x00,(byte)0x04,(byte)0x14
+};
+</codetext>
+</codeclip>
+<operation>
+<ID>_O35</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>164</x0>
+<y0>286</y0>
+<width>197</width>
+<height>49</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(int key)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>28</inpiny0>
+<inpinwidth>97</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext> // キー入力コマンドを実行
+
+
+
+Log.d(&quot;vkeyboard&quot;,&quot;recognise out key=&quot;+key);
+   String cmd = &quot;input keyevent &quot;+key;
+   try {
+      int n,s;
+      
+      // ポートを開く
+Log.d(&quot;vkeyboard&quot;,&quot;open localhost port 5555&quot;);
+      Socket socket = new Socket(&quot;127.0.0.1&quot;, 5555);
+      InputStream in  = socket.getInputStream();
+      OutputStream out = socket.getOutputStream();
+      socket.setTcpNoDelay(true); // 小さなパケットなのですぐ応答するようにしておく
+
+      // ADB接続要求を送信
+Log.d(&quot;vkeyboard&quot;,&quot;cnxn&quot;);
+      out.write(connect);
+      out.flush();
+
+      // トークンを受信
+Log.d(&quot;vkeyboard&quot;,&quot;recv token&quot;);
+      in.read( recv, 0,  24);
+      n = ((int)recv[12]&amp;0xff)+((int)recv[13]&amp;0xff)*0x100;
+Log.d(&quot;vkeyboard&quot;,&quot;size=&quot;+n);
+      byte[] token = new byte[n];
+      in.read( token );
+
+      // トークンから署名を生成
+Log.d(&quot;vkeyboard&quot;,&quot;create private key&quot;);
+      encipher.init(Cipher.ENCRYPT_MODE, privkey);
+      encipher.update(digestInfo);
+      byte[] enc = encipher.doFinal(token);
+      n = enc.length;
+      s = check_sum(enc);
+
+       // 署名を送信
+Log.d(&quot;vkeyboard&quot;,&quot;send auth&quot;);
+      auth[12]= (byte)(n &amp; 0xff);
+      auth[13]= (byte)((n&gt;&gt;8) &amp; 0xff);
+      auth[14]= (byte)((n&gt;&gt;16) &amp; 0xff);
+      auth[15]= (byte)((n&gt;&gt;24) &amp; 0xff);
+      auth[16]= (byte)(s &amp; 0xff);
+      auth[17]= (byte)((s&gt;&gt;8) &amp; 0xff);
+      auth[18]= (byte)((s&gt;&gt;16) &amp; 0xff);
+      auth[19]= (byte)((s&gt;&gt;24) &amp; 0xff);
+      out.write(auth);
+      out.write(enc);
+      out.flush();
+  
+      // バナーを読み込む
+Log.d(&quot;vkeyboard&quot;,&quot;read banner&quot;);
+      in.read( recv, 0, 24 );
+      n = ((int)recv[12]&amp;0xff)+((int)recv[13]&amp;0xff)*0x100;
+      in.read( recv, 24, n );
+
+      // キー入力コマンドを作成
+Log.d(&quot;vkeyboard&quot;,&quot;create keycommand&quot;);
+      String cm = &quot;shell:&quot;+cmd;
+      n = cm.length();
+      byte[] command = new byte[n+1];
+      for(int i = 0; i &lt; n; i++) { command[i] = (byte)cm.charAt(i); }
+      command[n] = (byte)&apos;\0&apos;;
+      n = command.length;
+      s = check_sum(command);
+      open[12]= (byte)(n &amp; 0xff);
+      open[13]= (byte)((n&gt;&gt;8) &amp; 0xff);
+      open[14]= (byte)((n&gt;&gt;16) &amp; 0xff);
+      open[15]= (byte)((n&gt;&gt;24) &amp; 0xff);
+      open[16]= (byte)(s &amp; 0xff);
+      open[17]= (byte)((s&gt;&gt;8) &amp; 0xff);
+      open[18]= (byte)((s&gt;&gt;16) &amp; 0xff);
+      open[19]= (byte)((s&gt;&gt;24) &amp; 0xff);
+      
+      // キー入力コマンドを送信
+Log.d(&quot;vkeyboard&quot;,&quot;send keycommand&quot;);
+      out.write(open);
+      out.write(command);
+      out.flush();
+
+      // クローズコマンドを送信
+Log.d(&quot;vkeyboard&quot;,&quot;read close command&quot;);
+      in.read( recv, 0, 24 );
+Log.d(&quot;vkeyboard&quot;,&quot;send close command&quot;);
+      in.read( recv, 24, 24 );
+      close[4]  = recv[8];
+      close[5]  = recv[9];
+      close[6]  = recv[10];
+      close[7]  = recv[11];
+      close[8]  = recv[4];
+      close[9]  = recv[5];
+      close[10] = recv[6];
+      close[11] = recv[7];
+      out.write(close);
+      out.flush();
+
+      // ポートを閉じる
+Log.d(&quot;vkeyboard&quot;,&quot;close port&quot;);
+      socket.close();
+    } catch(Exception e){
+      is_running = false;
+      e.printStackTrace();
+    }
+</codetext>
+</operation>
+<ID_maker>52</ID_maker>
+<pin>
+<ID>_P43</ID>
+<x0>4</x0>
+<y0>298</y0>
+<width>120</width>
+<height>25</height>
+<text>type(int key)</text>
+<px>0</px>
+<py>61</py>
+</pin>
+<relation>
+<ID>_R44</ID>
+<pin1name>_P43</pin1name>
+<pin2name>_O35</pin2name>
+</relation>
+<operation>
+<ID>_O45</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>169</x0>
+<y0>360</y0>
+<width>116</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>1</inpinx0>
+<inpiny0>31</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// 初期化 
+
+
+      // 秘密鍵の生成
+      byte[] privateKeyAsByteArray = null;
+      try {
+        int i = 0, cnt = 0;
+		android.content.res.Resources resource = SERVICE.getResources();
+        java.io.InputStream is = resource.openRawResource(R.raw.adbkey);
+        while (is.read()!=-1) cnt++;
+        privateKeyAsByteArray = new byte[cnt];
+        is.reset();
+        is.read(privateKeyAsByteArray);
+        is.close();
+        encipher = Cipher.getInstance(&quot;RSA/ECB/PKCS1Padding&quot;);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyAsByteArray);
+        KeyFactory kf = KeyFactory.getInstance(&quot;RSA&quot;);
+        privkey = (RSAPrivateKey) kf.generatePrivate(keySpec);
+      }catch(Exception e){}
+
+</codetext>
+</operation>
+<codeclip>
+<ID>_C46</ID>
+<x0>167</x0>
+<y0>34</y0>
+<width>214</width>
+<height>20</height>
+<codetext>RSAPrivateKey privkey = null ;</codetext>
+</codeclip>
+<pin>
+<ID>_P47</ID>
+<x0>21</x0>
+<y0>385</y0>
+<width>60</width>
+<height>30</height>
+<text>init()</text>
+<px>5</px>
+<py>31</py>
+</pin>
+<relation>
+<ID>_R48</ID>
+<pin1name>_P47</pin1name>
+<pin2name>_O45</pin2name>
+</relation>
+<codeclip>
+<ID>_C50</ID>
+<x0>165</x0>
+<y0>215</y0>
+<width>267</width>
+<height>33</height>
+<codetext>// チェックサムを計算する
+public int check_sum(byte[] payload) {
+
+  int checksum = 0;
+  for(byte b : payload) {
+    checksum += (int)b &amp; 0xff;
+  }
+  return checksum;
+}
+</codetext>
+</codeclip>
+<codeclip>
+<ID>_C51</ID>
+<x0>166</x0>
+<y0>8</y0>
+<width>168</width>
+<height>21</height>
+<codetext>Cipher encipher = null;
+</codetext>
+</codeclip>
+</xobject>
+<relation>
+<ID>_R43</ID>
+<pin1name>_X34(_P102)</pin1name>
+<pin2name>_X42(_P43)</pin2name>
+</relation>
+<relation>
+<ID>_R44</ID>
+<pin1name>_X34(_P88)</pin1name>
+<pin2name>_X42(_P47)</pin2name>
+</relation>
 </xobject>

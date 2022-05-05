@@ -1,4 +1,4 @@
-package com.example.vkeyboard_service;
+package ..;
 import android.app.Activity;
 import android.os.Bundle;
 import android.content.Context;
@@ -9,7 +9,7 @@ public class ServiceStartActivity extends Activity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     Intent intent_service = new Intent(); 
-    intent_service.setClassName( "com.example.vkeyboard_service", "com.example.vkeyboard_service.VKeyboardService" ); 
+    intent_service.setClassName( "..", "...VKeyBoardService" ); 
     startService( intent_service );
     finish();
   }
