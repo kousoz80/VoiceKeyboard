@@ -6,7 +6,7 @@
 <y0>0</y0>
 <width>200</width>
 <height>100</height>
-<ID_maker>45</ID_maker>
+<ID_maker>46</ID_maker>
 <objectname>VoiceKeyboardService</objectname>
 <description>新規のアプリケーション</description>
 <プロパティ>
@@ -179,6 +179,8 @@ import java.security.KeyFactory;
 import java.security.spec.PKCS8EncodedKeySpec;
 import android.os.Environment;
 import android.media.MediaPlayer;
+import android.app.Notification;
+import android.app.NotificationManager;
 
 public class HelloWorld extends Service {
   %AppName% ap;
@@ -300,16 +302,17 @@ int main( int argc, char** argv ){
 <codeclip>
 <ID>_CSTART</ID>
 <x0>293</x0>
-<y0>271</y0>
-<width>130</width>
-<height>20</height>
+<y0>259</y0>
+<width>170</width>
+<height>34</height>
 <codetext>Service SERVICE;
+int SERICE_ID=655;
 </codetext>
 </codeclip>
 <pin>
 <ID>_PSTART</ID>
 <x0>10</x0>
-<y0>425</y0>
+<y0>441</y0>
 <width>55</width>
 <height>24</height>
 <text>Start()</text>
@@ -318,8 +321,8 @@ int main( int argc, char** argv ){
 </pin>
 <codeclip>
 <ID>_C17</ID>
-<x0>292</x0>
-<y0>88</y0>
+<x0>294</x0>
+<y0>72</y0>
 <width>284</width>
 <height>89</height>
 <codetext>// 変数
@@ -331,8 +334,8 @@ double[] filter;      // 平滑フィルタ
 </codeclip>
 <codeclip>
 <ID>_C18</ID>
-<x0>293</x0>
-<y0>181</y0>
+<x0>294</x0>
+<y0>169</y0>
 <width>285</width>
 <height>85</height>
 <codetext>// 定数
@@ -344,8 +347,8 @@ static final int SOUND_DFT_SIZE = 256;
 </codeclip>
 <codeclip>
 <ID>_C20</ID>
-<x0>630</x0>
-<y0>357</y0>
+<x0>629</x0>
+<y0>366</y0>
 <width>291</width>
 <height>38</height>
 <codetext>// デバッグファイル
@@ -354,8 +357,8 @@ String DEBUG_FILE = &quot;debug.txt&quot;;
 </codeclip>
 <codeclip>
 <ID>_C28</ID>
-<x0>629</x0>
-<y0>399</y0>
+<x0>630</x0>
+<y0>410</y0>
 <width>239</width>
 <height>185</height>
 <codetext>// デバッグ表示
@@ -374,11 +377,12 @@ public void dprint(String s){
 <codeclip>
 <ID>_C30</ID>
 <x0>0</x0>
-<y0>88</y0>
-<width>287</width>
-<height>263</height>
+<y0>71</y0>
+<width>285</width>
+<height>288</height>
 <codetext>// 各種パラメータ
 boolean is_running = false;
+boolean is_active=false;
 int bright = 0;  // 声紋表示の輝度調節
 int startup_time = 300;
 double sound_filter = 150.0;
@@ -393,12 +397,15 @@ int vstart = 1; // 音声の先頭
 int vend   = 1; // 音声の末尾
 int voice_no = 0; // 音声番号
 double kpenalty = 1.0; //音声の長さ比較用
+NotificationManager notifManager;
+Notification notif;
+
 </codetext>
 </codeclip>
 <xobject>
 <ID>_X31</ID>
 <x0>102</x0>
-<y0>402</y0>
+<y0>418</y0>
 <width>174</width>
 <height>73</height>
 <ID_maker>17</ID_maker>
@@ -612,8 +619,8 @@ try{
 <xobject>
 <ID>_X34</ID>
 <x0>80</x0>
-<y0>491</y0>
-<width>177</width>
+<y0>507</y0>
+<width>175</width>
 <height>61</height>
 <objectname>Control</objectname>
 <description></description>
@@ -765,9 +772,6 @@ class RecordThread extends Thread {
     int start_point, end_point;
     double   a, u, v, x, y, trigger, pow;
 
-    // 開始音を鳴らす
-    MediaPlayer.create(SERVICE,R.raw.start).start();
-
 Log.d(&quot;vkeyboard&quot;,&quot;start rec thread\n&quot;);
 
     // 例外が出たら即終了
@@ -895,15 +899,12 @@ Log.d(&quot;vkeyboard&quot;,&quot;start rec thread\n&quot;);
      e.printStackTrace();
     }
 
-    // 終了音を鳴らす
-    MediaPlayer.create(SERVICE,R.raw.stop).stop();
-
   }//run()
 
 }//RecordThread
 </codetext>
 </codeclip>
-<ID_maker>112</ID_maker>
+<ID_maker>116</ID_maker>
 <pin>
 <ID>_P88</ID>
 <x0>37</x0>
@@ -941,6 +942,30 @@ Log.d(&quot;vkeyboard&quot;,&quot;start rec thread\n&quot;);
 <codetext>// 初期設定
 
 
+// 通知用変数を取得
+Intent intent = new Intent(android.content.Intent.ACTION_VIEW);
+//intent.setData(Uri.parse(&quot;http://www.google.com/&quot;));
+
+PendingIntent pendingIntent
+	= PendingIntent.getActivity(
+		SERVICE,
+		0,
+		intent,
+		0);
+
+notifManager = (NotificationManager)SERVICE.getSystemService(Context.NOTIFICATION_SERVICE);
+notif = new Notification(R.drawable.ic_launcher, &quot;音声キーボードが有効です&quot;, System.currentTimeMillis());
+
+// 通知を選択した時に自動的に通知が消えるための設定
+notif.flags = Notification.FLAG_AUTO_CANCEL;
+
+// &quot;Latest Event&quot; レイアウトの設定
+notif.setLatestEventInfo(
+		SERVICE,
+		&quot;音声キーボード&quot;,
+		&quot;有効&quot;,
+		pendingIntent);
+
 
 // 三角関数テーブルを作成
 sin_table = new double[HEARING_HEIGHT][SOUND_DFT_SIZE];
@@ -975,8 +1000,8 @@ recognize_thread.start();
 <width>108</width>
 <height>27</height>
 <text>result(int key)</text>
-<px>63</px>
-<py>41</py>
+<px>177</px>
+<py>78</py>
 </pin>
 <codeclip>
 <ID>_C105</ID>
@@ -1023,6 +1048,73 @@ public double[] do_filter( double[] in ){
 }
 </codetext>
 </codeclip>
+<operation>
+<ID>_O112</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>474</x0>
+<y0>41</y0>
+<width>183</width>
+<height>67</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(int k1)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>47</inpiny0>
+<inpinwidth>64</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out(int k0)</outpintext>
+<outpinx0>102</outpinx0>
+<outpiny0>44</outpiny0>
+<outpinwidth>72</outpinwidth>
+<outpinheight>24</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// 音声キーボードが有効なら
+// 通知してタイプする
+
+
+
+// 音声キーボードの有効/無効の切り替え
+if( k1 == -1 ){
+  is_active = !is_active;
+  if(is_active){
+    notifManager.notify(R.string.app_name, notif);
+  }
+  else{
+    notifManager.cancel(R.string.app_name);
+  }
+}
+
+// 音声キーボード無効
+if(!is_active || (is_active &amp;&amp; (k1 == 0) )) return;
+
+// 音声キーボード有効
+k0=k1;
+</codetext>
+</operation>
+<relation>
+<ID>_R113</ID>
+<pin1name>_P102</pin1name>
+<pin2name>_O112</pin2name>
+</relation>
+<pin>
+<ID>_P114</ID>
+<x0>681</x0>
+<y0>130</y0>
+<width>86</width>
+<height>28</height>
+<text>type(int key)</text>
+<px>80</px>
+<py>39</py>
+</pin>
+<relation>
+<ID>_R115</ID>
+<pin1name>_O112</pin1name>
+<pin2name>_P114</pin2name>
+</relation>
 </xobject>
 <relation>
 <ID>_R35</ID>
@@ -1032,7 +1124,7 @@ public double[] do_filter( double[] in ){
 <codeclip>
 <ID>_C37</ID>
 <x0>582</x0>
-<y0>88</y0>
+<y0>70</y0>
 <width>389</width>
 <height>259</height>
 <codetext>// 音声テンプレート
@@ -1056,8 +1148,8 @@ class VoiceTemplate{
 </codeclip>
 <codeclip>
 <ID>_C40</ID>
-<x0>0</x0>
-<y0>360</y0>
+<x0>2</x0>
+<y0>367</y0>
 <width>597</width>
 <height>38</height>
 <codetext>// 音声テンプレートファイル
@@ -1067,7 +1159,7 @@ File voice_data_file = new File( Environment.getExternalStorageDirectory(),&quot
 <codeclip>
 <ID>_C41</ID>
 <x0>255</x0>
-<y0>13</y0>
+<y0>4</y0>
 <width>446</width>
 <height>57</height>
 <codetext>// 音声キーボードサービスプログラム for android  ver 0.2.1
@@ -1078,7 +1170,7 @@ File voice_data_file = new File( Environment.getExternalStorageDirectory(),&quot
 <xobject>
 <ID>_X42</ID>
 <x0>299</x0>
-<y0>471</y0>
+<y0>487</y0>
 <width>138</width>
 <height>80</height>
 <objectname>ADB_keyboad</objectname>
@@ -1466,13 +1558,13 @@ public int check_sum(byte[] payload) {
 </codeclip>
 </xobject>
 <relation>
-<ID>_R43</ID>
-<pin1name>_X34(_P102)</pin1name>
-<pin2name>_X42(_P43)</pin2name>
-</relation>
-<relation>
 <ID>_R44</ID>
 <pin1name>_X34(_P88)</pin1name>
 <pin2name>_X42(_P47)</pin2name>
+</relation>
+<relation>
+<ID>_R45</ID>
+<pin1name>_X34(_P114)</pin1name>
+<pin2name>_X42(_P43)</pin2name>
 </relation>
 </xobject>

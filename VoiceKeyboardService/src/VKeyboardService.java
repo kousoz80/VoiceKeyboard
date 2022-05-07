@@ -43,6 +43,8 @@ import java.security.KeyFactory;
 import java.security.spec.PKCS8EncodedKeySpec;
 import android.os.Environment;
 import android.media.MediaPlayer;
+import android.app.Notification;
+import android.app.NotificationManager;
 
 public class VKeyboardService extends Service {
   VoiceKeyboardService ap;
@@ -72,6 +74,7 @@ public class VKeyboardService extends Service {
 }
 class VoiceKeyboardService{
 Service SERVICE;
+int SERICE_ID=655;
 
 // 変数
 Handler handler = new Handler();
@@ -102,6 +105,7 @@ public void dprint(String s){
 
 // 各種パラメータ
 boolean is_running = false;
+boolean is_active=false;
 int bright = 0;  // 声紋表示の輝度調節
 int startup_time = 300;
 double sound_filter = 150.0;
@@ -116,6 +120,9 @@ int vstart = 1; // 音声の先頭
 int vend   = 1; // 音声の末尾
 int voice_no = 0; // 音声番号
 double kpenalty = 1.0; //音声の長さ比較用
+NotificationManager notifManager;
+Notification notif;
+
 
 // 音声テンプレート
 Vector voice_template;
@@ -414,9 +421,6 @@ class RecordThread extends Thread {
     int start_point, end_point;
     double   a, u, v, x, y, trigger, pow;
 
-    // 開始音を鳴らす
-    MediaPlayer.create(SERVICE,R.raw.start).start();
-
 Log.d("vkeyboard","start rec thread\n");
 
     // 例外が出たら即終了
@@ -544,9 +548,6 @@ Log.d("vkeyboard","start rec thread\n");
      e.printStackTrace();
     }
 
-    // 終了音を鳴らす
-    MediaPlayer.create(SERVICE,R.raw.stop).stop();
-
   }//run()
 
 }//RecordThread
@@ -587,11 +588,38 @@ _O89_in();
 parent.IADB_keyboad.init();
 }
 public void result(int key){
+_O112_in(key);
+}
+public void type(int key){
 parent.IADB_keyboad.type(key);
 }
 private void _O89_in(){
 // 初期設定
 
+
+// 通知用変数を取得
+Intent intent = new Intent(android.content.Intent.ACTION_VIEW);
+//intent.setData(Uri.parse("http://www.google.com/"));
+
+PendingIntent pendingIntent
+	= PendingIntent.getActivity(
+		SERVICE,
+		0,
+		intent,
+		0);
+
+notifManager = (NotificationManager)SERVICE.getSystemService(Context.NOTIFICATION_SERVICE);
+notif = new Notification(R.drawable.ic_launcher, "音声キーボードが有効です", System.currentTimeMillis());
+
+// 通知を選択した時に自動的に通知が消えるための設定
+notif.flags = Notification.FLAG_AUTO_CANCEL;
+
+// "Latest Event" レイアウトの設定
+notif.setLatestEventInfo(
+		SERVICE,
+		"音声キーボード",
+		"有効",
+		pendingIntent);
 
 
 // 三角関数テーブルを作成
@@ -614,6 +642,32 @@ record_thread.start();
 recognize_thread.start();
 
 
+}
+private void _O112_in(int k1){
+int k0;
+// 音声キーボードが有効なら
+// 通知してタイプする
+
+
+
+// 音声キーボードの有効/無効の切り替え
+if( k1 == -1 ){
+  is_active = !is_active;
+  if(is_active){
+    notifManager.notify(R.string.app_name, notif);
+  }
+  else{
+    notifManager.cancel(R.string.app_name);
+  }
+}
+
+// 音声キーボード無効
+if(!is_active || (is_active && (k1 == 0) )) return;
+
+// 音声キーボード有効
+k0=k1;
+
+type(k0);
 }
 Control( VoiceKeyboardService pnt ){
  parent = pnt;

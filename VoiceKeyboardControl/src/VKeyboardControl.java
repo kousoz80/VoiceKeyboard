@@ -566,7 +566,7 @@ STATE2 = STATE;
 parent.ISetter.code_is(e);
 }
 private void _Ocreate_in(){
-if( STATE2 != 210959301 ) return;
+if( STATE2 != 929639218 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -578,7 +578,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 210959301;
+STATE = 929639218;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;

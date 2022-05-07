@@ -1999,8 +1999,8 @@ String DEBUG_FILE=&quot;debug.txt&quot;;
 </codeclip>
 <aobject>
 <ID>_A88</ID>
-<x0>79</x0>
-<y0>271</y0>
+<x0>73</x0>
+<y0>274</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
