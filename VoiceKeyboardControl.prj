@@ -6,22 +6,22 @@
 <y0>0</y0>
 <width>200</width>
 <height>100</height>
-<ID_maker>144</ID_maker>
+<ID_maker>167</ID_maker>
 <objectname>VoiceKeyboardControl</objectname>
 <description>新規のアプリケーション</description>
 <codeclip>
 <ID>_CSTART</ID>
-<x0>757</x0>
-<y0>355</y0>
-<width>144</width>
-<height>26</height>
+<x0>789</x0>
+<y0>309</y0>
+<width>143</width>
+<height>22</height>
 <codetext>Activity ACTIVITY;
 </codetext>
 </codeclip>
 <pin>
 <ID>_PSTART</ID>
-<x0>2</x0>
-<y0>289</y0>
+<x0>67</x0>
+<y0>234</y0>
 <width>55</width>
 <height>24</height>
 <text>Start()</text>
@@ -30,151 +30,277 @@
 </pin>
 <xobject>
 <ID>_X_G87</ID>
-<x0>380</x0>
-<y0>260</y0>
-<width>177</width>
-<height>61</height>
+<x0>436</x0>
+<y0>280</y0>
+<width>178</width>
+<height>82</height>
 <objectname>Control</objectname>
 <description></description>
 <codeclip>
 <ID>_C83</ID>
-<x0>24</x0>
-<y0>109</y0>
-<width>334</width>
-<height>67</height>
-<codetext>// 音声の認識スレッド
-RecognizeThread recognize_thread = null;
-boolean is_action; // セットすると認識処理を始める
-class RecognizeThread extends Thread {
-
-  public void run() {
-    is_action = false;
-    while(is_running){
+<x0>29</x0>
+<y0>104</y0>
+<width>264</width>
+<height>33</height>
+<codetext>// 音声の認識
+public void recognize( double[] voice) {
     
-      // 処理の依頼を待つ
-      while( !is_action ){
-        try{
-          Thread.sleep(10);
-        } catch( Exception e ){}
-      } 
+  int maxi = 0;
+  double r = 0.0, max = 0.0;
+  for( int i = 0; i &lt; voice_template.size(); i++ ){
 
-      // 音声認識処理
-      int maxi = 0;
-      double r = 0.0, max = 0.0;
-      for( int i = 0; i &lt; voice_template.size(); i++ ){
+    // テンプレートの音声
+    double[] ref = ((VoiceTemplate)(voice_template.get(i))).voice;
 
-        // テンプレートの音声
-        double[] ref = ((VoiceTemplate)(voice_template.get(i))).voice;
+    // 音声の長さを比べて範囲内なら比較する
+    double p = (double)ref.length / voice.length;
+    if(p &lt; limit_length &amp;&amp; 1/p &lt; limit_length){
 
-         // 重み
-        double w = ((VoiceTemplate)(voice_template.get(i))).weight;
-        
-        // 録音した音声とテンプレートの音声の長さを比較する(一致しないとペナルティとなる)
-        double d = (double)voice.length / (double)((VoiceTemplate)(voice_template.get(i))).length - 1.0;
-        double p = Math.exp( -kpenalty * d * d );
+      // 重み(大きいほど優先順位が高くなる)
+      double w = ((VoiceTemplate)(voice_template.get(i))).weight;
 
-        // テンプレートと録音した音声の相関値を計算して重みとペナルティをかける
-        r = compare_voice( ref, voice ) * w * p;
-        if( r &gt; max ){ max = r; maxi = i; }
-      }
-      
-      // 認識結果を送る
-      if( max &gt; thresh_recognize ) result( ((VoiceTemplate)(voice_template.get(maxi))).text+&quot;(&quot;+max+&quot;)\n&quot;);
-      else result(&quot;(&quot;+max+&quot;)\n&quot;);
+      // テンプレートと録音した音声の相関値を計算する(トリガタイミングの誤差を考慮して少しずつずらして比較して一番大きいのをとる)
+      r = compare_voice( ref, voice, -2 ) * w;
+      if(r &gt; max){ max = r; maxi = i; }
 
-      // 処理が終了したのでフラグをクリア
-      is_action = false;
+      r = compare_voice( ref, voice, -1 ) * w;
+      if(r &gt; max){ max = r; maxi = i; }
+
+      r = compare_voice( ref, voice, 0  ) * w;
+      if(r &gt; max){ max = r; maxi = i; }
+
+      r = compare_voice( ref, voice, 1  ) * w; 
+      if(r &gt; max){ max = r; maxi = i; }
+
+      r = compare_voice( ref, voice, 2  ) * w;
+      if(r &gt; max){ max = r; maxi = i; }
+
     }
+  }
+      
+  // 認識結果を送る
+  if( max &gt; thresh_recognize ) result( ((VoiceTemplate)(voice_template.get(maxi))).text+&quot;(&quot;+max+&quot;)\n&quot;);
+  else result(&quot;***(&quot;+max+&quot;)\n&quot;);
 
-  }//run()
+}
 
-}//HandlerThread
+
 </codetext>
 </codeclip>
 <codeclip>
 <ID>_C81</ID>
-<x0>26</x0>
-<y0>179</y0>
-<width>389</width>
-<height>37</height>
-<codetext>// 2つの音声を比較して相関値を返す
-public double compare_voice( double[] ref, double[] voice ){
+<x0>28</x0>
+<y0>144</y0>
+<width>465</width>
+<height>36</height>
+<codetext>// 2つの音声を比較して相関値を返す(offsetはずらす位置)
+public double compare_voice( double[] ref, double[] voice, int offset ){
+
   int x, y, width, height;
   double a = 0.0, nn = 0.0, ar = 0.0, av = 0.0, pr = 0.0, pv = 0.0;
 
   if( voice == null || ref == null ) return 0.0;
   if( voice.length &lt;= 0 || ref.length &lt;=0 ) return 0.0;
     
-  width  = ref.length / HEARING_HEIGHT;
-  if( ( x= voice.length / HEARING_HEIGHT ) &lt; width ) width = x;
-  height  = HEARING_HEIGHT;
-  nn = (double)( width * height );
+  // 右側にずらす場合
+  if( offset &gt;=1 ){
+    if( voice.length &lt;= offset * HEARING_HEIGHT ) return 0.0;
+    
+    // ずらす voice-&gt;xvoice
+    double[] xvoice = new double[voice.length - offset * HEARING_HEIGHT];
+    for( int i = 0; i &lt; xvoice.length; i++ ) xvoice[i] = voice[i + offset * HEARING_HEIGHT];
 
-  // ref[]の平均値を求める
-  ar = 0.0;
-  for( x = 0; x &lt; width; x++ ){
-    for( y = 0; y &lt; height; y++ ){
-      ar += ref[ HEARING_HEIGHT * x + y ];
-    }
-  }
-  ar /= nn; 
+    width = ref.length / HEARING_HEIGHT;
+    if( ( x= xvoice.length / HEARING_HEIGHT ) &lt; width ) width = x;
+    height  = HEARING_HEIGHT;
+    nn = (double)( width * height );
 
-  // voice[]の平均値を求める
-  av = 0.0;
-  for( x = 0; x &lt; width; x++ ){
-    for( y = 0; y &lt; height; y++ ){
-      av += voice[ HEARING_HEIGHT * x + y ];
+    // ref[]の平均値を求める
+    ar = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        ar += ref[ HEARING_HEIGHT * x + y ];
+      }
     }
-  }
-  av /= nn; 
+    ar /= nn; 
 
-  // ref[]のパワーを求める
-   pr = 0.0;
-  for( x = 0; x &lt; width; x++ ){
-    for( y = 0; y &lt; height; y++ ){
-      a = ref[ HEARING_HEIGHT * x + y ] - ar;
-      pr += a * a;
+    // xvoice[]の平均値を求める
+    av = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        av += xvoice[ HEARING_HEIGHT * x + y ];
+      }
     }
-  }
-  if( pr == 0.0 ) return 0.0;
+    av /= nn; 
 
-  // voice[]のパワーを求める
-  pv = 0.0;
-  for( x = 0; x &lt; width; x++ ){
-    for( y = 0; y &lt; height; y++ ){
-      a = voice[ HEARING_HEIGHT * x + y ] - av;
-      pv += a * a;
+    // ref[]のパワーを求める
+     pr = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a = ref[ HEARING_HEIGHT * x + y ] - ar;
+        pr += a * a;
+      }
     }
-  }
-  if( pv == 0.0 ) return 0.0;
+    if( pr == 0.0 ) return 0.0;
 
-  // ref[]とvoice[]の相関値を求める
-  a = 0.0;
-  for( x = 0; x &lt; width; x++ ){
-    for( y = 0; y &lt; height; y++ ){
-      a += ( ref[ HEARING_HEIGHT * x + y ] - ar ) * ( voice[ HEARING_HEIGHT * x + y ] - av ) ;
+    // xvoice[]のパワーを求める
+    pv = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a = xvoice[ HEARING_HEIGHT * x + y ] - av;
+        pv += a * a;
+      }
     }
+    if( pv == 0.0 ) return 0.0;
+
+    // ref[]とxvoice[]の相関値を求める
+    a = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a += ( ref[ HEARING_HEIGHT * x + y ] - ar ) * ( xvoice[ HEARING_HEIGHT * x + y ] - av ) ;
+      }
+    }
+    return a / Math.sqrt( pv * pr );
   }
-  return a / Math.sqrt( pv * pr );
+
+
+  // 左側にずらす場合
+  else if( offset &lt;= -1 ){
+    if( ref.length &lt;= -offset * HEARING_HEIGHT ) return 0.0;
+    
+    // ずらす ref-&gt;xref
+    double[] xref = new double[ref.length + offset * HEARING_HEIGHT];
+    for( int i = 0; i &lt; xref.length; i++ ) xref[i] = ref[i - offset * HEARING_HEIGHT];
+
+    width  = xref.length / HEARING_HEIGHT;
+    if( ( x= voice.length / HEARING_HEIGHT ) &lt; width ) width = x;
+    height  = HEARING_HEIGHT;
+    nn = (double)( width * height );
+
+    // xref[]の平均値を求める
+    ar = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        ar += xref[ HEARING_HEIGHT * x + y ];
+      }
+    }
+    ar /= nn; 
+
+    // voice[]の平均値を求める
+    av = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        av += voice[ HEARING_HEIGHT * x + y ];
+      }
+    }
+    av /= nn; 
+
+    // xref[]のパワーを求める
+    pr = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a = xref[ HEARING_HEIGHT * x + y ] - ar;
+        pr += a * a;
+      }
+    }
+    if( pr == 0.0 ) return 0.0;
+
+    // voice[]のパワーを求める
+    pv = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a = voice[ HEARING_HEIGHT * x + y ] - av;
+        pv += a * a;
+      }
+    }
+    if( pv == 0.0 ) return 0.0;
+
+    // xref[]とvoice[]の相関値を求める
+    a = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a += ( xref[ HEARING_HEIGHT * x + y ] - ar ) * ( voice[ HEARING_HEIGHT * x + y ] - av ) ;
+      }
+    }
+    return a / Math.sqrt( pv * pr );
+  }
+
+  // ずらさない場合
+  else{
+
+    width  = ref.length / HEARING_HEIGHT;
+    if( ( x= voice.length / HEARING_HEIGHT ) &lt; width ) width = x;
+    height  = HEARING_HEIGHT;
+    nn = (double)( width * height );
+
+    // ref[]の平均値を求める
+    ar = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        ar += ref[ HEARING_HEIGHT * x + y ];
+      }
+    }
+    ar /= nn; 
+
+    // voice[]の平均値を求める
+    av = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        av += voice[ HEARING_HEIGHT * x + y ];
+      }
+    }
+    av /= nn; 
+
+    // ref[]のパワーを求める
+    pr = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a = ref[ HEARING_HEIGHT * x + y ] - ar;
+        pr += a * a;
+      }
+    }
+    if( pr == 0.0 ) return 0.0;
+
+    // voice[]のパワーを求める
+    pv = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a = voice[ HEARING_HEIGHT * x + y ] - av;
+        pv += a * a;
+      }
+    }
+    if( pv == 0.0 ) return 0.0;
+
+    // ref[]とvoice[]の相関値を求める
+    a = 0.0;
+    for( x = 0; x &lt; width; x++ ){
+      for( y = 0; y &lt; height; y++ ){
+        a += ( ref[ HEARING_HEIGHT * x + y ] - ar ) * ( voice[ HEARING_HEIGHT * x + y ] - av ) ;
+      }
+    }
+    return a / Math.sqrt( pv * pr );
+  }
+
 }
 </codetext>
 </codeclip>
 <codeclip>
 <ID>_C62</ID>
-<x0>25</x0>
-<y0>52</y0>
+<x0>29</x0>
+<y0>43</y0>
 <width>262</width>
 <height>54</height>
 <codetext>// 録音スレッド
 RecordThread record_thread = null;
 class RecordThread extends Thread {
+
   int state;
   static final int NEUTRAL = 0;
   static final int OFF = 1;
   static final int SENS_ON = 2;
   static final int ON = 3;
   static final int SENS_OFF = 4;
-  int HEARING_BUFFER_SIZE = SOUND_DFT_SIZE * HEARING_WIDTH * 4;
+  int HEARING_BUFFER_SIZE = 65536;
 
   public void run() {
     int i, j, k, len, width, height, state, offset, count;
@@ -203,35 +329,56 @@ dprint(&quot;start rec thread\n&quot;);
     offset = 0;
     count = 0;
     start_point = end_point = 0;
-    short[]    sound_buffer   = new short[ SOUND_DFT_SIZE ];
-    double[] sound_av         = new double[ HEARING_HEIGHT ];
-    double[] hearing_buffer = new double[ HEARING_BUFFER_SIZE ];
+    short[]  sound_buffer   = new short[SOUND_DFT_SIZE];
+    double[] sound_av       = new double[HEARING_HEIGHT];
+    double[] hearing_buffer = new double[HEARING_BUFFER_SIZE];
 
     while(is_running){       
 
       // 録音データを読み込む(SOUND_DFT_SIZEは配列要素の数)
-      audioRec.read( sound_buffer, 0, SOUND_DFT_SIZE );
+      audioRec.read(sound_buffer, 0, SOUND_DFT_SIZE);
 
       // 取り込んだ聴覚データをDFTして開けておいたところにセットする
-      trigger = 0.0;
-      for( i = 0; i &lt; HEARING_HEIGHT; i++ ){
-        for( x = y = 0.0, j = 0; j &lt; SOUND_DFT_SIZE; j++ ){
-          a = (double)sound_buffer[ j ];
-          x += a * cos_table[ i ][ j ];
-          y += a * sin_table[ i ][ j ];
+      // 振幅が対数スケールの場合
+      if(alog_scale){
+        trigger = 0.0;
+        for( i = 0; i &lt; HEARING_HEIGHT; i++ ){
+          for( x = y = 0.0, j = 0; j &lt; SOUND_DFT_SIZE; j++ ){
+            a = (double)sound_buffer[j];
+            x += a * cos_table[i][j];
+            y += a * sin_table[i][j];
+          }
+          pow = Math.log((x * x + y * y) + bias);       // 微小なノイズを抑制するためバイアスをかける
+          hearing_buffer[i + offset] = pow * hosei[i];  // 必要ならば人間の聴覚に合わせて補正をかける
+          sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + pow) / sound_filter;
+          pow /= sound_av[i];
+          if(pow &gt; trigger) trigger = pow;
         }
-        hearing_buffer[ i + offset ] = pow = Math.pow( (x * x + y * y) * hosei[ i ], rcompress );
-        sound_av[ i ] = ( (sound_filter - 1.0) * sound_av[ i ]   + pow ) / sound_filter;
-        pow /= sound_av[ i ];
-        if( pow &gt; trigger ) trigger = pow;
       }
 
+      // 振幅がリニアスケールの場合
+      else{
+        trigger = 0.0;
+        for( i = 0; i &lt; HEARING_HEIGHT; i++ ){
+          for( x = y = 0.0, j = 0; j &lt; SOUND_DFT_SIZE; j++ ){
+            a = (double)sound_buffer[j];
+            x += a * cos_table[i][j];
+            y += a * sin_table[i][j];
+          }
+          pow = Math.pow( (x * x + y * y), acompress );
+          hearing_buffer[i + offset] = pow * hosei[i];  // 必要ならば人間の聴覚に合わせて補正をかける
+          sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + pow) / sound_filter;
+          pow /= sound_av[i];
+          if(pow &gt; trigger) trigger = pow;
+        }
+      }
+      
       // 状態ごとの動作を以下に記述
-      switch( state ){
+      switch(state){
           
       // NEWTRAL状態：起動してしばらくは各フィルタ変数が安定するのを待つ
       case NEUTRAL:
-        if( count &gt; startup_time ){
+        if(count &gt; startup_time){
            state = OFF;
            update_display();  // 落ち着いたら表示を更新する
         }
@@ -239,53 +386,55 @@ dprint(&quot;start rec thread\n&quot;);
 
       // OFF状態
       case OFF:
-        if( trigger &gt; thresh_trigger_on ){
+        if(trigger &gt; thresh_trigger_on){
           state = SENS_ON;
-          start_point = offset - HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
+          start_point = offset - TRIGGER_MARGIN*HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
+          if(start_point &lt; 0) start_point += HEARING_BUFFER_SIZE;
           count = 0;
         }
         break;
 
       // OFFからONに遷移する状態
       case SENS_ON:
-        if( trigger &lt; thresh_trigger_off )  state = OFF;
+        if(trigger &lt; thresh_trigger_off)  state = OFF;
         else{
-          if( count &gt; thresh_count_on ) state = ON;
+          if(count &gt; thresh_count_on) state = ON;
         }
         break;
 
       // ON状態
       case ON:
-        if( trigger &lt; thresh_trigger_off ){
+        if(trigger &lt; thresh_trigger_off){
           state = SENS_OFF;
-          end_point = offset + HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
+          end_point = offset + TRIGGER_MARGIN*HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
+          if(end_point &gt;= HEARING_BUFFER_SIZE) end_point -= HEARING_BUFFER_SIZE;
           count = 0;
         }
         break;
 
       // ONからOFFに遷移する状態
       case SENS_OFF:
-        if( trigger &gt; thresh_trigger_on )  state = ON;
+        if(trigger &gt; thresh_trigger_on)  state = ON;
         else{
-          if( count &gt; thresh_count_off ){
+          if(count &gt; thresh_count_off){
 
             // サンプリング範囲内のデータを音声データ配列voiceに転送する
             len = end_point - start_point;
-            if( len &lt; 0 ) len += HEARING_BUFFER_SIZE;
-
-            double[] xvoice = new double[ len ];
-            double sum = 0;
-            for( i = start_point, j = 0; j &lt; len; i++, j++ ){
-
-              // リングバッファ処理
-              if( i &lt; 0 )  i += HEARING_BUFFER_SIZE;
-              if( i &gt;= HEARING_BUFFER_SIZE ) i -=  HEARING_BUFFER_SIZE;
-
-              sum += xvoice[ j ] = hearing_buffer[ i ];
+            if(len &lt; 0) len += HEARING_BUFFER_SIZE;
+            voice = new double[len];
+            for(i = start_point, j = 0; j &lt; len; i++, j++){
+              if(i &gt;= HEARING_BUFFER_SIZE) i -= HEARING_BUFFER_SIZE;
+              voice[j] = hearing_buffer[i];
             }
-            voice = do_filter( xvoice ); // 平滑フィルタ処理
             state = OFF;
-            is_action = true;  // 音節認識スレッドに処理を渡す
+
+            // 認識処理開始
+            handler.post(new Runnable() {
+              @Override
+              public void run(){
+                recognize(voice);
+              }
+            });
           }
         }
         break;
@@ -304,11 +453,11 @@ dprint(&quot;start rec thread\n&quot;);
 }//RecordThread
 </codetext>
 </codeclip>
-<ID_maker>111</ID_maker>
+<ID_maker>121</ID_maker>
 <pin>
 <ID>_P88</ID>
 <x0>37</x0>
-<y0>281</y0>
+<y0>189</y0>
 <width>60</width>
 <height>30</height>
 <text>start()</text>
@@ -319,8 +468,8 @@ dprint(&quot;start rec thread\n&quot;);
 <ID>_O89</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>144</x0>
-<y0>282</y0>
+<x0>138</x0>
+<y0>201</y0>
 <width>103</width>
 <height>46</height>
 <inconnectx0>0</inconnectx0>
@@ -342,26 +491,46 @@ dprint(&quot;start rec thread\n&quot;);
 <codetext>// 初期設定
 
 
+// 音声認識用三角関数テーブルを作成
+  sin_table = new double[HEARING_HEIGHT][SOUND_DFT_SIZE];
+  cos_table = new double[HEARING_HEIGHT][SOUND_DFT_SIZE];
 
-// 三角関数テーブルを作成
-sin_table = new double[HEARING_HEIGHT][SOUND_DFT_SIZE];
-cos_table = new double[HEARING_HEIGHT][SOUND_DFT_SIZE];
-for(int i = 0; i &lt; HEARING_HEIGHT; i++ ){
-  for( int j = 0; j &lt; SOUND_DFT_SIZE; j++ ){
-    sin_table[ i ][ j ]  = Math.sin((double)(i  * j) * 6.2832 / (double)(SOUND_DFT_SIZE));
-    cos_table[ i ][ j ] = Math.cos((double)(i  * j) * 6.2832 / (double)(SOUND_DFT_SIZE));
+// 対数スケールの場合
+if(flog_scale){
+  int[] dist  = new int[HEARING_HEIGHT+1]; // 周波数分布テーブル
+  double p = Math.pow( HEARING_HEIGHT-1.0, 1.0 / HEARING_HEIGHT );
+  for( int i = 0; i &lt;= HEARING_HEIGHT; i++ ){
+    int d = (int)(Math.pow( p, (double)i ));
+    dist[i] = i+1 &gt;= d? i+1 : d;
+  }
+  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
+    for(int j = 0; j &lt; SOUND_DFT_SIZE; j++){
+      sin_table[i][j] = 0;
+      cos_table[i][j] = 0;
+      double r = 1 / Math.sqrt(dist[i+1] - dist[i]);
+      for(int k = dist[i]; k &lt; dist[i+1]; k++){
+        sin_table[i][j] += r * Math.sin(k * j * 6.2832 / SOUND_DFT_SIZE);
+        cos_table[i][j] += r * Math.cos(k * j * 6.2832 / SOUND_DFT_SIZE);
+      }
+    }
   }
 }
 
-// 各スレッドを生成
-record_thread = new RecordThread();
-recognize_thread = new RecognizeThread();
+// リニアスケールの場合
+else{
+  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
+    for(int j = 0; j &lt; SOUND_DFT_SIZE; j++){
+      sin_table[i][j] = Math.sin(i * j * 6.2832 / SOUND_DFT_SIZE);
+      cos_table[i][j] = Math.cos(i * j * 6.2832 / SOUND_DFT_SIZE);
+    }
+  }
+}
 
-// 各スレッドをスタート
+
+// 録音スレッドを開始
 is_running = true;
+record_thread = new RecordThread();
 record_thread.start();
-recognize_thread.start();
-
 </codetext>
 </operation>
 <relation>
@@ -371,20 +540,20 @@ recognize_thread.start();
 </relation>
 <pin>
 <ID>_P91</ID>
-<x0>34</x0>
-<y0>343</y0>
+<x0>30</x0>
+<y0>251</y0>
 <width>60</width>
 <height>30</height>
-<text>store()</text>
+<text>learn()</text>
 <px>2</px>
-<py>34</py>
+<py>30</py>
 </pin>
 <operation>
 <ID>_O93</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>138</x0>
-<y0>341</y0>
+<x0>132</x0>
+<y0>257</y0>
 <width>268</width>
 <height>48</height>
 <inconnectx0>0</inconnectx0>
@@ -403,33 +572,23 @@ recognize_thread.start();
 <outpinheight>20</outpinheight>
 <inpinlinkcount>1</inpinlinkcount>
 <description></description>
-<codetext>// 録音した音声をテンプレートにセットする
+<codetext>// 録音した音声を学習する
 
 
-// キーコードをセット
-int c = Integer.parseInt( ((SpannableStringBuilder)code.getText()).toString() );
-((VoiceTemplate)(voice_template.get(voice_no))).code = c;
-
-// 音声の長さをセット
-((VoiceTemplate)(voice_template.get(voice_no))).length = voice.length;
-
-// 重み係数をセット
-double w = Double.parseDouble( ((SpannableStringBuilder)weight.getText()).toString() );
-((VoiceTemplate)(voice_template.get(voice_no))).weight = w;
-
-// 音声データをセット
-int vs = ( vstart * HEARING_WIDTH / 100 ) * HEARING_HEIGHT;
-int ve = ( vend  * HEARING_WIDTH / 100 ) * HEARING_HEIGHT;
-if( vs &gt; voice.length ) vs = voice.length;
-if( ve &gt; voice.length ) ve = voice.length;
-if( vs &gt;= ve ) return;
-int vlength = ve - vs;
-double[] v = new double[ vlength ];
-for( int i = 0; i &lt; vlength; i++ ) v[ i ] = voice[ i + vs ];
-((VoiceTemplate)(voice_template.get(voice_no))).voice = v;
-
-// 表示を更新
-update_display();
+if(tsize &gt; 0){
+  double[] u =((VoiceTemplate)(voice_template.get(voice_no))).voice;
+  double[] v = new double[tsize];
+  for(int i = 0; i &lt; v.length; i++){
+  if(i &lt; u.length) v[i] = u[i]; else v[i] = 0;
+  }
+  for(int i = 0; i &lt; v.length; i++){
+    double d = 0;
+    if(i &lt; voice.length) d = voice[i];
+    v[i] = ((learn_param - 1.0) * v[i] + d) / learn_param;
+  }
+  ((VoiceTemplate)(voice_template.get(voice_no))).voice = v;
+  update_display();
+}
 </codetext>
 </operation>
 <relation>
@@ -439,59 +598,179 @@ update_display();
 </relation>
 <pin>
 <ID>_P102</ID>
-<x0>370</x0>
-<y0>132</y0>
+<x0>302</x0>
+<y0>109</y0>
 <width>108</width>
 <height>27</height>
 <text>result(String s)</text>
-<px>63</px>
-<py>41</py>
+<px>67</px>
+<py>38</py>
 </pin>
 <codeclip>
 <ID>_C105</ID>
-<x0>27</x0>
-<y0>11</y0>
+<x0>29</x0>
+<y0>2</y0>
 <width>224</width>
 <height>36</height>
 <codetext>// 三角関数テーブル
 double[][] sin_table, cos_table;
 </codetext>
 </codeclip>
-<codeclip>
-<ID>_C108</ID>
-<x0>29</x0>
-<y0>223</y0>
-<width>263</width>
-<height>36</height>
-<codetext>// 音声の平滑フィルタ処理
-public double[] do_filter( double[] in ){
-  int x, y, x0, y0, i, j, width, filter_height;
-  double  a, out[];
+<pin>
+<ID>_P111</ID>
+<x0>27</x0>
+<y0>329</y0>
+<width>60</width>
+<height>30</height>
+<text>ins()</text>
+<px>0</px>
+<py>48</py>
+</pin>
+<pin>
+<ID>_P112</ID>
+<x0>26</x0>
+<y0>389</y0>
+<width>60</width>
+<height>30</height>
+<text>del()</text>
+<px>0</px>
+<py>65</py>
+</pin>
+<pin>
+<ID>_P113</ID>
+<x0>25</x0>
+<y0>449</y0>
+<width>60</width>
+<height>30</height>
+<text>exit()</text>
+<px>120</px>
+<py>65</py>
+</pin>
+<operation>
+<ID>_O114</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>137</x0>
+<y0>323</y0>
+<width>260</width>
+<height>49</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>27</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// 録音した音声をテンプレートに挿入する
 
-  if( in == null ) return null;
 
-  out = new double[ in.length ];
-  filter_height = 2 * filter_size + 1;
-  width = in.length / HEARING_HEIGHT;
-  for( x =0; x &lt; width; x++ ){
-    for( y =0; y &lt; HEARING_HEIGHT; y++ ){
-      a = 0.0;
-      for( i = - filter_size; i &lt;= filter_size; i++ ){
-        x0 = x + i;
-        for( j = - filter_size; j &lt;= filter_size; j++ ){
-          y0 = y + j;
-          if( x0 &gt;= 0 &amp;&amp; x0 &lt; width &amp;&amp; y0 &gt;=0 &amp;&amp; y0 &lt; HEARING_HEIGHT ){
-            a += in[ HEARING_HEIGHT * x0 + y0 ] * filter[ filter_height *( i + filter_size ) + ( j + filter_size ) ];
-          }
-        }
-      }
-      out[ HEARING_HEIGHT * x + y ] = a;
-    }
-  }
-  return out;
-}
+if(voice == null) return;
+double[] v = new double[voice.length];
+for(int i = 0; i &lt; voice.length; i++) v[i] = voice[i];
+String t = ((SpannableStringBuilder)text.getText()).toString();
+double w = Double.parseDouble(((SpannableStringBuilder)weight.getText()).toString());
+int c = Integer.parseInt(((SpannableStringBuilder)code.getText()).toString());
+VoiceTemplate vt = new VoiceTemplate(t, w, c, v);
+voice_template.insertElementAt(vt, voice_no);
+
+// 表示を更新
+update_display();
 </codetext>
-</codeclip>
+</operation>
+<relation>
+<ID>_R115</ID>
+<pin1name>_P111</pin1name>
+<pin2name>_O114</pin2name>
+</relation>
+<operation>
+<ID>_O116</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>134</x0>
+<y0>386</y0>
+<width>260</width>
+<height>43</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>25</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// テンプレートから音声を削除する
+
+
+
+voice_template.removeElementAt(voice_no);
+int size = voice_template.size();
+if(voice_no &gt;= size) voice_no = size -1; 
+
+// 表示を更新
+update_display();
+</codetext>
+</operation>
+<relation>
+<ID>_R117</ID>
+<pin1name>_P112</pin1name>
+<pin2name>_O116</pin2name>
+</relation>
+<operation>
+<ID>_O118</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>134</x0>
+<y0>447</y0>
+<width>129</width>
+<height>49</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// 終了処理
+
+
+
+try{
+is_running = false;
+record_thread.join();
+} catch(Exception e){}
+</codetext>
+</operation>
+<relation>
+<ID>_R119</ID>
+<pin1name>_P113</pin1name>
+<pin2name>_O118</pin2name>
+</relation>
 </xobject>
 <relation>
 <ID>_R89</ID>
@@ -500,10 +779,10 @@ public double[] do_filter( double[] in ){
 </relation>
 <xobject>
 <ID>_X91</ID>
-<x0>380</x0>
-<y0>184</y0>
+<x0>435</x0>
+<y0>218</y0>
 <width>173</width>
-<height>73</height>
+<height>58</height>
 <ID_maker>17</ID_maker>
 <objectname>File_IO</objectname>
 <description></description>
@@ -514,8 +793,8 @@ public double[] do_filter( double[] in ){
 <width>65</width>
 <height>29</height>
 <text>save()</text>
-<px>8</px>
-<py>53</py>
+<px>0</px>
+<py>42</py>
 </pin>
 <pin>
 <ID>_P12</ID>
@@ -524,8 +803,8 @@ public double[] do_filter( double[] in ){
 <width>60</width>
 <height>30</height>
 <text>load()</text>
-<px>7</px>
-<py>32</py>
+<px>0</px>
+<py>28</py>
 </pin>
 <operation>
 <ID>_O13</ID>
@@ -581,60 +860,56 @@ BufferedReader din = new BufferedReader( new FileReader(voice_data_file));
 while(true){
   if( ( line=din.readLine() ) == null ) return;
   if( line.equals( &quot;&quot; ) ) break;
-  if( line.startsWith(&quot;startup_time=&quot;))        startup_time=Integer.parseInt(line.substring(13));
-  if( line.startsWith(&quot;sound_filter=&quot;))          sound_filter=Double.parseDouble(line.substring(13));
-  if( line.startsWith(&quot;thresh_trigger_on=&quot;)) thresh_trigger_on=Double.parseDouble(line.substring(18));
+  if( line.equals(&quot;debug_mode=true&quot;))         debug_mode=true;
+  if( line.equals(&quot;debug_mode=false&quot;))        debug_mode=false;
+  if( line.equals(&quot;auto_learn=true&quot;))         auto_learn=true;
+  if( line.equals(&quot;auto_learn=false&quot;))        auto_learn=false;
+  if( line.equals(&quot;flog_scale=true&quot;))         flog_scale=true;
+  if( line.equals(&quot;flog_scale=false&quot;))        flog_scale=false;
+  if( line.equals(&quot;alog_scale=true&quot;))         alog_scale=true;
+  if( line.equals(&quot;alog_scale=false&quot;))        alog_scale=false;
+  if( line.startsWith(&quot;startup_time=&quot;))       startup_time=Integer.parseInt(line.substring(13));
+  if( line.startsWith(&quot;sound_filter=&quot;))       sound_filter=Double.parseDouble(line.substring(13));
+  if( line.startsWith(&quot;thresh_trigger_on=&quot;))  thresh_trigger_on=Double.parseDouble(line.substring(18));
   if( line.startsWith(&quot;thresh_trigger_off=&quot;)) thresh_trigger_off=Double.parseDouble(line.substring(19));
-  if( line.startsWith(&quot;thresh_count_on=&quot;))   thresh_count_on=Integer.parseInt(line.substring(16));
+  if( line.startsWith(&quot;thresh_count_on=&quot;))    thresh_count_on=Integer.parseInt(line.substring(16));
   if( line.startsWith(&quot;thresh_count_off=&quot;))   thresh_count_off=Integer.parseInt(line.substring(17));
-  if( line.startsWith(&quot;thresh_recognize=&quot;))  thresh_recognize=Double.parseDouble(line.substring(17));
-  if( line.startsWith(&quot;rcompress=&quot;))              rcompress=Double.parseDouble(line.substring(10));
-  if( line.startsWith(&quot;filter_size=&quot;))               filter_size=Integer.parseInt(line.substring(12));
-  if( line.startsWith(&quot;kpenalty=&quot;))                 kpenalty=Double.parseDouble(line.substring(9));
+  if( line.startsWith(&quot;thresh_recognize=&quot;))   thresh_recognize=Double.parseDouble(line.substring(17));
+  if( line.startsWith(&quot;bias=&quot;))               bias=Double.parseDouble(line.substring(5));
+  if( line.startsWith(&quot;acompress=&quot;))          acompress=Double.parseDouble(line.substring(10));
+  if( line.startsWith(&quot;learn_param=&quot;))        learn_param=Double.parseDouble(line.substring(12));
+  if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
 }
 
-// フィルタ係数を読み込む
-int size = filter_size *2 + 1, i = 0;
-filter = new double[ size * size ];
-while(true){
-  if( ( line=din.readLine() ) == null ) return;
-  if( line.equals( &quot;&quot; ) ) break;
-  filter[ i ++] = Double.parseDouble(line);
-}
-
-// 聴覚感度補正データを読み込む
 hosei = new double[HEARING_HEIGHT];
-i = 0;
-while(true){
-  if( ( line=din.readLine() ) == null ) return;
+for(int i = 0; true; i++){
+  if((line=din.readLine()) == null){din.close(); return;}
   if( line.equals( &quot;&quot; ) ) break;
-  hosei[ i ++] = Double.parseDouble(line);
+  hosei[i%HEARING_HEIGHT] = Double.parseDouble(line);
 }
 
 // 音声データを読み込む
 voice_template = new Vector();
 while(true){
-  if( ( line=din.readLine() ) == null ) return;
-  if( line.equals( &quot;END&quot; ) ) break;
+  if((line=din.readLine()) == null){din.close(); return;}
+  if(line.equals(&quot;END&quot;)) break;
   String t = line;
-  if( ( line=din.readLine() ) == null ) return;
-  int c = Integer.parseInt(line);
-  if( ( line=din.readLine() ) == null ) return;
-  int l = Integer.parseInt(line);
-  if( ( line=din.readLine() ) == null ) return;
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
   double w = Double.parseDouble(line);
-  if( ( line=din.readLine() ) == null ) return;
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int c = Integer.parseInt(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
   int s = Integer.parseInt(line);
-  double[] v = new double[ s ];
-  for( i = 0; i &lt; s; i++ ){
-    if( ( line=din.readLine() ) == null ) return;
+  double[] v = new double[s];
+  for(int i = 0; i &lt; s; i++){
+    if((line=din.readLine()) == null){din.close(); return;}
     v[i] = Double.parseDouble(line);
   }
-  voice_template.add( new VoiceTemplate( t, c, l, w, v ) );
+  voice_template.add(new VoiceTemplate(t, w, c, v));
 }
 
 din.close();
-} catch( Exception e ){}
+} catch( Exception e ){ dprint(e+&quot;\n&quot;); }
 
 voice_no = 0;
 </codetext>
@@ -666,48 +941,44 @@ voice_no = 0;
 <codetext>//音声テンプレートを保存する
 
 try{
-  BufferedWriter dout = new BufferedWriter( new FileWriter( voice_data_file ) );
+  BufferedWriter dout = new BufferedWriter( new FileWriter(voice_data_file) );
   
   // 変数を保存する
-  dout.write(&quot;startup_time=&quot;+ startup_time + &quot;\n&quot;);
-  dout.write(&quot;sound_filter=&quot;+ sound_filter + &quot;\n&quot;);
-  dout.write(&quot;thresh_trigger_on=&quot;+ thresh_trigger_on + &quot;\n&quot;);
-  dout.write(&quot;thresh_trigger_off=&quot;+ thresh_trigger_off + &quot;\n&quot;);
-  dout.write(&quot;thresh_count_on=&quot;+ thresh_count_on + &quot;\n&quot;);
-  dout.write(&quot;thresh_count_off=&quot;+ thresh_count_off + &quot;\n&quot;);
-  dout.write(&quot;thresh_recognize=&quot;+ thresh_recognize + &quot;\n&quot;);
-  dout.write(&quot;rcompress=&quot;+ rcompress + &quot;\n&quot;);
-  dout.write(&quot;filter_size=&quot;+ filter_size + &quot;\n&quot;);
-  dout.write(&quot;kpenalty=&quot;+ kpenalty + &quot;\n&quot;);
+  dout.write(&quot;auto_learn=&quot; + auto_learn + &quot;\n&quot;);
+  dout.write(&quot;flog_scale=&quot; + flog_scale + &quot;\n&quot;);
+  dout.write(&quot;alog_scale=&quot; + alog_scale + &quot;\n&quot;);
+  dout.write(&quot;startup_time=&quot; + startup_time + &quot;\n&quot;);
+  dout.write(&quot;sound_filter=&quot; + sound_filter + &quot;\n&quot;);
+  dout.write(&quot;thresh_trigger_on=&quot; + thresh_trigger_on + &quot;\n&quot;);
+  dout.write(&quot;thresh_trigger_off=&quot; + thresh_trigger_off + &quot;\n&quot;);
+  dout.write(&quot;thresh_count_on=&quot; + thresh_count_on + &quot;\n&quot;);
+  dout.write(&quot;thresh_count_off=&quot; + thresh_count_off + &quot;\n&quot;);
+  dout.write(&quot;thresh_recognize=&quot; + thresh_recognize + &quot;\n&quot;);
+  dout.write(&quot;bias=&quot; + bias + &quot;\n&quot;);
+  dout.write(&quot;acompress=&quot; + acompress + &quot;\n&quot;);
+  dout.write(&quot;learn_param=&quot; + learn_param + &quot;\n&quot;);
+  dout.write(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
   dout.write(&quot;\n&quot;);
-  
-  // フィルタ係数を保存する
-  int size = filter_size * 2 + 1;
-  for( int i = 0; i &lt; size * size; i++ ) dout.write( filter[ i ] + &quot;\n&quot; );
-  dout.write(&quot;\n&quot;);
-  
-  // 聴覚感度補正データを保存する
-  for( int i = 0; i &lt; HEARING_HEIGHT; i++ ) dout.write( hosei[ i ] + &quot;\n&quot; );
+
+  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
+    dout.write(hosei[i] + &quot;\n&quot;);
+  }
   dout.write(&quot;\n&quot;);
   
   // 音声データを保存する
   for( int i = 0; i &lt; voice_template.size(); i++ ){
-    dout.write( ((VoiceTemplate)voice_template.get(i)).text + &quot;\n&quot; );
-    dout.write( ((VoiceTemplate)voice_template.get(i)).code + &quot;\n&quot; );
-    dout.write( ((VoiceTemplate)voice_template.get(i)).length + &quot;\n&quot; );
-    dout.write( ((VoiceTemplate)voice_template.get(i)).weight + &quot;\n&quot; );
+    dout.write(((VoiceTemplate)voice_template.get(i)).text + &quot;\n&quot; );
+    dout.write(((VoiceTemplate)voice_template.get(i)).weight + &quot;\n&quot; );
+    dout.write(((VoiceTemplate)voice_template.get(i)).code + &quot;\n&quot; );
     double[] v = ((VoiceTemplate)(voice_template.get(i))).voice;
     dout.write(v.length + &quot;\n&quot;);
-    for ( int j = 0; j &lt;  v.length; j++ ){
-      dout.write( v[j] + &quot;\n&quot;);
+    for (int j = 0; j &lt;  v.length; j++){
+      dout.write(v[j] + &quot;\n&quot;);
     }
   }
   dout.write(&quot;END\n&quot;);
-
-  // キーボードデータを保存する
-
   dout.close();
-} catch( Exception e ){}
+} catch( Exception e ){dprint(e+&quot;\n&quot;);}
 </codetext>
 </operation>
 <relation>
@@ -723,11 +994,11 @@ try{
 </xobject>
 <xobject>
 <ID>_X92</ID>
-<x0>381</x0>
-<y0>323</y0>
+<x0>436</x0>
+<y0>367</y0>
 <width>178</width>
-<height>183</height>
-<ID_maker>28</ID_maker>
+<height>191</height>
+<ID_maker>44</ID_maker>
 <objectname>Display</objectname>
 <description></description>
 <pin>
@@ -737,8 +1008,8 @@ try{
 <width>60</width>
 <height>30</height>
 <text>prev()</text>
-<px>0</px>
-<py>46</py>
+<px>2</px>
+<py>26</py>
 </pin>
 <pin>
 <ID>_P1</ID>
@@ -747,45 +1018,35 @@ try{
 <width>60</width>
 <height>30</height>
 <text>next()</text>
-<px>0</px>
-<py>64</py>
+<px>2</px>
+<py>42</py>
 </pin>
 <pin>
 <ID>_P2</ID>
 <x0>22</x0>
 <y0>193</y0>
-<width>75</width>
-<height>27</height>
-<text>set(int val)</text>
+<width>137</width>
+<height>23</height>
+<text>voice_no_set(int v)</text>
 <px>0</px>
-<py>29</py>
-</pin>
-<pin>
-<ID>_P3</ID>
-<x0>3</x0>
-<y0>442</y0>
-<width>146</width>
-<height>24</height>
-<text>seimon_is(TextView t)</text>
-<px>0</px>
-<py>125</py>
+<py>60</py>
 </pin>
 <pin>
 <ID>_P4</ID>
-<x0>10</x0>
-<y0>380</y0>
+<x0>11</x0>
+<y0>311</y0>
 <width>115</width>
 <height>23</height>
 <text>paint(Canvas g)</text>
-<px>0</px>
-<py>144</py>
+<px>1</px>
+<py>174</py>
 </pin>
 <operation>
 <ID>_O6</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>180</x0>
-<y0>297</y0>
+<x0>171</x0>
+<y0>240</y0>
 <width>155</width>
 <height>50</height>
 <inconnectx0>0</inconnectx0>
@@ -829,14 +1090,22 @@ for( int x = 0; x &lt; xwidth; x++ ){
   }
 }
 
+// 末尾を表示
+float x = tsize / HEARING_HEIGHT * width / HEARING_WIDTH;
+paint.setStyle(Paint.Style.STROKE); 
+paint.setStrokeWidth(2.0f);
+paint.setColor(Color.rgb( 255, 0, 0));
+g.drawLine( x, 0, x, height-1, paint);
+
+
 dprint(&quot;display template end\n&quot;);
 
 </codetext>
 </operation>
 <codeclip>
 <ID>_C8</ID>
-<x0>90</x0>
-<y0>16</y0>
+<x0>351</x0>
+<y0>70</y0>
 <width>190</width>
 <height>21</height>
 <codetext>Paint paint = new Paint();
@@ -870,7 +1139,7 @@ dprint(&quot;display template end\n&quot;);
 
 
 voice_no--;
-if(voice_no &lt;0 ) voice_no = 0;
+if(voice_no &lt; 0) voice_no = 0;
 update_display();
 </codetext>
 </operation>
@@ -908,7 +1177,7 @@ update_display();
 
 
 voice_no++;
-if( voice_no &gt;= voice_template.size() ) voice_no = voice_template.size() - 1;
+if(voice_no &gt;= voice_template.size()) voice_no = voice_template.size() - 1;
 update_display();
 </codetext>
 </operation>
@@ -944,7 +1213,7 @@ update_display();
 <codetext>// 番号をセットする
 
 
-voice_no = val * voice_template.size() / 100;
+voice_no = val * (voice_template.size()-1) / 100;
 update_display();
 </codetext>
 </operation>
@@ -953,96 +1222,22 @@ update_display();
 <pin1name>_P2</pin1name>
 <pin2name>_O13</pin2name>
 </relation>
-<operation>
-<ID>_O15</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>183</x0>
-<y0>423</y0>
-<width>148</width>
-<height>55</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(TextView t)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>33</inpiny0>
-<inpinwidth>97</inpinwidth>
-<inpinheight>21</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>seimon = t;
-</codetext>
-</operation>
-<relation>
-<ID>_R16</ID>
-<pin1name>_P3</pin1name>
-<pin2name>_O15</pin2name>
-</relation>
-<pin>
-<ID>_P17</ID>
-<x0>6</x0>
-<y0>508</y0>
-<width>135</width>
-<height>23</height>
-<text>text_is(TextView t)</text>
-<px>0</px>
-<py>162</py>
-</pin>
-<operation>
-<ID>_O18</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>185</x0>
-<y0>492</y0>
-<width>148</width>
-<height>55</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(TextView t)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>33</inpiny0>
-<inpinwidth>97</inpinwidth>
-<inpinheight>21</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>text = t;
-</codetext>
-</operation>
-<relation>
-<ID>_R19</ID>
-<pin1name>_P17</pin1name>
-<pin2name>_O18</pin2name>
-</relation>
 <pin>
 <ID>_P20</ID>
-<x0>8</x0>
-<y0>306</y0>
+<x0>9</x0>
+<y0>253</y0>
 <width>110</width>
 <height>22</height>
 <text>paint0(Canvas g)</text>
 <px>0</px>
-<py>104</py>
+<py>137</py>
 </pin>
 <operation>
 <ID>_O21</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>180</x0>
-<y0>358</y0>
+<x0>170</x0>
+<y0>307</y0>
 <width>156</width>
 <height>52</height>
 <inconnectx0>0</inconnectx0>
@@ -1088,21 +1283,12 @@ for( int x = 0; x &lt; xwidth; x++ ){
   }
 }
 
-// 先頭を表示
-int x = vstart * width / 100;
-paint.setStyle(Paint.Style.STROKE); 
-paint.setStrokeWidth(2.0f);
-paint.setColor(Color.rgb( 0, 255, 0));
-g.drawLine( x, 0, x, height-1, paint);
-
 // 末尾を表示
-x = vend * width / 100;
+float x = tsize / HEARING_HEIGHT * width / HEARING_WIDTH;
 paint.setStyle(Paint.Style.STROKE); 
 paint.setStrokeWidth(2.0f);
 paint.setColor(Color.rgb( 255, 0, 0));
 g.drawLine( x, 0, x, height-1, paint);
-
-
 
 dprint(&quot;display voice end\n&quot;);
 
@@ -1118,22 +1304,57 @@ dprint(&quot;display voice end\n&quot;);
 <pin1name>_P4</pin1name>
 <pin2name>_O21</pin2name>
 </relation>
-<pin>
-<ID>_P25</ID>
-<x0>4</x0>
-<y0>249</y0>
-<width>150</width>
-<height>25</height>
-<text>seimon0_is(TextView t)</text>
-<px>0</px>
-<py>82</py>
-</pin>
 <operation>
-<ID>_O26</ID>
+<ID>_O28</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>177</x0>
-<y0>232</y0>
+<x0>187</x0>
+<y0>399</y0>
+<width>117</width>
+<height>51</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(int v)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>69</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>bright = v;
+
+
+update_display();
+</codetext>
+</operation>
+<pin>
+<ID>_P29</ID>
+<x0>14</x0>
+<y0>398</y0>
+<width>106</width>
+<height>29</height>
+<text>bright_set(int v)</text>
+<px>0</px>
+<py>77</py>
+</pin>
+<relation>
+<ID>_R30</ID>
+<pin1name>_P29</pin1name>
+<pin2name>_O28</pin2name>
+</relation>
+<operation>
+<ID>_O36</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>185</x0>
+<y0>473</y0>
 <width>148</width>
 <height>55</height>
 <inconnectx0>0</inconnectx0>
@@ -1155,10 +1376,117 @@ dprint(&quot;display voice end\n&quot;);
 <codetext>seimon0 = t;
 </codetext>
 </operation>
+<operation>
+<ID>_O35</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>195</x0>
+<y0>551</y0>
+<width>148</width>
+<height>55</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(TextView t)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>33</inpiny0>
+<inpinwidth>97</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>seimon = t;
+</codetext>
+</operation>
+<pin>
+<ID>_P34</ID>
+<x0>0</x0>
+<y0>480</y0>
+<width>154</width>
+<height>28</height>
+<text>seimon0_is(TextView t)</text>
+<px>0</px>
+<py>117</py>
+</pin>
+<pin>
+<ID>_P33</ID>
+<x0>0</x0>
+<y0>571</y0>
+<width>154</width>
+<height>28</height>
+<text>seimon_is(TextView t)</text>
+<px>0</px>
+<py>158</py>
+</pin>
 <relation>
-<ID>_R27</ID>
-<pin1name>_P25</pin1name>
-<pin2name>_O26</pin2name>
+<ID>_R38</ID>
+<pin1name>_P34</pin1name>
+<pin2name>_O36</pin2name>
+</relation>
+<relation>
+<ID>_R37</ID>
+<pin1name>_P33</pin1name>
+<pin2name>_O35</pin2name>
+</relation>
+<codeclip>
+<ID>_C40</ID>
+<x0>351</x0>
+<y0>39</y0>
+<width>212</width>
+<height>21</height>
+<codetext>int HEARING_WIDTH = 64;
+</codetext>
+</codeclip>
+<pin>
+<ID>_P41</ID>
+<x0>391</x0>
+<y0>129</y0>
+<width>119</width>
+<height>30</height>
+<text>length_set(int v)</text>
+<px>0</px>
+<py>98</py>
+</pin>
+<operation>
+<ID>_O42</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>528</x0>
+<y0>129</y0>
+<width>210</width>
+<height>56</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(int v)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>54</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// テンプレートのサイズをセット
+
+
+tsize = v * HEARING_HEIGHT * HEARING_WIDTH / 100;
+update_display();
+</codetext>
+</operation>
+<relation>
+<ID>_R43</ID>
+<pin1name>_P41</pin1name>
+<pin2name>_O42</pin2name>
 </relation>
 </xobject>
 <relation>
@@ -1171,30 +1499,23 @@ dprint(&quot;display voice end\n&quot;);
 <pin1name>_A88(_PAnext)</pin1name>
 <pin2name>_X92(_P1)</pin2name>
 </relation>
-<relation>
-<ID>_R98</ID>
-<pin1name>_A88(_PAref_count)</pin1name>
-<pin2name>_X92(_P2)</pin2name>
-</relation>
 <codeclip>
 <ID>_C103</ID>
-<x0>608</x0>
-<y0>89</y0>
-<width>378</width>
-<height>257</height>
+<x0>622</x0>
+<y0>82</y0>
+<width>358</width>
+<height>219</height>
 <codetext>// 音声テンプレート
 Vector voice_template;
 class VoiceTemplate{
   String text;    // 表示テキスト
+  double weight; // 重み(優先順位)
   int code;        // キーコード
-  int length;      // 音声の長さ
-  double weight; // 重み係数(音声認識の優先度)
   double[] voice; // 音声データ
-  VoiceTemplate( String t, int c, int l, double w, double[] v ){
+  VoiceTemplate( String t, double w, int c, double[] v ){
     text = t;
-    code = c;
-    length = l;
     weight = w;
+    code = c;
     voice = v;  
   }
 }
@@ -1203,26 +1524,27 @@ class VoiceTemplate{
 </codeclip>
 <codeclip>
 <ID>_C104</ID>
-<x0>0</x0>
+<x0>6</x0>
 <y0>0</y0>
-<width>287</width>
-<height>263</height>
+<width>308</width>
+<height>220</height>
 <codetext>// 各種パラメータ
-boolean is_running = false;
-int bright = 0;  // 声紋表示の輝度調節
+boolean flog_scale = false; // 周波数スケール
+boolean alog_scale = false; // 振幅スケール
 int startup_time = 300;
 double sound_filter = 150.0;
-double thresh_trigger_on = 4;
-double thresh_trigger_off = 4;
+double thresh_trigger_on = 2;
+double thresh_trigger_off = 2;
 int thresh_count_on = 4;
 int thresh_count_off = 10;
 double thresh_recognize = 0.1;
-double rcompress = 0.3; // レンジ圧縮用
-int filter_size = 1; // 平滑フィルタのサイズ
-int vstart = 1; // 音声の先頭
-int vend   = 1; // 音声の末尾
-int voice_no = 0; // 音声番号
-double kpenalty = 1.0; //音声の長さ比較用
+double bias = 1; // ノイズ抑制用バイアス
+double acompress = 0.3;  // 振幅圧縮係数
+double learn_param = 8;  // 学習パラメータ
+double limit_length = 1.1; // 音声の長さ比較用
+
+
+boolean auto_learn=false;
 </codetext>
 </codeclip>
 <relation>
@@ -1241,19 +1563,9 @@ double kpenalty = 1.0; //音声の長さ比較用
 <pin2name>_X91(_P1)</pin2name>
 </relation>
 <relation>
-<ID>_R110</ID>
-<pin1name>_A88(_Ptext)</pin1name>
-<pin2name>_X92(_P17)</pin2name>
-</relation>
-<relation>
 <ID>_R111</ID>
 <pin1name>_A88(_PPseimon)</pin1name>
 <pin2name>_X92(_P4)</pin2name>
-</relation>
-<relation>
-<ID>_R112</ID>
-<pin1name>_A88(_Pseimon)</pin1name>
-<pin2name>_X92(_P3)</pin2name>
 </relation>
 <relation>
 <ID>_R114</ID>
@@ -1262,20 +1574,24 @@ double kpenalty = 1.0; //音声の長さ比較用
 </relation>
 <codeclip>
 <ID>_C116</ID>
-<x0>607</x0>
-<y0>446</y0>
-<width>377</width>
-<height>37</height>
+<x0>790</x0>
+<y0>335</y0>
+<width>184</width>
+<height>34</height>
 <codetext>// 音声テンプレートファイル
-File voice_data_file = new File( Environment.getExternalStorageDirectory(),&quot;VoiceData.txt&quot; );
+File voice_data_file = new File( &quot;/sdcard/VoiceData.txt&quot; );
+
+
+//File voice_data_file = new File( Environment.getDataDirectory(),&quot;VoiceData.txt&quot; );
+
 </codetext>
 </codeclip>
 <operation>
 <ID>_O117</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>608</x0>
-<y0>352</y0>
+<x0>636</x0>
+<y0>307</y0>
 <width>125</width>
 <height>51</height>
 <inconnectx0>0</inconnectx0>
@@ -1315,34 +1631,15 @@ update_display();
 </relation>
 <codeclip>
 <ID>_C121</ID>
-<x0>608</x0>
+<x0>622</x0>
 <y0>0</y0>
-<width>285</width>
-<height>85</height>
+<width>284</width>
+<height>82</height>
 <codetext>// 定数
 static final int SAMPLING_RATE = 16000;
-static final int HEARING_WIDTH = 40;
 static final int HEARING_HEIGHT = 128;
 static final int SOUND_DFT_SIZE = 256;
-</codetext>
-</codeclip>
-<codeclip>
-<ID>_C122</ID>
-<x0>300</x0>
-<y0>2</y0>
-<width>299</width>
-<height>179</height>
-<codetext>// 変数
-Handler handler = new Handler();
-TextView seimon;   // 録音した音声の声紋表示
-TextView seimon0; // テンプレートの声紋表示
-TextView text;      // テキスト表示
-EditText  code;     // キーコード
-EditText  weight;   // 重み係数
-TextView result;    // 認識結果の表示
-double[] voice;      // 録音した音声
-double[] hosei;      // 聴覚感度補正係数
-double[] filter;      // 平滑フィルタ
+static final int TRIGGER_MARGIN = 2;
 </codetext>
 </codeclip>
 <プロパティ>
@@ -1356,8 +1653,8 @@ double[] filter;      // 平滑フィルタ
 <MesgWiny0>0</MesgWiny0>
 <MesgWinWidth>1024</MesgWinWidth>
 <MesgWinHeight>744</MesgWinHeight>
-<FileWinx0>80</FileWinx0>
-<FileWiny0>305</FileWiny0>
+<FileWinx0>89</FileWinx0>
+<FileWiny0>478</FileWiny0>
 <FileWinWidth>578</FileWinWidth>
 <FileWinHeight>262</FileWinHeight>
 <EditWinx0>347</EditWinx0>
@@ -1465,7 +1762,7 @@ Startup();
 </ProgramStartupCode3>
 <NativeHelpCommand3></NativeHelpCommand3>
 <MoveStep>8</MoveStep>
-<ImageEditCommand></ImageEditCommand>
+<ImageEditCommand>mtpaint</ImageEditCommand>
 <CompilerFileName>javac.exe</CompilerFileName>
 <CompileCommand4>./compile_vkeycontrol VKeyboardControl com example voice_keyboard_control</CompileCommand4>
 <RunCommand4>echo no action</RunCommand4>
@@ -1528,14 +1825,16 @@ public class HelloWorld extends Activity {
    }
 
    @Override
-    public void onPause(){
+    public void onStop(){
       if( ap != null ){
-         ap.is_running=false;
          try{
            ap.dbg.close();
          } catch(Exception e){}
+         ap.exit();
       }
       super.onStop();
+      finish();
+      System.exit(0);
     }
 
 }
@@ -1635,14 +1934,16 @@ int main( int argc, char** argv ){
 </プロパティ>
 <codeclip>
 <ID>_C124</ID>
-<x0>607</x0>
-<y0>522</y0>
-<width>206</width>
-<height>68</height>
-<codetext>// デバッグ表示
-FileWriter dbg;
+<x0>619</x0>
+<y0>434</y0>
+<width>214</width>
+<height>83</height>
+<codetext>// デバッグオブジェクト
 boolean debug_mode = false;
+String DEBUG_FILE=&quot;debug.txt&quot;;
+FileWriter dbg;
 public void dprint(String s){
+
   if(debug_mode){
     try{
       dbg.write(s);
@@ -1654,8 +1955,8 @@ public void dprint(String s){
 </codeclip>
 <codeclip>
 <ID>_C125</ID>
-<x0>609</x0>
-<y0>409</y0>
+<x0>618</x0>
+<y0>394</y0>
 <width>204</width>
 <height>36</height>
 <codetext>// 表示を更新する
@@ -1669,8 +1970,8 @@ dprint(&quot;update display\n&quot;);
       seimon0.invalidate();
       seimon.invalidate();
       text.setText( ((VoiceTemplate)(voice_template.get(voice_no))).text );
-      code.setText( &quot;&quot;+((VoiceTemplate)(voice_template.get(voice_no))).code );
       weight.setText( &quot;&quot;+((VoiceTemplate)(voice_template.get(voice_no))).weight );
+      code.setText( &quot;&quot;+((VoiceTemplate)(voice_template.get(voice_no))).code );
     }
   });
 }
@@ -1681,60 +1982,20 @@ dprint(&quot;update display\n&quot;);
 <pin1name>_A88(_PPseimon0)</pin1name>
 <pin2name>_X92(_P20)</pin2name>
 </relation>
-<relation>
-<ID>_R127</ID>
-<pin1name>_A88(_Pseimon0)</pin1name>
-<pin2name>_X92(_P25)</pin2name>
-</relation>
-<relation>
-<ID>_R128</ID>
-<pin1name>_A88(_PAstore)</pin1name>
-<pin2name>_X_G87(_P91)</pin2name>
-</relation>
 <xobject>
 <ID>_X_G130</ID>
-<x0>379</x0>
-<y0>508</y0>
-<width>180</width>
-<height>141</height>
+<x0>626</x0>
+<y0>525</y0>
+<width>177</width>
+<height>112</height>
 <objectname>Setter</objectname>
 <description></description>
-<operation>
-<ID>_O119</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>190</x0>
-<y0>79</y0>
-<width>117</width>
-<height>51</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(int val)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>29</inpiny0>
-<inpinwidth>69</inpinwidth>
-<inpinheight>21</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>bright = val;
-
-
-update_display();
-</codetext>
-</operation>
 <operation>
 <ID>_O113</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>187</x0>
-<y0>13</y0>
+<x0>188</x0>
+<y0>212</y0>
 <width>131</width>
 <height>51</height>
 <inconnectx0>0</inconnectx0>
@@ -1757,184 +2018,37 @@ update_display();
 </codetext>
 </operation>
 <pin>
-<ID>_P131</ID>
-<text>bright_is(int val)</text>
-<x0>8</x0>
-<y0>90</y0>
-<width>119</width>
-<height>24</height>
-<px>1</px>
-<py>49</py>
-</pin>
-<relation>
-<ID>_R132</ID>
-<pin2name>_O119</pin2name>
-<pin1name>_P131</pin1name>
-</relation>
-<pin>
 <ID>_P133</ID>
 <text>result_is(TextView t)</text>
-<x0>27</x0>
-<y0>31</y0>
-<width>80</width>
-<height>24</height>
+<x0>7</x0>
+<y0>238</y0>
+<width>144</width>
+<height>25</height>
 <px>0</px>
-<py>32</py>
+<py>87</py>
 </pin>
 <relation>
 <ID>_R134</ID>
 <pin2name>_O113</pin2name>
 <pin1name>_P133</pin1name>
 </relation>
-<ID_maker>147</ID_maker>
-<pin>
-<ID>_P135</ID>
-<x0>10</x0>
-<y0>139</y0>
-<width>110</width>
-<height>24</height>
-<text>vstart_is(int val)</text>
-<px>0</px>
-<py>69</py>
-</pin>
-<operation>
-<ID>_O136</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>192</x0>
-<y0>140</y0>
-<width>117</width>
-<height>51</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(int val)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>29</inpiny0>
-<inpinwidth>69</inpinwidth>
-<inpinheight>21</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>vstart = val;
-
-
-update_display();
-</codetext>
-</operation>
-<relation>
-<ID>_R137</ID>
-<pin1name>_P135</pin1name>
-<pin2name>_O136</pin2name>
-</relation>
-<pin>
-<ID>_P138</ID>
-<x0>11</x0>
-<y0>200</y0>
-<width>108</width>
-<height>28</height>
-<text>vend_is(int val)</text>
-<px>0</px>
-<py>89</py>
-</pin>
-<operation>
-<ID>_O139</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>193</x0>
-<y0>202</y0>
-<width>117</width>
-<height>51</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(int val)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>29</inpiny0>
-<inpinwidth>69</inpinwidth>
-<inpinheight>21</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>vend = val;
-
-
-update_display();
-</codetext>
-</operation>
-<relation>
-<ID>_R140</ID>
-<pin1name>_P138</pin1name>
-<pin2name>_O139</pin2name>
-</relation>
-<pin>
-<ID>_P141</ID>
-<x0>15</x0>
-<y0>272</y0>
-<width>138</width>
-<height>28</height>
-<text>weight_is(EditText e)</text>
-<px>0</px>
-<py>108</py>
-</pin>
-<operation>
-<ID>_O142</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>195</x0>
-<y0>272</y0>
-<width>131</width>
-<height>51</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(EditText e)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>30</inpiny0>
-<inpinwidth>91</inpinwidth>
-<inpinheight>21</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>weight =e;
-</codetext>
-</operation>
-<relation>
-<ID>_R143</ID>
-<pin1name>_P141</pin1name>
-<pin2name>_O142</pin2name>
-</relation>
+<ID_maker>160</ID_maker>
 <pin>
 <ID>_P144</ID>
-<x0>15</x0>
-<y0>351</y0>
+<x0>6</x0>
+<y0>163</y0>
 <width>133</width>
 <height>29</height>
 <text>code_is(EditText e)</text>
-<px>1</px>
-<py>125</py>
+<px>0</px>
+<py>69</py>
 </pin>
 <operation>
 <ID>_O145</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>195</x0>
-<y0>336</y0>
+<x0>192</x0>
+<y0>143</y0>
 <width>131</width>
 <height>51</height>
 <inconnectx0>0</inconnectx0>
@@ -1961,46 +2075,257 @@ update_display();
 <pin1name>_P144</pin1name>
 <pin2name>_O145</pin2name>
 </relation>
+<operation>
+<ID>_O147</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>182</x0>
+<y0>12</y0>
+<width>148</width>
+<height>55</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText t)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>33</inpiny0>
+<inpinwidth>97</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>text = t;
+</codetext>
+</operation>
+<pin>
+<ID>_P148</ID>
+<x0>8</x0>
+<y0>24</y0>
+<width>128</width>
+<height>31</height>
+<text>text_is(EditText t)</text>
+<px>0</px>
+<py>34</py>
+</pin>
+<relation>
+<ID>_R149</ID>
+<pin1name>_P148</pin1name>
+<pin2name>_O147</pin2name>
+</relation>
+<pin>
+<ID>_P157</ID>
+<x0>0</x0>
+<y0>83</y0>
+<width>130</width>
+<height>29</height>
+<text>weight_is(EditText t)</text>
+<px>0</px>
+<py>52</py>
+</pin>
+<operation>
+<ID>_O158</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>185</x0>
+<y0>77</y0>
+<width>148</width>
+<height>55</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText t)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>33</inpiny0>
+<inpinwidth>97</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>weight = t;
+</codetext>
+</operation>
+<relation>
+<ID>_R159</ID>
+<pin1name>_P157</pin1name>
+<pin2name>_O158</pin2name>
+</relation>
 </xobject>
-<relation>
-<ID>_R136</ID>
-<pin1name>_A88(_PAxbright)</pin1name>
-<pin2name>_X_G130(_P131)</pin2name>
-</relation>
-<relation>
-<ID>_R137</ID>
-<pin1name>_A88(_PAxvstart)</pin1name>
-<pin2name>_X_G130(_P135)</pin2name>
-</relation>
-<relation>
-<ID>_R138</ID>
-<pin1name>_A88(_PAxvend)</pin1name>
-<pin2name>_X_G130(_P138)</pin2name>
-</relation>
-<relation>
-<ID>_R140</ID>
-<pin1name>_A88(_Pweight)</pin1name>
-<pin2name>_X_G130(_P141)</pin2name>
-</relation>
 <relation>
 <ID>_R141</ID>
 <pin1name>_A88(_Pcode)</pin1name>
 <pin2name>_X_G130(_P144)</pin2name>
 </relation>
+<relation>
+<ID>_R145</ID>
+<pin1name>_A88(_PAlearn)</pin1name>
+<pin2name>_X_G87(_P91)</pin2name>
+</relation>
+<relation>
+<ID>_R146</ID>
+<pin1name>_A88(_PAins)</pin1name>
+<pin2name>_X_G87(_P111)</pin2name>
+</relation>
+<relation>
+<ID>_R147</ID>
+<pin1name>_A88(_PAdel)</pin1name>
+<pin2name>_X_G87(_P112)</pin2name>
+</relation>
 <codeclip>
-<ID>_C143</ID>
-<x0>606</x0>
-<y0>487</y0>
-<width>276</width>
-<height>34</height>
-<codetext>// デバッグファイル
-String DEBUG_FILE=&quot;debug.txt&quot;;
+<ID>_C148</ID>
+<x0>315</x0>
+<y0>0</y0>
+<width>291</width>
+<height>214</height>
+<codetext>// 変数
+Handler handler = new Handler();
+TextView seimon;   // 録音した音声の声紋
+TextView seimon0; // テンプレートの声紋
+EditText text;      // テキスト表示
+EditText weight;   // 重み(優先順位) 
+EditText code;     // キーコード
+TextView result;   // 認識結果の表示
+double[] voice;      // 録音した音声
+double[] hosei;      // 周波数補正係数
+int voice_no = 0;  // 音声番号
+int tsize = 0;       // テンプレートのサイズ
+int bright = 0;     // 声紋表示の輝度調節
+boolean is_running = false; // 実行中フラグ
 </codetext>
 </codeclip>
+<pin>
+<ID>_P149</ID>
+<x0>651</x0>
+<y0>361</y0>
+<width>44</width>
+<height>26</height>
+<text>exit()</text>
+<px>10</px>
+<py>40</py>
+</pin>
+<relation>
+<ID>_R150</ID>
+<pin1name>_P149</pin1name>
+<pin2name>_X_G87(_P113)</pin2name>
+</relation>
+<relation>
+<ID>_R151</ID>
+<pin1name>_A88(_PAbright)</pin1name>
+<pin2name>_X92(_P29)</pin2name>
+</relation>
+<relation>
+<ID>_R154</ID>
+<pin1name>_A88(_Ptext)</pin1name>
+<pin2name>_X_G130(_P148)</pin2name>
+</relation>
+<relation>
+<ID>_R155</ID>
+<pin1name>_A88(_Pseimon0)</pin1name>
+<pin2name>_X92(_P34)</pin2name>
+</relation>
+<relation>
+<ID>_R156</ID>
+<pin1name>_A88(_Pseimon)</pin1name>
+<pin2name>_X92(_P33)</pin2name>
+</relation>
+<relation>
+<ID>_R157</ID>
+<pin1name>_A88(_PAvoice_no)</pin1name>
+<pin2name>_X92(_P2)</pin2name>
+</relation>
+<relation>
+<ID>_R158</ID>
+<pin1name>_A88(_Pweight)</pin1name>
+<pin2name>_X_G130(_P157)</pin2name>
+</relation>
+<relation>
+<ID>_R159</ID>
+<pin1name>_A88(_PAlength)</pin1name>
+<pin2name>_X92(_P41)</pin2name>
+</relation>
+<xobject>
+<ID>_X160</ID>
+<x0>10</x0>
+<y0>271</y0>
+<width>107</width>
+<height>68</height>
+<ID_maker>30</ID_maker>
+<objectname>config</objectname>
+<description></description>
+<pin>
+<ID>_P1</ID>
+<x0>21</x0>
+<y0>63</y0>
+<width>109</width>
+<height>26</height>
+<text>start(Object l)</text>
+<px>2</px>
+<py>28</py>
+</pin>
+<pin>
+<ID>_P4</ID>
+<x0>102</x0>
+<y0>399</y0>
+<width>60</width>
+<height>30</height>
+<text>config()</text>
+<px>52</px>
+<py>45</py>
+</pin>
+<operation>
+<ID>_O5</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>144</x0>
+<y0>59</y0>
+<width>164</width>
+<height>52</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(Object o)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>27</inpiny0>
+<inpinwidth>83</inpinwidth>
+<inpinheight>25</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>114</outpinx0>
+<outpiny0>32</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// メインコンテナを取得
+
+
+
+main_container = (AbsoluteLayout)o;
+</codetext>
+</operation>
+<relation>
+<ID>_R6</ID>
+<pin1name>_P1</pin1name>
+<pin2name>_O5</pin2name>
+</relation>
+<relation>
+<ID>_R7</ID>
+<pin1name>_O5</pin1name>
+<pin2name>_A2(_Pstart)</pin2name>
+</relation>
 <aobject>
-<ID>_A88</ID>
-<x0>73</x0>
-<y0>274</y0>
+<ID>_A2</ID>
+<x0>324</x0>
+<y0>85</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
@@ -2069,164 +2394,64 @@ XGUI x = new XGUI();
 </codetext>
 </operation>
 <pin>
-<ID>_PAsave</ID>
+<ID>_Ptext</ID>
 <x0>0</x0>
 <y0>110</y0>
 <width>200</width>
 <height>26</height>
-<text>save_clicked()</text>
+<text>text_created(EditText e)</text>
 <px>0</px>
 <py>72</py>
 </pin>
 <pin>
-<ID>_PAstore</ID>
+<ID>_PAclose</ID>
 <x0>0</x0>
 <y0>138</y0>
 <width>200</width>
 <height>26</height>
-<text>store_clicked()</text>
+<text>close_clicked()</text>
 <px>0</px>
 <py>90</py>
 </pin>
 <pin>
-<ID>_PAref_count</ID>
+<ID>_PAslider</ID>
 <x0>0</x0>
 <y0>166</y0>
 <width>200</width>
 <height>26</height>
-<text>ref_count_changed(int val)</text>
+<text>slider_changed(int val)</text>
 <px>0</px>
 <py>108</py>
 </pin>
 <pin>
-<ID>_PAprev</ID>
+<ID>_PAbackup</ID>
 <x0>0</x0>
 <y0>194</y0>
 <width>200</width>
 <height>26</height>
-<text>prev_clicked()</text>
+<text>backup_clicked()</text>
 <px>0</px>
 <py>126</py>
 </pin>
 <pin>
-<ID>_PAnext</ID>
+<ID>_PArestore</ID>
 <x0>0</x0>
 <y0>222</y0>
 <width>200</width>
 <height>26</height>
-<text>next_clicked()</text>
+<text>restore_clicked()</text>
 <px>0</px>
 <py>144</py>
 </pin>
 <pin>
-<ID>_Pseimon0</ID>
+<ID>_PAclear</ID>
 <x0>0</x0>
 <y0>250</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon0_created(TextView t)</text>
+<text>clear_clicked()</text>
 <px>0</px>
 <py>162</py>
-</pin>
-<pin>
-<ID>_PPseimon0</ID>
-<x0>0</x0>
-<y0>278</y0>
-<width>200</width>
-<height>26</height>
-<text>seimon0_paint(Canvas g)</text>
-<px>0</px>
-<py>180</py>
-</pin>
-<pin>
-<ID>_Pseimon</ID>
-<x0>0</x0>
-<y0>306</y0>
-<width>200</width>
-<height>26</height>
-<text>seimon_created(TextView t)</text>
-<px>0</px>
-<py>198</py>
-</pin>
-<pin>
-<ID>_PPseimon</ID>
-<x0>0</x0>
-<y0>334</y0>
-<width>200</width>
-<height>26</height>
-<text>seimon_paint(Canvas g)</text>
-<px>0</px>
-<py>216</py>
-</pin>
-<pin>
-<ID>_Ptext</ID>
-<x0>0</x0>
-<y0>362</y0>
-<width>200</width>
-<height>26</height>
-<text>text_created(TextView t)</text>
-<px>0</px>
-<py>234</py>
-</pin>
-<pin>
-<ID>_Presult</ID>
-<x0>0</x0>
-<y0>390</y0>
-<width>200</width>
-<height>26</height>
-<text>result_created(TextView t)</text>
-<px>0</px>
-<py>252</py>
-</pin>
-<pin>
-<ID>_PAxbright</ID>
-<x0>0</x0>
-<y0>418</y0>
-<width>200</width>
-<height>26</height>
-<text>xbright_changed(int val)</text>
-<px>0</px>
-<py>270</py>
-</pin>
-<pin>
-<ID>_PAxvstart</ID>
-<x0>0</x0>
-<y0>446</y0>
-<width>200</width>
-<height>26</height>
-<text>xvstart_changed(int val)</text>
-<px>0</px>
-<py>288</py>
-</pin>
-<pin>
-<ID>_PAxvend</ID>
-<x0>0</x0>
-<y0>474</y0>
-<width>200</width>
-<height>26</height>
-<text>xvend_changed(int val)</text>
-<px>0</px>
-<py>306</py>
-</pin>
-<pin>
-<ID>_Pweight</ID>
-<x0>0</x0>
-<y0>502</y0>
-<width>200</width>
-<height>26</height>
-<text>weight_created(EditText e)</text>
-<px>0</px>
-<py>324</py>
-</pin>
-<pin>
-<ID>_Pcode</ID>
-<x0>0</x0>
-<y0>530</y0>
-<width>200</width>
-<height>26</height>
-<text>code_created(EditText e)</text>
-<px>0</px>
-<py>342</py>
 </pin>
 <codeclip>
 <ID>_CXSTART</ID>
@@ -2235,6 +2460,983 @@ XGUI x = new XGUI();
 <width>300</width>
 <height>26</height>
 <codetext> class XGUI{
+text Itext;
+ class text extends EditText{
+ text(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setGravity(Gravity.LEFT | Gravity.TOP);
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ text_created( this );
+}
+}
+close Iclose;
+ class close extends Button{
+ close(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;X&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {close_clicked();}} );
+}
+}
+slider Islider;
+ class slider extends SeekBar{
+ slider(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ setProgress( 0 );
+ setMax( 10000 );
+ setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+ public void onStopTrackingTouch(SeekBar seekBar) {}
+ public void onStartTrackingTouch(SeekBar seekBar) {}
+ public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { slider_changed( progress ); }
+ });
+}
+}
+backup Ibackup;
+ class backup extends Button{
+ backup(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;BACKUP&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {backup_clicked();}} );
+}
+}
+restore Irestore;
+ class restore extends Button{
+ restore(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 15f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;RESTORE&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {restore_clicked();}} );
+}
+}
+clear Iclear;
+ class clear extends Button{
+ clear(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;CLEAR&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {clear_clicked();}} );
+}
+}
+ XGUI(){
+ AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+layout.setBackgroundColor(Color.rgb( 247, 249, 165));
+ACTIVITY.setContentView(layout);
+ACTIVITY.setTitle(&quot;Config&quot;);
+ Itext = new text();
+ Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 594,610,4,174 ) );
+ layout.addView( Itext );
+ Iclose = new close();
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 70,70,524,0 ) );
+ layout.addView( Iclose );
+ Islider = new slider();
+ Islider.setLayoutParams( new AbsoluteLayout.LayoutParams( 596,78,0,84 ) );
+ layout.addView( Islider );
+ Ibackup = new backup();
+ Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( 168,70,154,0 ) );
+ layout.addView( Ibackup );
+ Irestore = new restore();
+ Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( 190,70,328,0 ) );
+ layout.addView( Irestore );
+ Iclear = new clear();
+ Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( 146,70,0,0 ) );
+ layout.addView( Iclear );
+ GUI_created( layout );
+}
+}
+</codetext>
+</codeclip>
+<ID_maker>26</ID_maker>
+<height>184</height>
+<レイアウト>Config
+306
+403
+247
+249
+165
+xxscale=2
+TEXTAREA;text;null;2;87;297;305;51;51;51;255;255;255;Dialog;16;1;1;1;EditText;
+BUTTON;close;X;262;0;35;35;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+HSLIDER;slider;0;10000;0;42;298;39;163;184;204;238;238;238;1;0;1;SeekBar;
+BUTTON;backup;BACKUP;77;0;84;35;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+BUTTON;restore;RESTORE;164;0;95;35;51;51;51;192;192;192;Dialog;15;null;0;0;1;0;1;Button;
+BUTTON;clear;CLEAR;0;0;73;35;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+</レイアウト>
+</aobject>
+<codeclip>
+<ID>_C8</ID>
+<x0>347</x0>
+<y0>22</y0>
+<width>254</width>
+<height>54</height>
+<codetext>// コンテナ
+AbsoluteLayout main_container;
+AbsoluteLayout this_container;
+</codetext>
+</codeclip>
+<operation>
+<ID>_O10</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>638</x0>
+<y0>76</y0>
+<width>164</width>
+<height>52</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(Object o)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>27</inpiny0>
+<inpinwidth>83</inpinwidth>
+<inpinheight>25</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>114</outpinx0>
+<outpiny0>32</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// コンテナを取得
+
+
+
+this_container = (AbsoluteLayout)o;
+ACTIVITY.setContentView(main_container);
+</codetext>
+</operation>
+<relation>
+<ID>_R11</ID>
+<pin1name>_A2(_PGUIout)</pin1name>
+<pin2name>_O10</pin2name>
+</relation>
+<operation>
+<ID>_O12</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>199</x0>
+<y0>374</y0>
+<width>197</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>30</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// データをセットして表示
+
+
+
+
+  text.setText(&quot;&quot;);
+  text.append(&quot;startup_time=&quot; + startup_time + &quot;\n&quot;);
+  text.append(&quot;sound_filter=&quot; + sound_filter + &quot;\n&quot;);
+  text.append(&quot;thresh_trigger_on=&quot; + thresh_trigger_on + &quot;\n&quot;);
+  text.append(&quot;thresh_trigger_off=&quot; + thresh_trigger_off + &quot;\n&quot;);
+  text.append(&quot;thresh_count_on=&quot; + thresh_count_on + &quot;\n&quot;);
+  text.append(&quot;thresh_count_off=&quot; + thresh_count_off + &quot;\n&quot;);
+  text.append(&quot;thresh_recognize=&quot; + thresh_recognize + &quot;\n&quot;);
+  text.append(&quot;bias=&quot; + bias + &quot;\n&quot;);
+  text.append(&quot;acompress=&quot; + acompress + &quot;\n&quot;);
+  text.append(&quot;learn_param=&quot; + learn_param + &quot;\n&quot;);
+  text.append(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
+  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
+    text.append(hosei[i] + &quot;\n&quot;);
+  }
+  ACTIVITY.setContentView(this_container);
+  
+</codetext>
+</operation>
+<relation>
+<ID>_R13</ID>
+<pin1name>_P4</pin1name>
+<pin2name>_O12</pin2name>
+</relation>
+<codeclip>
+<ID>_C14</ID>
+<x0>625</x0>
+<y0>17</y0>
+<width>181</width>
+<height>48</height>
+<codetext>EditText text;
+int line_p;
+String source;
+</codetext>
+</codeclip>
+<operation>
+<ID>_O15</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>637</x0>
+<y0>137</y0>
+<width>106</width>
+<height>48</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText t)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>27</inpiny0>
+<inpinwidth>93</inpinwidth>
+<inpinheight>22</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>text = t;
+
+</codetext>
+</operation>
+<relation>
+<ID>_R16</ID>
+<pin1name>_A2(_Ptext)</pin1name>
+<pin2name>_O15</pin2name>
+</relation>
+<codeclip>
+<ID>_C17</ID>
+<x0>446</x0>
+<y0>276</y0>
+<width>419</width>
+<height>65</height>
+<codetext>public void text_home(){
+  source = ((SpannableStringBuilder)text.getText()).toString();
+  line_p = -1;
+}
+</codetext>
+</codeclip>
+<codeclip>
+<ID>_C18</ID>
+<x0>449</x0>
+<y0>352</y0>
+<width>279</width>
+<height>123</height>
+<codetext>public String get_line(){
+  String s;
+  int i = source.indexOf( &quot;\n&quot;, line_p+1 );
+  if( i == -1 )return null;
+  s = source.substring( line_p+1, i );
+  line_p = i;
+  return s;
+}
+</codetext>
+</codeclip>
+<operation>
+<ID>_O19</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>136</x0>
+<y0>119</y0>
+<width>174</width>
+<height>49</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>126</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// 変数をセットして閉じる
+
+
+  text_home();
+  startup_time=Integer.parseInt(get_line().substring(13));
+  sound_filter=Double.parseDouble(get_line().substring(13));
+  thresh_trigger_on=Double.parseDouble(get_line().substring(18));
+  thresh_trigger_off=Double.parseDouble(get_line().substring(19));
+  thresh_count_on=Integer.parseInt(get_line().substring(16));
+  thresh_count_off=Integer.parseInt(get_line().substring(17));
+  thresh_recognize=Double.parseDouble(get_line().substring(17));
+  bias=Double.parseDouble(get_line().substring(5));
+  acompress=Double.parseDouble(get_line().substring(10));
+  learn_param=Double.parseDouble(get_line().substring(12));
+  limit_length=Double.parseDouble(get_line().substring(13));
+
+  hosei = new double[HEARING_HEIGHT];
+  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
+    hosei[i%HEARING_HEIGHT] = Double.parseDouble(get_line());
+  }
+  ACTIVITY.setContentView(main_container);
+</codetext>
+</operation>
+<relation>
+<ID>_R20</ID>
+<pin1name>_A2(_PAclose)</pin1name>
+<pin2name>_O19</pin2name>
+</relation>
+<operation>
+<ID>_O21</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>209</x0>
+<y0>318</y0>
+<width>121</width>
+<height>49</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>70</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>//データを消去
+
+
+try{
+
+  int cnt = 0;
+  InputStream is = ACTIVITY.getResources().openRawResource(R.raw.voicedata);
+  while (is.read()!=-1) cnt++;
+  byte[] b = new byte[cnt];
+  is.reset();
+  is.read(b);
+  is.close();
+  FileOutputStream os = new FileOutputStream(voice_data_file);
+  os.write(b);
+  os.close();
+
+String line = null;
+BufferedReader din = new BufferedReader( new FileReader(voice_data_file));
+
+// 変数を読み込む
+while(true){
+  if( ( line=din.readLine() ) == null ) return;
+  if( line.equals( &quot;&quot; ) ) break;
+  if( line.equals(&quot;debug_mode=true&quot;))         debug_mode=true;
+  if( line.equals(&quot;debug_mode=false&quot;))        debug_mode=false;
+  if( line.equals(&quot;auto_learn=true&quot;))         auto_learn=true;
+  if( line.equals(&quot;auto_learn=false&quot;))        auto_learn=false;
+  if( line.equals(&quot;flog_scale=true&quot;))         flog_scale=true;
+  if( line.equals(&quot;flog_scale=false&quot;))        flog_scale=false;
+  if( line.equals(&quot;alog_scale=true&quot;))         alog_scale=true;
+  if( line.equals(&quot;alog_scale=false&quot;))        alog_scale=false;
+  if( line.startsWith(&quot;startup_time=&quot;))       startup_time=Integer.parseInt(line.substring(13));
+  if( line.startsWith(&quot;sound_filter=&quot;))       sound_filter=Double.parseDouble(line.substring(13));
+  if( line.startsWith(&quot;thresh_trigger_on=&quot;))  thresh_trigger_on=Double.parseDouble(line.substring(18));
+  if( line.startsWith(&quot;thresh_trigger_off=&quot;)) thresh_trigger_off=Double.parseDouble(line.substring(19));
+  if( line.startsWith(&quot;thresh_count_on=&quot;))    thresh_count_on=Integer.parseInt(line.substring(16));
+  if( line.startsWith(&quot;thresh_count_off=&quot;))   thresh_count_off=Integer.parseInt(line.substring(17));
+  if( line.startsWith(&quot;thresh_recognize=&quot;))   thresh_recognize=Double.parseDouble(line.substring(17));
+  if( line.startsWith(&quot;bias=&quot;))               bias=Double.parseDouble(line.substring(5));
+  if( line.startsWith(&quot;acompress=&quot;))          acompress=Double.parseDouble(line.substring(10));
+  if( line.startsWith(&quot;learn_param=&quot;))        learn_param=Double.parseDouble(line.substring(12));
+  if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
+}
+
+hosei = new double[HEARING_HEIGHT];
+for(int i = 0; true; i++){
+  if((line=din.readLine()) == null){din.close(); return;}
+  if( line.equals( &quot;&quot; ) ) break;
+  hosei[i%HEARING_HEIGHT] = Double.parseDouble(line);
+}
+
+// 音声データを読み込む
+voice_template = new Vector();
+while(true){
+  if((line=din.readLine()) == null){din.close(); return;}
+  if(line.equals(&quot;END&quot;)) break;
+  String t = line;
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  double w = Double.parseDouble(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int c = Integer.parseInt(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int s = Integer.parseInt(line);
+  double[] v = new double[s];
+  for(int i = 0; i &lt; s; i++){
+    if((line=din.readLine()) == null){din.close(); return;}
+    v[i] = Double.parseDouble(line);
+  }
+  voice_template.add(new VoiceTemplate(t, w, c, v));
+}
+
+din.close();
+} catch( Exception e ){ dprint(e+&quot;\n&quot;); }
+
+voice_no = 0;
+</codetext>
+</operation>
+<relation>
+<ID>_R22</ID>
+<pin1name>_A2(_PAclear)</pin1name>
+<pin2name>_O21</pin2name>
+</relation>
+<operation>
+<ID>_O23</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>75</x0>
+<y0>178</y0>
+<width>200</width>
+<height>46</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>154</inpinx0>
+<inpiny0>26</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// SDカードにバックアップする
+
+
+//音声テンプレートを保存する
+
+try{
+
+  String line = null;
+  int cnt = 0;
+  BufferedWriter dout = new BufferedWriter( new FileWriter(voice_data_file) );
+  
+  // 変数を保存する
+  dout.write(&quot;auto_learn=&quot; + auto_learn + &quot;\n&quot;);
+  dout.write(&quot;flog_scale=&quot; + flog_scale + &quot;\n&quot;);
+  dout.write(&quot;alog_scale=&quot; + alog_scale + &quot;\n&quot;);
+  dout.write(&quot;startup_time=&quot; + startup_time + &quot;\n&quot;);
+  dout.write(&quot;sound_filter=&quot; + sound_filter + &quot;\n&quot;);
+  dout.write(&quot;thresh_trigger_on=&quot; + thresh_trigger_on + &quot;\n&quot;);
+  dout.write(&quot;thresh_trigger_off=&quot; + thresh_trigger_off + &quot;\n&quot;);
+  dout.write(&quot;thresh_count_on=&quot; + thresh_count_on + &quot;\n&quot;);
+  dout.write(&quot;thresh_count_off=&quot; + thresh_count_off + &quot;\n&quot;);
+  dout.write(&quot;thresh_recognize=&quot; + thresh_recognize + &quot;\n&quot;);
+  dout.write(&quot;bias=&quot; + bias + &quot;\n&quot;);
+  dout.write(&quot;acompress=&quot; + acompress + &quot;\n&quot;);
+  dout.write(&quot;learn_param=&quot; + learn_param + &quot;\n&quot;);
+  dout.write(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
+  dout.write(&quot;\n&quot;);
+
+  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
+    dout.write(hosei[i] + &quot;\n&quot;);
+  }
+  dout.write(&quot;\n&quot;);
+  
+  // 音声データを保存する
+  for( int i = 0; i &lt; voice_template.size(); i++ ){
+    dout.write(((VoiceTemplate)voice_template.get(i)).text + &quot;\n&quot; );
+    dout.write(((VoiceTemplate)voice_template.get(i)).weight + &quot;\n&quot; );
+    dout.write(((VoiceTemplate)voice_template.get(i)).code + &quot;\n&quot; );
+    double[] v = ((VoiceTemplate)(voice_template.get(i))).voice;
+    dout.write(v.length + &quot;\n&quot;);
+    for (int j = 0; j &lt;  v.length; j++){
+      dout.write(v[j] + &quot;\n&quot;);
+    }
+  }
+  dout.write(&quot;END\n&quot;);
+  dout.close();
+
+  // バックアップファイルにコピーする
+  FileInputStream is = new FileInputStream(voice_data_file);;
+  while (is.read()!=-1) cnt++;
+  byte[] b = new byte[cnt];
+  is.reset();
+  is.read(b);
+  is.close();
+  FileOutputStream os = new FileOutputStream(backup_file);
+  os.write(b);
+  os.close();
+
+} catch( Exception e ){dprint(e+&quot;\n&quot;);}
+</codetext>
+</operation>
+<relation>
+<ID>_R24</ID>
+<pin1name>_A2(_PAbackup)</pin1name>
+<pin2name>_O23</pin2name>
+</relation>
+<operation>
+<ID>_O25</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>47</x0>
+<y0>237</y0>
+<width>230</width>
+<height>47</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>179</inpinx0>
+<inpiny0>26</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>//バックアップしたデータを呼び出す
+
+
+try{
+  String line = null;
+  int cnt = 0;
+
+  // バックアップファイルからコピーする
+  FileInputStream is = new FileInputStream(backup_file);;
+  while (is.read()!=-1) cnt++;
+  byte[] b = new byte[cnt];
+  is.reset();
+  is.read(b);
+  is.close();
+  FileOutputStream os = new FileOutputStream(voice_data_file);
+  os.write(b);
+  os.close();
+
+
+
+BufferedReader din = new BufferedReader( new FileReader(voice_data_file));
+
+// 変数を読み込む
+while(true){
+  if( ( line=din.readLine() ) == null ) return;
+  if( line.equals( &quot;&quot; ) ) break;
+  if( line.equals(&quot;debug_mode=true&quot;))         debug_mode=true;
+  if( line.equals(&quot;debug_mode=false&quot;))        debug_mode=false;
+  if( line.equals(&quot;auto_learn=true&quot;))         auto_learn=true;
+  if( line.equals(&quot;auto_learn=false&quot;))        auto_learn=false;
+  if( line.equals(&quot;flog_scale=true&quot;))         flog_scale=true;
+  if( line.equals(&quot;flog_scale=false&quot;))        flog_scale=false;
+  if( line.equals(&quot;alog_scale=true&quot;))         alog_scale=true;
+  if( line.equals(&quot;alog_scale=false&quot;))        alog_scale=false;
+  if( line.startsWith(&quot;startup_time=&quot;))       startup_time=Integer.parseInt(line.substring(13));
+  if( line.startsWith(&quot;sound_filter=&quot;))       sound_filter=Double.parseDouble(line.substring(13));
+  if( line.startsWith(&quot;thresh_trigger_on=&quot;))  thresh_trigger_on=Double.parseDouble(line.substring(18));
+  if( line.startsWith(&quot;thresh_trigger_off=&quot;)) thresh_trigger_off=Double.parseDouble(line.substring(19));
+  if( line.startsWith(&quot;thresh_count_on=&quot;))    thresh_count_on=Integer.parseInt(line.substring(16));
+  if( line.startsWith(&quot;thresh_count_off=&quot;))   thresh_count_off=Integer.parseInt(line.substring(17));
+  if( line.startsWith(&quot;thresh_recognize=&quot;))   thresh_recognize=Double.parseDouble(line.substring(17));
+  if( line.startsWith(&quot;bias=&quot;))               bias=Double.parseDouble(line.substring(5));
+  if( line.startsWith(&quot;acompress=&quot;))          acompress=Double.parseDouble(line.substring(10));
+  if( line.startsWith(&quot;learn_param=&quot;))        learn_param=Double.parseDouble(line.substring(12));
+  if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
+}
+
+hosei = new double[HEARING_HEIGHT];
+for(int i = 0; true; i++){
+  if((line=din.readLine()) == null){din.close(); return;}
+  if( line.equals( &quot;&quot; ) ) break;
+  hosei[i%HEARING_HEIGHT] = Double.parseDouble(line);
+}
+
+// 音声データを読み込む
+voice_template = new Vector();
+while(true){
+  if((line=din.readLine()) == null){din.close(); return;}
+  if(line.equals(&quot;END&quot;)) break;
+  String t = line;
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  double w = Double.parseDouble(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int c = Integer.parseInt(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int s = Integer.parseInt(line);
+  double[] v = new double[s];
+  for(int i = 0; i &lt; s; i++){
+    if((line=din.readLine()) == null){din.close(); return;}
+    v[i] = Double.parseDouble(line);
+  }
+  voice_template.add(new VoiceTemplate(t, w, c, v));
+}
+
+din.close();
+} catch( Exception e ){ dprint(e+&quot;\n&quot;); }
+
+voice_no = 0;
+</codetext>
+</operation>
+<relation>
+<ID>_R26</ID>
+<pin1name>_A2(_PArestore)</pin1name>
+<pin2name>_O25</pin2name>
+</relation>
+<operation>
+<ID>_O27</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>638</x0>
+<y0>192</y0>
+<width>182</width>
+<height>54</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(int v)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>32</inpiny0>
+<inpinwidth>62</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// テキストを移動する
+
+
+String s= ((SpannableStringBuilder)text.getText()).toString();
+int len = s.length();
+text.setSelection( v * len /10000 );
+</codetext>
+</operation>
+<relation>
+<ID>_R28</ID>
+<pin1name>_A2(_PAslider)</pin1name>
+<pin2name>_O27</pin2name>
+</relation>
+<codeclip>
+<ID>_C29</ID>
+<x0>453</x0>
+<y0>486</y0>
+<width>297</width>
+<height>36</height>
+<codetext>// バックアップファイル
+File backup_file = new File( Environment.getExternalStorageDirectory(),&quot;VKeyboaed.bak&quot; );
+</codetext>
+</codeclip>
+</xobject>
+<relation>
+<ID>_R164</ID>
+<pin1name>_A88(_PAconfig)</pin1name>
+<pin2name>_X160(_P4)</pin2name>
+</relation>
+<relation>
+<ID>_R165</ID>
+<pin1name>_A88(_PGUIout)</pin1name>
+<pin2name>_X160(_P1)</pin2name>
+</relation>
+<aobject>
+<ID>_A88</ID>
+<x0>137</x0>
+<y0>235</y0>
+<width>280</width>
+<objectname>GUI</objectname>
+<description>GUIオブジェクト
+</description>
+<state>
+<ID>_SINIT</ID>
+<x0>0</x0>
+<y0>40</y0>
+<width>70</width>
+<height>40</height>
+<text>  InitState</text>
+<isinitstate>1</isinitstate>
+</state>
+<pin>
+<ID>_Pstart</ID>
+<x0>400</x0>
+<y0>100</y0>
+<width>80</width>
+<height>26</height>
+<text>Start()</text>
+<px>0</px>
+<py>36</py>
+</pin>
+<pin>
+<ID>_PGUIout</ID>
+<x0>0</x0>
+<y0>84</y0>
+<width>180</width>
+<height>26</height>
+<text>GUI_created(AbsoluteLayout l)</text>
+<px>0</px>
+<py>54</py>
+</pin>
+<action>
+<ID>_Astart</ID>
+<comp1name>_Pstart</comp1name>
+<comp2name>_Ocreate</comp2name>
+</action>
+<operation>
+<ID>_Ocreate</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>220</x0>
+<y0>40</y0>
+<width>130</width>
+<height>64</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>30</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>30</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>90</inpinx0>
+<inpiny0>43</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// GUIを作成する
+XGUI x = new XGUI();
+
+</codetext>
+</operation>
+<pin>
+<ID>_PAconfig</ID>
+<x0>0</x0>
+<y0>110</y0>
+<width>200</width>
+<height>26</height>
+<text>config_clicked()</text>
+<px>0</px>
+<py>72</py>
+</pin>
+<pin>
+<ID>_PAsave</ID>
+<x0>0</x0>
+<y0>138</y0>
+<width>200</width>
+<height>26</height>
+<text>save_clicked()</text>
+<px>0</px>
+<py>90</py>
+</pin>
+<pin>
+<ID>_PAlearn</ID>
+<x0>0</x0>
+<y0>166</y0>
+<width>200</width>
+<height>26</height>
+<text>learn_clicked()</text>
+<px>0</px>
+<py>108</py>
+</pin>
+<pin>
+<ID>_PAins</ID>
+<x0>0</x0>
+<y0>194</y0>
+<width>200</width>
+<height>26</height>
+<text>ins_clicked()</text>
+<px>0</px>
+<py>126</py>
+</pin>
+<pin>
+<ID>_PAdel</ID>
+<x0>0</x0>
+<y0>222</y0>
+<width>200</width>
+<height>26</height>
+<text>del_clicked()</text>
+<px>0</px>
+<py>144</py>
+</pin>
+<pin>
+<ID>_PAprev</ID>
+<x0>0</x0>
+<y0>250</y0>
+<width>200</width>
+<height>26</height>
+<text>prev_clicked()</text>
+<px>0</px>
+<py>162</py>
+</pin>
+<pin>
+<ID>_PAnext</ID>
+<x0>0</x0>
+<y0>278</y0>
+<width>200</width>
+<height>26</height>
+<text>next_clicked()</text>
+<px>0</px>
+<py>180</py>
+</pin>
+<pin>
+<ID>_PAvoice_no</ID>
+<x0>0</x0>
+<y0>306</y0>
+<width>200</width>
+<height>26</height>
+<text>voice_no_changed(int val)</text>
+<px>0</px>
+<py>198</py>
+</pin>
+<pin>
+<ID>_PAbright</ID>
+<x0>0</x0>
+<y0>334</y0>
+<width>200</width>
+<height>26</height>
+<text>bright_changed(int val)</text>
+<px>0</px>
+<py>216</py>
+</pin>
+<pin>
+<ID>_PAlength</ID>
+<x0>0</x0>
+<y0>362</y0>
+<width>200</width>
+<height>26</height>
+<text>length_changed(int val)</text>
+<px>0</px>
+<py>234</py>
+</pin>
+<pin>
+<ID>_Pseimon0</ID>
+<x0>0</x0>
+<y0>390</y0>
+<width>200</width>
+<height>26</height>
+<text>seimon0_created(TextView t)</text>
+<px>0</px>
+<py>252</py>
+</pin>
+<pin>
+<ID>_PPseimon0</ID>
+<x0>0</x0>
+<y0>418</y0>
+<width>200</width>
+<height>26</height>
+<text>seimon0_paint(Canvas g)</text>
+<px>0</px>
+<py>270</py>
+</pin>
+<pin>
+<ID>_Pseimon</ID>
+<x0>0</x0>
+<y0>446</y0>
+<width>200</width>
+<height>26</height>
+<text>seimon_created(TextView t)</text>
+<px>0</px>
+<py>288</py>
+</pin>
+<pin>
+<ID>_PPseimon</ID>
+<x0>0</x0>
+<y0>474</y0>
+<width>200</width>
+<height>26</height>
+<text>seimon_paint(Canvas g)</text>
+<px>0</px>
+<py>306</py>
+</pin>
+<pin>
+<ID>_Ptext</ID>
+<x0>0</x0>
+<y0>502</y0>
+<width>200</width>
+<height>26</height>
+<text>text_created(EditText e)</text>
+<px>0</px>
+<py>324</py>
+</pin>
+<pin>
+<ID>_Pweight</ID>
+<x0>0</x0>
+<y0>530</y0>
+<width>200</width>
+<height>26</height>
+<text>weight_created(EditText e)</text>
+<px>0</px>
+<py>342</py>
+</pin>
+<pin>
+<ID>_Pcode</ID>
+<x0>0</x0>
+<y0>558</y0>
+<width>200</width>
+<height>26</height>
+<text>code_created(EditText e)</text>
+<px>0</px>
+<py>360</py>
+</pin>
+<pin>
+<ID>_Presult</ID>
+<x0>0</x0>
+<y0>586</y0>
+<width>200</width>
+<height>26</height>
+<text>result_created(TextView t)</text>
+<px>0</px>
+<py>378</py>
+</pin>
+<codeclip>
+<ID>_CXSTART</ID>
+<x0>0</x0>
+<y0>0</y0>
+<width>300</width>
+<height>26</height>
+<codetext> class XGUI{
+config Iconfig;
+ class config extends Button{
+ config(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;Config&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {config_clicked();}} );
+}
+}
 save Isave;
  class save extends Button{
  save(){
@@ -2242,35 +3444,45 @@ save Isave;
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 0, 0, 0 ));
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ setBackgroundColor( Color.rgb( 214, 214, 214 ));
  setText( &quot;SAVE&quot; );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {save_clicked();}} );
 }
 }
-store Istore;
- class store extends Button{
- store(){
+learn Ilearn;
+ class learn extends Button{
+ learn(){
  super(ACTIVITY);
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
- setTextSize( 16f ); setTextColor( Color.rgb( 255, 0, 0 ));
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setText( &quot;STORE&quot; );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {store_clicked();}} );
+ setTextSize( 16f ); setTextColor( Color.rgb( 5, 3, 0 ));
+ setBackgroundColor( Color.rgb( 214, 214, 214 ));
+ setText( &quot;LEARN&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_clicked();}} );
 }
 }
-ref_count Iref_count;
- class ref_count extends SeekBar{
- ref_count(){
+ins Iins;
+ class ins extends Button{
+ ins(){
  super(ACTIVITY);
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setProgress( 0 );
- setMax( 100 );
- setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
- public void onStopTrackingTouch(SeekBar seekBar) {}
- public void onStartTrackingTouch(SeekBar seekBar) {}
- public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { ref_count_changed( progress ); }
- });
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 214, 214, 214 ));
+ setText( &quot;INS&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {ins_clicked();}} );
+}
+}
+del Idel;
+ class del extends Button{
+ del(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 214, 214, 214 ));
+ setText( &quot;DEL&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {del_clicked();}} );
 }
 }
 prev Iprev;
@@ -2295,6 +3507,48 @@ next Inext;
  setBackgroundColor( Color.rgb( 238, 238, 238 ));
  setText( &quot;&gt;&quot; );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {next_clicked();}} );
+}
+}
+voice_no Ivoice_no;
+ class voice_no extends SeekBar{
+ voice_no(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ setProgress( 0 );
+ setMax( 100 );
+ setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+ public void onStopTrackingTouch(SeekBar seekBar) {}
+ public void onStartTrackingTouch(SeekBar seekBar) {}
+ public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { voice_no_changed( progress ); }
+ });
+}
+}
+bright Ibright;
+ class bright extends SeekBar{
+ bright(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ setProgress( 0 );
+ setMax( 100 );
+ setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+ public void onStopTrackingTouch(SeekBar seekBar) {}
+ public void onStartTrackingTouch(SeekBar seekBar) {}
+ public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { bright_changed( progress ); }
+ });
+}
+}
+length Ilength;
+ class length extends SeekBar{
+ length(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ setProgress( 0 );
+ setMax( 100 );
+ setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+ public void onStopTrackingTouch(SeekBar seekBar) {}
+ public void onStartTrackingTouch(SeekBar seekBar) {}
+ public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { length_changed( progress ); }
+ });
 }
 }
 seimon0 Iseimon0;
@@ -2324,15 +3578,36 @@ seimon Iseimon;
  protected void onDraw(Canvas g){ super.onDraw( g ); seimon_paint(g); }
 }
 text Itext;
- class text extends TextView{
+ class text extends EditText{
  text(){
  super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
- setTextSize( 24f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 232, 232, 232 ));
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
  setText( &quot;&quot; );
  text_created( this );
+}
+}
+weight Iweight;
+ class weight extends EditText{
+ weight(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ weight_created( this );
+}
+}
+code Icode;
+ class code extends EditText{
+ code(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;0&quot; );
+ code_created( this );
 }
 }
 result Iresult;
@@ -2341,24 +3616,10 @@ result Iresult;
  super(ACTIVITY);
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
- setTextSize( 24f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setTextSize( 20f ); setTextColor( Color.rgb( 51, 51, 51 ));
  setBackgroundColor( Color.rgb( 255, 255, 204 ));
  setText( &quot;&quot; );
  result_created( this );
-}
-}
-xbright Ixbright;
- class xbright extends SeekBar{
- xbright(){
- super(ACTIVITY);
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setProgress( 0 );
- setMax( 100 );
- setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
- public void onStopTrackingTouch(SeekBar seekBar) {}
- public void onStartTrackingTouch(SeekBar seekBar) {}
- public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { xbright_changed( progress ); }
- });
 }
 }
 LABEL10 ILABEL10;
@@ -2383,78 +3644,6 @@ LABEL11 ILABEL11;
  setText( &quot;Bright&quot; );
 }
 }
-LABEL12 ILABEL12;
- class LABEL12 extends TextView{
- LABEL12(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 252, 252, 252 ));
- setText( &quot;V.Start&quot; );
-}
-}
-xvstart Ixvstart;
- class xvstart extends SeekBar{
- xvstart(){
- super(ACTIVITY);
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setProgress( 0 );
- setMax( 100 );
- setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
- public void onStopTrackingTouch(SeekBar seekBar) {}
- public void onStartTrackingTouch(SeekBar seekBar) {}
- public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { xvstart_changed( progress ); }
- });
-}
-}
-xvend Ixvend;
- class xvend extends SeekBar{
- xvend(){
- super(ACTIVITY);
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setProgress( 0 );
- setMax( 100 );
- setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
- public void onStopTrackingTouch(SeekBar seekBar) {}
- public void onStartTrackingTouch(SeekBar seekBar) {}
- public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { xvend_changed( progress ); }
- });
-}
-}
-LABEL15 ILABEL15;
- class LABEL15 extends TextView{
- LABEL15(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 252, 252, 252 ));
- setText( &quot;V.End&quot; );
-}
-}
-LABEL16 ILABEL16;
- class LABEL16 extends TextView{
- LABEL16(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 252, 252, 252 ));
- setText( &quot;WEIGHT&quot; );
-}
-}
-weight Iweight;
- class weight extends EditText{
- weight(){
- super(ACTIVITY);
- setPadding(1, 1, 1, 1);
- setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 248, 248, 248 ));
- setText( &quot;1.0&quot; );
- weight_created( this );
-}
-}
 LABEL18 ILABEL18;
  class LABEL18 extends TextView{
  LABEL18(){
@@ -2466,37 +3655,74 @@ LABEL18 ILABEL18;
  setText( &quot;CODE&quot; );
 }
 }
-code Icode;
- class code extends EditText{
- code(){
+LABEL16 ILABEL16;
+ class LABEL16 extends TextView{
+ LABEL16(){
  super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
- setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
  setBackgroundColor( Color.rgb( 255, 255, 255 ));
- setText( &quot;0&quot; );
- code_created( this );
+ setText( &quot;Text&quot; );
+}
+}
+LABEL17 ILABEL17;
+ class LABEL17 extends TextView{
+ LABEL17(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;Weight&quot; );
+}
+}
+LABEL15 ILABEL15;
+ class LABEL15 extends TextView{
+ LABEL15(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 252, 252, 252 ));
+ setText( &quot;Length&quot; );
 }
 }
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
-layout.setBackgroundColor(Color.rgb( 255, 255, 255));
+layout.setBackgroundColor(Color.rgb( 223, 253, 248));
 ACTIVITY.setContentView(layout);
-ACTIVITY.setTitle(&quot;音声キーボード&quot;);
+ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
+ Iconfig = new config();
+ Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 280,70,182,882 ) );
+ layout.addView( Iconfig );
  Isave = new save();
- Isave.setLayoutParams( new AbsoluteLayout.LayoutParams( 312,60,324,8 ) );
+ Isave.setLayoutParams( new AbsoluteLayout.LayoutParams( 156,60,484,6 ) );
  layout.addView( Isave );
- Istore = new store();
- Istore.setLayoutParams( new AbsoluteLayout.LayoutParams( 314,62,0,8 ) );
- layout.addView( Istore );
- Iref_count = new ref_count();
- Iref_count.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,70,132,368 ) );
- layout.addView( Iref_count );
+ Ilearn = new learn();
+ Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( 156,60,0,8 ) );
+ layout.addView( Ilearn );
+ Iins = new ins();
+ Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 138,60,168,8 ) );
+ layout.addView( Iins );
+ Idel = new del();
+ Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 150,60,320,6 ) );
+ layout.addView( Idel );
  Iprev = new prev();
  Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( 74,280,2,76 ) );
  layout.addView( Iprev );
  Inext = new next();
- Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,286,566,72 ) );
+ Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,284,566,74 ) );
  layout.addView( Inext );
+ Ivoice_no = new voice_no();
+ Ivoice_no.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,70,132,368 ) );
+ layout.addView( Ivoice_no );
+ Ibright = new bright();
+ Ibright.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,68,130,442 ) );
+ layout.addView( Ibright );
+ Ilength = new length();
+ Ilength.setLayoutParams( new AbsoluteLayout.LayoutParams( 518,62,124,514 ) );
+ layout.addView( Ilength );
  Iseimon0 = new seimon0();
  Iseimon0.setLayoutParams( new AbsoluteLayout.LayoutParams( 238,280,80,76 ) );
  layout.addView( Iseimon0 );
@@ -2504,78 +3730,225 @@ ACTIVITY.setTitle(&quot;音声キーボード&quot;);
  Iseimon.setLayoutParams( new AbsoluteLayout.LayoutParams( 236,282,326,76 ) );
  layout.addView( Iseimon );
  Itext = new text();
- Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 644,70,0,814 ) );
+ Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 502,64,140,582 ) );
  layout.addView( Itext );
+ Iweight = new weight();
+ Iweight.setLayoutParams( new AbsoluteLayout.LayoutParams( 500,64,140,654 ) );
+ layout.addView( Iweight );
+ Icode = new code();
+ Icode.setLayoutParams( new AbsoluteLayout.LayoutParams( 498,68,142,728 ) );
+ layout.addView( Icode );
  Iresult = new result();
- Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 646,70,0,896 ) );
+ Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 646,70,0,802 ) );
  layout.addView( Iresult );
- Ixbright = new xbright();
- Ixbright.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,68,130,448 ) );
- layout.addView( Ixbright );
  ILABEL10 = new LABEL10();
  ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( 116,66,8,370 ) );
  layout.addView( ILABEL10 );
  ILABEL11 = new LABEL11();
  ILABEL11.setLayoutParams( new AbsoluteLayout.LayoutParams( 118,68,4,442 ) );
  layout.addView( ILABEL11 );
- ILABEL12 = new LABEL12();
- ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 114,68,6,524 ) );
- layout.addView( ILABEL12 );
- Ixvstart = new xvstart();
- Ixvstart.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,64,132,522 ) );
- layout.addView( Ixvstart );
- Ixvend = new xvend();
- Ixvend.setLayoutParams( new AbsoluteLayout.LayoutParams( 518,62,124,596 ) );
- layout.addView( Ixvend );
- ILABEL15 = new LABEL15();
- ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,62,0,586 ) );
- layout.addView( ILABEL15 );
- ILABEL16 = new LABEL16();
- ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 146,64,0,738 ) );
- layout.addView( ILABEL16 );
- Iweight = new weight();
- Iweight.setLayoutParams( new AbsoluteLayout.LayoutParams( 484,64,152,740 ) );
- layout.addView( Iweight );
  ILABEL18 = new LABEL18();
- ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 146,68,0,666 ) );
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,66,0,728 ) );
  layout.addView( ILABEL18 );
- Icode = new code();
- Icode.setLayoutParams( new AbsoluteLayout.LayoutParams( 486,68,152,664 ) );
- layout.addView( Icode );
+ ILABEL16 = new LABEL16();
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,64,0,580 ) );
+ layout.addView( ILABEL16 );
+ ILABEL17 = new LABEL17();
+ ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( 126,70,0,650 ) );
+ layout.addView( ILABEL17 );
+ ILABEL15 = new LABEL15();
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,62,0,514 ) );
+ layout.addView( ILABEL15 );
  GUI_created( layout );
 }
 }
 </codetext>
 </codeclip>
-<ID_maker>36</ID_maker>
-<height>364</height>
-<レイアウト>音声キーボード
-327
-499
-255
-255
-255
+<ID_maker>38</ID_maker>
+<height>400</height>
+<レイアウト>音声キーボード設定
+328
+481
+223
+253
+248
 xxscale=2
-BUTTON;save;SAVE;162;4;156;30;0;0;0;238;238;238;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;store;STORE;0;4;157;31;255;0;0;238;238;238;Dialog;16;null;0;0;1;0;1;Button;
-HSLIDER;ref_count;0;100;66;184;256;35;163;184;204;238;238;238;1;0;1;SeekBar;
+BUTTON;config;Config;91;441;140;35;51;51;51;192;192;192;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;save;SAVE;242;3;78;30;0;0;0;214;214;214;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;learn;LEARN;0;4;78;30;5;3;0;214;214;214;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;ins;INS;84;4;69;30;51;51;51;214;214;214;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;del;DEL;160;3;75;30;51;51;51;214;214;214;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;prev;&lt;;1;38;37;140;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
-BUTTON;next;&gt;;283;36;39;143;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
+BUTTON;next;&gt;;283;37;39;142;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
+HSLIDER;voice_no;0;100;66;184;256;35;163;184;204;238;238;238;1;0;1;SeekBar;
+HSLIDER;bright;0;100;65;221;256;34;163;184;204;238;238;238;1;0;1;SeekBar;
+HSLIDER;length;0;100;62;257;259;31;163;184;204;238;238;238;1;0;1;SeekBar;
 LABEL;seimon0;null;40;38;119;140;51;51;51;0;0;0;Dialog;12;null;4;0;1;1;1;TextView;
 LABEL;seimon;null;163;38;118;141;51;51;51;0;0;0;Dialog;12;null;4;0;1;1;1;TextView;
-LABEL;text;null;0;407;322;35;51;51;51;232;232;232;Dialog;24;null;0;0;1;1;0;TextView;
-LABEL;result;null;0;448;323;35;51;51;51;255;255;204;Dialog;24;null;0;0;1;1;0;TextView;
-HSLIDER;xbright;0;100;65;224;256;34;163;184;204;238;238;238;1;0;1;SeekBar;
+TEXTFIELD;text;null;70;291;251;32;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
+TEXTFIELD;weight;null;70;327;250;32;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
+TEXTFIELD;code;0;71;364;249;34;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
+LABEL;result;null;0;401;323;35;51;51;51;255;255;204;Dialog;20;null;0;0;1;1;0;TextView;
 LABEL;LABEL10;No.;4;185;58;33;51;51;51;255;255;255;Dialog;14;null;0;0;1;0;0;TextView;
 LABEL;LABEL11;Bright;2;221;59;34;51;51;51;255;255;255;Dialog;14;null;0;0;1;0;0;TextView;
-LABEL;LABEL12;V.Start;3;262;57;34;51;51;51;252;252;252;Dialog;14;null;0;0;1;0;0;TextView;
-HSLIDER;xvstart;0;100;66;261;256;32;163;184;204;238;238;238;1;0;1;SeekBar;
-HSLIDER;xvend;0;100;62;298;259;31;163;184;204;238;238;238;1;0;1;SeekBar;
-LABEL;LABEL15;V.End;0;293;65;31;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
-LABEL;LABEL16;WEIGHT;0;369;73;32;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
-TEXTFIELD;weight;1.0;76;370;242;32;51;51;51;248;248;248;Dialog;16;1;1;0;EditText;
-LABEL;LABEL18;CODE;0;333;73;34;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
-TEXTFIELD;code;0;76;332;243;34;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
+LABEL;LABEL18;CODE;0;364;65;33;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL16;Text;0;290;65;32;51;51;51;255;255;255;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL17;Weight;0;325;63;35;51;51;51;255;255;255;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL15;Length;0;257;65;31;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
 </レイアウト>
 </aobject>
+<ImgIcon>
+<ID>_I166</ID>
+<x0>842</x0>
+<y0>441</y0>
+<width>149</width>
+<height>149</height>
+<image>ppinppaoaaabkegejegeaabacaaaaabaaabaaaaapplnaadeaaiagagahagafaia
+hahahajajaiakamaebnamalalamajbcbdbpaebnbkbpbobnbkbmbmbacecochcac
+ccmcdcmbmbichdjcmcadbdedededpbhcjdndidcdmdocddedcdpplnaadebajaja
+jamalamaibnanaibcdbcmbbccdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd
+cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdppam
+aabbiaaagjaagjdabaccaacabbbadabbbappemaapbaaaabafababababababaaa
+aaaaaaaaaaaaaabacadaeafagahaiajakalappemaaflabaacabadadacaeadafa
+faeaeaaaaabanhbacadaaaeabbfacbbcbdbegadbbfbghaccbhebcdbibjbkiadc
+ceblbmfbcfbnapecddcgchcijakagbhbibjbkbfcgchcicjckcedfdgdhdidjdkd
+deeefegeheiejekedfefffgfhfifjfkfdgegfggghgigjgkgdhehfhghhhihjhkh
+dieifigihiiijikicjdjejfjgjhjijjjkjckdkekfkgkhkikjkkkcldlelflglhl
+iljlklcmdmemfmgmhmimjmkmcndnenfngnhninjnknbocodoeofogohoiojokobp
+cpdpepfpgphpipjpkpppemaapbbaaadabababababababababaaaaaaaaaaaaaba
+cadaeafagahaiajakalappemaaflbbaacabacaeaeadaeahafaeaeaaabacahhaa
+bacadabbeafabcbdgacbbebfhabgbhdbcccdbiiaebcebjbkblbmjadcddcfapfb
+cgchbnkagbecedbofcbphbibjbkbgchcicjckcfdgdhdidjdkddeeefegeheieje
+kedfefffgfhfifjfkfdgegfggghgigjgkgdhehfhghhhihjhkhcidieifigihiii
+jikicjdjejfjgjhjijjjkjckdkekfkgkhkikjkkkcldlelflglhliljlklcmdmem
+fmgmhmimjmkmcndnenfngnhninjnkncodoeofogohoiojokocpdpepfpgphpipjp
+kpppknaamadabaaacabbdabbaapdaahpkpjcjcigaackkiicaackkiicaackijjf
+aeeobibflfmndedhhbljeajmedhgdkgmbmbimpfeaaifckkiicaackkiicaackki
+icaackkiicaackkiicaackkiicaackkiicaackkiicaaekgcgjilpfjiohacnhhb
+beoignmnpllnfdjcfielccbdhjbmlpfonhgpeodainaljkejejffinmboohljkpf
+ihollgipcoijhebolhgdlndchijagpcmkdgjdgmigeibabaalpineplohbcifdjg
+edlhnpmejgknnfnoonpichbllmkalneedcnifgaajigdjjkaokiakaihidomlgde
+ceapclknbmebkpclhenccnagfmogmldmigaaamefhagiacphbbobilamokijadfp
+fddpihmogpebggbonedhnbafdmnnnffjpmlifdnlipppaaeigephmckhkogblppl
+ncinnpkgfgbpekafaikngjhjkkifhkhhiheekmodgkccinkpephkoaejmodojlpk
+gdmbnebfpdohgapjffpigebfmlipjigkhacjnakajbfdlkejacjdhlagalhmojlj
+fkpgejnhgapeflofappjjifchncoplkikoknlalglojbmpjickgipgfdjdafkmde
+agahbeepnojfhbkpnanlfmcnpnknjdclendoldcjgofdompedkhkjegaidhoapac
+dpffmljaikmnonihlmfmckkommkfomfaljleibjdnflnnfjedfnnieafbehpgool
+djpcmmjgdgdgooigkpdkgjfkhdnapmjeckajehfkpkafmmicckkiaaicckkiaaic
+ckkiaajcddleoflgbpgcomlflilngalehcjlemngnjklpoincacplddggokpgpak
+pajenmncihpdeifhlkpnpaloofhcljcgccknkfknejelnlgnmlioejmlijecomge
+hapfoeilfbjogbojidclpeoajokpokpkfcnkpklnhggbbpnkmkppaakggechemaa
+mkdkojmjbpfmaafhnicnmlholfiikgphfbedcmoeepcneljpgckaadcejelcngjb
+epidpfcnhlednfkgdpkfgnmdnefgdhmbghgpkdehlolgmabnbdcbbdjnjljmepgm
+hfhaloofjgdkfebhopljdheklghbgpknfhfmdmndikfcecjhebcbmdgmggcflfbh
+eohgakfmchcojgoenkjcceoanmlkfbgaejokpmoeloafofndmmgfchflmjlcndan
+jboigdnhbkpigklhhfnjkgkjpljiedhpglgilnpfgjjgooibnojfmkaobcffhfeh
+miiebeanpafoffeppaibihhlffhlblilgjcpomidpogfhffikjlmhhbdalmaoajb
+nhheeolghodcbjffeienljmelogjccncifnnapgbdkmkoflnmnnhckmnfdjjkjge
+hbnabcmclbpdhhobojfplnhpcoclgblmfmaljolgghfcbnekcapcademnceodeoi
+plonfdgmkopjbbfhnkncpkpblpkbomgolahekijcobjdjjdhecdifiaadifpokme
+ogheofnlofigfeccigenafniljndocbljjomnjdonooacoodkjejdfjnmendghpk
+kjhiapkndoopfaifhdobkcbpnbojikkpnhhmhimkmmblemdlabhleocankojeihk
+mgefkhgifllkollkekkgleakhangcdbofoadhmihmbkmnklbbcdakcjdlbcllchk
+hckmblidmecemjoppbcflkffmidkdginfmncdgiokhnmpjiiedikfdldjamdlmjg
+bijcbjciiaidacoiemabbenkmhhnhnmjcebnfeebaabffeebaabffeebaagfgcnk
+bonglamfgjjdfhneccomgpiehnkgedbpgakcnddllfehafhahcfhbolblgneoacp
+hmdmgdkdggjjfddmdchblgfeihjigfhagooemphgobgialeppmbakghmemkngghk
+pkkognhhgjkpcgjmgplelelfbcpgkbiepnemaeidpddokiepkiicdaommldefbhm
+gimpbamkpgkjpbglkghbfcmhlmihjnchdnkmabmbcbjhaaopnjlcmiljnfdnehco
+mcaglelidiaabbejflfiekjnoiaibjamkphflhbpcfncopjalgcjkefknjfonldm
+pjooikfjhhpbamdbmfanjpgagaadoagekdafhancjhokjgkbdiemphelfgdnocbn
+kfidongonndjahfhkndmcbmamboikdbpgnllphlaipjbgididkknnnofjnnengag
+ecigfgdlcfjbjjdpllhhecpbnlknnjbkflnmemhppbhganpbafbdmpcilehiifao
+haobjphccikdjcnkfanlenmhbcmhfglldnpdcojehhibgcndcdlnphinggmbbbfi
+afcnlcfhomidacgpccfkfmbdmnlocamnfmchbjmkbhlbpalcjbncdpgiobnniahm
+cppkedbphkbiokngnopgokmcfjoceljkpgckplkjimdcjafjajfabcibhgacaiid
+hmmbfnbgnkloojecendkbpgefjahnccoglggoicmcmphjlcchgcbjhiliojembph
+hhdaonelokmpbelkihjmdbkecnelnodfiefnckfjmahnggffcpnoabdiilcjoaec
+kmeobaoiekobianmlchkbkcfhkicekongmfdgmplikihgiepkogfkldbknjjccbb
+gocpeobaelcbkhocpecflhkamhjalkjhimcnmnjfmopmmmjkdbhgapfclkdgifap
+ogdkdkifcmgpkjinadheiigpndcjahldnhcnlckdbnocckhanohhjajcmogfpcpc
+dadpeddofbfbegnejnmmiohfkfopdkobfkhgjglkolljckppaaigoelpngebmccn
+blpdadpnmpdcodijkolgbkdnmdlcbgfcepahlnoflggdhhchmblailfhjbjbbifp
+kcjngaclmlicaplnihjgokekccidmihpdbddojljmenkdijphfbeckkfippmjfdn
+ppaahledlcljnfocfnbelhldlgljafnomhpdnldcobdghaalobjlkkbbdlhaiifl
+plgapnhefgdojbdckldnfgngglkpmnbfjhagdbbnhgbecmojamoilcanfndimami
+ohfbkmigkfgkpjdopkmanmnbfoakgffcnkpomogceofmackohkjpdijokibmhjcm
+onhcapfjjiklappoiiocfhlalgbefjcnpcbjjfofbdmplahcafnhnaaakhfgfbpi
+bonnoghnemkhfcgkblegemlnnngcfphaikfphamnmbkiinakcakiicakcakiicak
+oalacohgkiflpckajokfehkjjghlfiokpogbonlflkijlmfmcapjcomgefgfkjpb
+mifliekjdhbpoahafldjoofdginjhbioemkjnopomgnofllajfncpgncdoilhlaj
+bgcofjdelcpaahlgbiapbcclapglnlmkihndcooicndeehhnghdcakilfigmohpf
+hpahgeicbaknhndimpmekjncbnhifmhbkheklnlfnhfkmobfiiokdcdcgaddflch
+oaddcildkjcoedlnijellgnakdlbligjlhlafnhamenlmhbjccbjpjjcpiapklep
+bmlohmolndapdpknmldjhfapmcknofdjphbknkkppebolkcpjfbgilhmljdgocle
+gapiopkhcainimpdpfmfaifhonkaljbbnflfdjcikailpbijopciklcnlcamepla
+pidbiokfcjnfjfinkflnbmebbgofannnjjgbfollejhcijdphnhadcjooflipgbp
+pedmeaiipkoohkdnocphkilblmhhcfpadlaaefopgaaiadfhnkobdpcmklfpnnfp
+fknjfmonhinhpcpjkckfgmeglhjdpeonbchemcmkjhdobknmehojcadnogmoepjj
+fpnbcegbcilpcfijpmecmachcgbfcpckpjnhakhgmndnpefmpedahiknmdbeogom
+ldgeoipnjmigpdfbmhabpdgokdpjmicdppaabpfdkcjcldkjkdcjbhfolhkbofpc
+jjdbhecpljpokmkoaakpmbhngjipdihfkbofmjeeagjejhdhijnkbghahjdhhmeo
+ddcjkghpiimdchklnpjpkbfanjnmionibhmbclgmanemndifdlaalhghgadlepnj
+bbnkoopncfenogfaonhkeclhmeijcmgmplnnbejoefgghdopbbilfcapflokjiah
+cpjhbbkcjigdmbpgbmjmjbephcfdhnmhjcenfogbkdhigioceohgljgebjeemcnn
+kfnnbmbdnpbhimmpfaggaggglkiodhnjhdcoomoiaobofdlejdnoeghmdhibdphb
+kpanhadeaolllnnfhdkfbpfjoldkcdbemhkjjjilijkmbodhdaiccplnojincoll
+lkljlnlhlejeocokggienkdonfpodcmbicobjlokhhemondaanmllfeccfkoajle
+gockejcbdejcnijjjajmgehmbfhmkhlmpibofheimigjkngjnkkkkokfegeajhkb
+nhnmhmooejoaaidogjpbkfaahjboeecfpccicbfodkigbkmlklilklcigdiblclb
+imkeopmjopfdonefjekbembkbfceikibaaoaaajkigaackkiicaackkiicaamknd
+hhdmkdhfjinkdklieffldpmhglnnebkifmobdckomkadbenkkmdeaemblcmphdgl
+afhcdlhnfdlmnhbejdkifopokfnfojlnlbfodckolcdcofflbpmmbbceogellnne
+bhbchanpcckmpecccfpdlodjbhpjbkpkbfgkhlobelbaaohggmkfahdgmaglkpcj
+nfhhhlgdcfogpmhkkenkcoihmphfpcgifkfnpnpehjkebnccihmpdodcfijlgjcd
+amcbebhgigjbponmlhelkjgofjdbejhjdfdlgenbdeoeakpignjlpbkikdfllimh
+ddfneihhabmnfdencgonfboiaelnnnijaagapdpdcmaijdionkbncamckeoaaaff
+idjmndhifdgnjfipodjgafndfohmhjpjaobedjjpgnheeimomlnmoekmjbjlcpdj
+dhlhajpdgmnlocaiadncmljcgkamdekdmlmokdpgogpdbcjfoplccnakkignldll
+ihgngdgfknlpgabahafkfhfpnicobjppaaebnopmfnphepbcaeobhhjfoobddopi
+iakeodapenjbdhmocgpgapnkkapmbfgomheeapehdajkklojmelhmchcpjgnaind
+klkiicakcakijcicbaigckkiaaicckkiaaicckkiaalcnmmpdhlckoodjccnmphd
+mddpbefklmhgndnococmgohdjliaaeifhpoaaejmjmhmkfepkidppkjigjnkggkp
+pejienallinebjbkllknddoppiocfboipdjnbcneaabhdkcmofnbmfmobnmgcmob
+aihmmjpajkgoliphjaiogdhjblonlnjoajhemdhgichfdchajocnhlhgbinkfokc
+embbenadiolmindijojfkbgjfklhjgikknjfjfiohpkfmihnabnlgminiemabbie
+eaaikhcpigdablapjippaajijnppaaokngnfnpihoibjdoniocdnffeijmddjfnn
+gephjhpgjhjbfiblpnikpkggdlmlciopfnocncekjfccajegkdmjkiaablifolkc
+pdbppemnnhdfppaacefbelkhhfpbdonaaefboicmddgjpmjjacobnnfaaachefpm
+malnnpllcofmdkghdneljoechcnbfoldheionaiekkjfciikjmhcaagfgabilkko
+gfobkchnfdnobdfefniknjmgnmjjacjbdoiiagfjogmmibcjldobohelbapoejfj
+bjbklogdkfgpmjkjfieicklehhdobkmaekfhgfhaajbeimfmmgafbafeebafbafe
+ebafbafeebafbafeebafbaffokncckklcilejhdkhfkifekckonniandfejfekak
+pafcjlheiphhhloefnbongdebmpoocncochldbfdbidgemmehammlomjaomiojfn
+fnihpicmpalknakdlpgeolkboflkhkdbgplebjobfpbbhlongedfenbbjfhpghjo
+pkmpgfoicneplclniggljejhmandojjhibokcpldnolahmgnlllhlkilmcnoekjl
+jlfjcccifdmncpjdambffpakoakbkmcooolpemcbippegmgjkbnglpndjljlfljl
+ieohjeanmbadicdhelmioifpbdipbfboipjbekbnfoenehjhpeecinofkdocphnn
+eckihicmoioplcbpnfhnmimencobjjmbpbcgcnlmmajbhfjdjhahkhcaaedajoof
+fiaeobphdhaoppaakbcebiehpniihhbeldnkonpjebempihpaigajlnfndfhfhll
+gnnkfpjedollnhodmolfflenbhjhbgjmfeoggepenklhnbembnlflfjmmdomcbic
+enllblioaaeokjcoohnbjpkjmjkhgpplfcjkkidnifpllpfeikajchbpeaffgfdc
+glbhkjaacmlldjlplcdmkhgijlecjfgbjogljnbdopglggldafpaemkiemdneplp
+pnhalnjnigkjmmobleiejlginooacgnjomjfbipdcmaoojhipkkgmoflmhihdkco
+gcpjakcmffelnpialanpbehedejcppaacfpjhinciphfdgjkjggfkhompjfdoibk
+mghjgbcnmikdieidpdaonhfmaajhmggeppaaieenpjdfbnnbcffopmkpnemlpjko
+okamibbanppadkoahemhoilcanmhjdcolipcbblfjdeijefaenmbmfknkeohihpi
+plikndiiaohnhbphaknmbooepgocojdofenacppfkdoolgbeinleoijflhpgnopn
+gnklddbofblgieocmkpggfnagfcbofknjpdfacegmalkmaopbpiaibacpjbhcidd
+aenbakjdfkmkpcpakgpolkifplknncollmpheagilalmahlnmljkhabkooiabmha
+ankinnakcakikeicbaigckkiaaicckkiaajcjcigakoapeemodnaneggkpnaoepm
+bfklcnfplgehbdfknnbleaejhcldjfpemaddlojfdmbomlhfcpekolgchnfdnbih
+hekmlfmnbbmbaclpgmijhabpokgpkiaakiidgniccmacbaaaamaaagbacfbnfeaa
+dhojjdelljafapoclljgogddedglcdkkpadfelbpcfipcfopnadecmkfnennalca
+jancdgkchaogaafmogojfjgoimkjhidmnhgefoagaljlplapfkemnicdnkclpodj
+pechchdmhggfcejemdehakjapkbopflampbfdnfllafflchgcondgnhlkmpacaeh
+nfbnpdennicmnlmaehpkpchjhflicohbkimdodedigocpfkednocnefpnnmoanel
+leiljcialiilnaemdjpmgklcenhbfkaaheccjaeflkaaafapbejbeahfebednmle
+bmomnkbolpjhpgephgdgpllemadalndjmpafgbpdhhhcejhcoionfjnncfcgaijd
+phpanhkkloiffnfljeeploliiaoomdikcooimhpgngaifoiieadoikpbfifhebag
+kakfaakejcigakcakiicakcakiicakcakiicakcakiicakcakiicakcaljkiicak
+fafmncebafbafeebafbafeebafbafeebafhappjn</image>
+</ImgIcon>
 </xobject>

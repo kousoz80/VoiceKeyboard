@@ -26,6 +26,7 @@ mkdir res/raw
 cp adbkey.pk8 res/raw
 cp start.wav res/raw
 cp stop.wav res/raw
+cp voicedata.txt res/raw
 
 echo set app_name:
 java -jar replace.jar Test $1 strings.xml res/values/strings.xml
