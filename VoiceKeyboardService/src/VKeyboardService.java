@@ -109,20 +109,21 @@ public void dprint(String s){
 
 // 各種パラメータ
 int bright = 0;  // 声紋表示の輝度調節
-int startup_time = 300;
+int startup_time = 400;
 boolean flog_scale = false;//周波数対数スケール
 boolean alog_scale = false;//振幅対数スケール
 boolean auto_learn = false; // 自動学習有効
-double sound_filter = 150.0;
-double thresh_trigger_on = 4;
-double thresh_trigger_off = 4;
+double sound_filter = 200;
+double thresh_trigger_on = 3;
+double thresh_trigger_off = 3;
 int thresh_count_on = 4;
 int thresh_count_off = 10;
 double thresh_recognize = 0.1;
-double bias = 1; // ノイズ抑制用バイアス
+double bias = 3; // ノイズ抑制用バイアス
 double acompress = 0.3;  // 振幅圧縮係数
-double learn_param = 8;  // 学習パラメータ
-double limit_length = 1.1; // 音声の長さ比較用
+double learn_param_o = 8;   // 学習パラメータ
+double learn_param_x =128; // 学習パラメータ
+double limit_length = 1.2; // 音声の長さ比較用
 
 
 // 音声テンプレート
@@ -144,8 +145,9 @@ class VoiceTemplate{
 // 音声テンプレートファイル
 File voice_data_file = new File( Environment.getExternalStorageDirectory(),"VoiceData.txt" );
 
-// 音声キーボードサービスプログラム for android  ver 0.2.2
+// 音声キーボードサービスプログラム for android  ver 0.2.3
 // 変更点：
+// 学習アルゴリズムを改良
 // 自動学習機能を追加
 // 音声認識アルゴリズムを改良
 // ADB接続でキー入力コマンドを実行するのでroot権限が必要でなくなった
@@ -560,19 +562,6 @@ public void recognize( double[] voice) {
   }
 }
 
-// 録音した音声を学習する
-public void learn( int voice_no, double[] voice ){
-
-  if(voice_no >= 0 && voice != null){
-    double[] v =((VoiceTemplate)(voice_template.get(voice_no))).voice;
-    for(int i = 0; i < v.length; i++){
-      double d = 0;
-      if(i < voice.length) d = voice[i];
-      v[i] = ((learn_param - 1.0) * v[i] + d) / learn_param;
-    }
-  }
-}
-
 // 学習用の音声
 int learn_voice_no = -1;
 double[] learn_voice = null;
@@ -717,15 +706,30 @@ else{
     // 自動学習が有効な場合
     if(auto_learn){
   
-      // 認識結果が"違う"ときは学習データを破棄する
+      // 認識結果が"違う"ときはペナルティ付きの学習をして学習データを破棄する
       if(vt.text.equals("違う")){
+        if(learn_voice_no >= 0 && learn_voice != null){
+          double[] w =((VoiceTemplate)(voice_template.get(learn_voice_no))).voice;
+          for(int j = 0; j < w.length; j++){
+            double d = 0;
+            if(j < learn_voice.length) d = learn_voice[j];
+            w[j] = ((learn_param_x - 1.0) * w[j] - d) / learn_param_x;
+          }
+        }
         learn_voice_no = -1;
         learn_voice = null;
       }
 
-      // そうでない場合は学習して次回の学習のためのデータを用意する
+      // そうでない場合は報酬付きの学習をして次回の学習のためのデータを用意する
       else{
-        learn(learn_voice_no, learn_voice); 
+        if(learn_voice_no >= 0 && learn_voice != null){
+          double[] w =((VoiceTemplate)(voice_template.get(learn_voice_no))).voice;
+          for(int j = 0; j < w.length; j++){
+            double d = 0;
+            if(j < learn_voice.length) d = learn_voice[j];
+            w[j] = ((learn_param_o - 1.0) * w[j] + d) / learn_param_o;
+          }
+        }
         learn_voice_no = i;
         learn_voice = new double[v.length];
         for(int j = 0; j < v.length;j++){
@@ -1045,12 +1049,12 @@ while(true){
   if( line.equals( "" ) ) break;
   if( line.equals("debug_mode=true"))         debug_mode=true;
   if( line.equals("debug_mode=false"))        debug_mode=false;
-  if( line.equals("auto_learn=true"))         auto_learn=true;
-  if( line.equals("auto_learn=false"))        auto_learn=false;
   if( line.equals("flog_scale=true"))         flog_scale=true;
   if( line.equals("flog_scale=false"))        flog_scale=false;
   if( line.equals("alog_scale=true"))         alog_scale=true;
   if( line.equals("alog_scale=false"))        alog_scale=false;
+  if( line.equals("auto_learn=true"))         auto_learn=true;
+  if( line.equals("auto_learn=false"))        auto_learn=false;
   if( line.startsWith("startup_time="))       startup_time=Integer.parseInt(line.substring(13));
   if( line.startsWith("sound_filter="))       sound_filter=Double.parseDouble(line.substring(13));
   if( line.startsWith("thresh_trigger_on="))  thresh_trigger_on=Double.parseDouble(line.substring(18));
@@ -1060,7 +1064,8 @@ while(true){
   if( line.startsWith("thresh_recognize="))   thresh_recognize=Double.parseDouble(line.substring(17));
   if( line.startsWith("bias="))               bias=Double.parseDouble(line.substring(5));
   if( line.startsWith("acompress="))          acompress=Double.parseDouble(line.substring(10));
-  if( line.startsWith("learn_param="))        learn_param=Double.parseDouble(line.substring(12));
+  if( line.startsWith("learn_param_o="))      learn_param_o=Double.parseDouble(line.substring(14));
+  if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
 }
 
@@ -1104,9 +1109,9 @@ try{
   BufferedWriter dout = new BufferedWriter( new FileWriter(voice_data_file) );
   
   // 変数を保存する
-  dout.write("auto_learn=" + auto_learn + "\n");
   dout.write("flog_scale=" + flog_scale + "\n");
   dout.write("alog_scale=" + alog_scale + "\n");
+  dout.write("auto_learn=" + auto_learn + "\n");
   dout.write("startup_time=" + startup_time + "\n");
   dout.write("sound_filter=" + sound_filter + "\n");
   dout.write("thresh_trigger_on=" + thresh_trigger_on + "\n");
@@ -1116,7 +1121,8 @@ try{
   dout.write("thresh_recognize=" + thresh_recognize + "\n");
   dout.write("bias=" + bias + "\n");
   dout.write("acompress=" + acompress + "\n");
-  dout.write("learn_param=" + learn_param + "\n");
+  dout.write("learn_param_o=" + learn_param_o + "\n");
+  dout.write("learn_param_x=" + learn_param_x + "\n");
   dout.write("limit_length=" + limit_length + "\n");
   dout.write("\n");
 

@@ -6,7 +6,7 @@
 <y0>0</y0>
 <width>200</width>
 <height>100</height>
-<ID_maker>167</ID_maker>
+<ID_maker>171</ID_maker>
 <objectname>VoiceKeyboardControl</objectname>
 <description>新規のアプリケーション</description>
 <codeclip>
@@ -20,8 +20,8 @@
 </codeclip>
 <pin>
 <ID>_PSTART</ID>
-<x0>67</x0>
-<y0>234</y0>
+<x0>62</x0>
+<y0>232</y0>
 <width>55</width>
 <height>24</height>
 <text>Start()</text>
@@ -32,8 +32,8 @@
 <ID>_X_G87</ID>
 <x0>436</x0>
 <y0>280</y0>
-<width>178</width>
-<height>82</height>
+<width>193</width>
+<height>91</height>
 <objectname>Control</objectname>
 <description></description>
 <codeclip>
@@ -79,9 +79,15 @@ public void recognize( double[] voice) {
   }
       
   // 認識結果を送る
-  if( max &gt; thresh_recognize ) result( ((VoiceTemplate)(voice_template.get(maxi))).text+&quot;(&quot;+max+&quot;)\n&quot;);
-  else result(&quot;***(&quot;+max+&quot;)\n&quot;);
+  if( max &gt; thresh_recognize ){
+    voice_no0 = maxi;
+    result( ((VoiceTemplate)(voice_template.get(maxi))).text+&quot;(&quot;+max+&quot;)\n&quot;);
+  }
 
+  else{
+    voice_no0 = -1;
+    result(&quot;***(&quot;+max+&quot;)\n&quot;);
+  }
 }
 
 
@@ -453,7 +459,7 @@ dprint(&quot;start rec thread\n&quot;);
 }//RecordThread
 </codetext>
 </codeclip>
-<ID_maker>121</ID_maker>
+<ID_maker>125</ID_maker>
 <pin>
 <ID>_P88</ID>
 <x0>37</x0>
@@ -461,8 +467,8 @@ dprint(&quot;start rec thread\n&quot;);
 <width>60</width>
 <height>30</height>
 <text>start()</text>
-<px>118</px>
-<py>11</py>
+<px>112</px>
+<py>3</py>
 </pin>
 <operation>
 <ID>_O89</ID>
@@ -540,13 +546,13 @@ record_thread.start();
 </relation>
 <pin>
 <ID>_P91</ID>
-<x0>30</x0>
-<y0>251</y0>
-<width>60</width>
-<height>30</height>
-<text>learn()</text>
-<px>2</px>
-<py>30</py>
+<x0>28</x0>
+<y0>255</y0>
+<width>81</width>
+<height>29</height>
+<text>learn_o()</text>
+<px>5</px>
+<py>29</py>
 </pin>
 <operation>
 <ID>_O93</ID>
@@ -572,7 +578,7 @@ record_thread.start();
 <outpinheight>20</outpinheight>
 <inpinlinkcount>1</inpinlinkcount>
 <description></description>
-<codetext>// 録音した音声を学習する
+<codetext>// 録音した音声を学習する(報酬)
 
 
 if(tsize &gt; 0){
@@ -584,7 +590,7 @@ if(tsize &gt; 0){
   for(int i = 0; i &lt; v.length; i++){
     double d = 0;
     if(i &lt; voice.length) d = voice[i];
-    v[i] = ((learn_param - 1.0) * v[i] + d) / learn_param;
+    v[i] = ((learn_param_o - 1.0) * v[i] + d) / learn_param_o;
   }
   ((VoiceTemplate)(voice_template.get(voice_no))).voice = v;
   update_display();
@@ -603,8 +609,8 @@ if(tsize &gt; 0){
 <width>108</width>
 <height>27</height>
 <text>result(String s)</text>
-<px>67</px>
-<py>38</py>
+<px>77</px>
+<py>28</py>
 </pin>
 <codeclip>
 <ID>_C105</ID>
@@ -623,8 +629,8 @@ double[][] sin_table, cos_table;
 <width>60</width>
 <height>30</height>
 <text>ins()</text>
-<px>0</px>
-<py>48</py>
+<px>10</px>
+<py>59</py>
 </pin>
 <pin>
 <ID>_P112</ID>
@@ -633,8 +639,8 @@ double[][] sin_table, cos_table;
 <width>60</width>
 <height>30</height>
 <text>del()</text>
-<px>0</px>
-<py>65</py>
+<px>10</px>
+<py>75</py>
 </pin>
 <pin>
 <ID>_P113</ID>
@@ -643,8 +649,8 @@ double[][] sin_table, cos_table;
 <width>60</width>
 <height>30</height>
 <text>exit()</text>
-<px>120</px>
-<py>65</py>
+<px>127</px>
+<py>47</py>
 </pin>
 <operation>
 <ID>_O114</ID>
@@ -771,6 +777,74 @@ record_thread.join();
 <pin1name>_P113</pin1name>
 <pin2name>_O118</pin2name>
 </relation>
+<pin>
+<ID>_P121</ID>
+<x0>456</x0>
+<y0>241</y0>
+<width>75</width>
+<height>30</height>
+<text>learn_x()</text>
+<px>6</px>
+<py>45</py>
+</pin>
+<operation>
+<ID>_O122</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>553</x0>
+<y0>255</y0>
+<width>268</width>
+<height>48</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>28</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// 録音した音声を学習する(ペナルティ)
+
+
+if(tsize &gt; 0 &amp;&amp; voice_no0 &gt;= 0){
+  double[] u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
+  double[] v = new double[tsize];
+  for(int i = 0; i &lt; v.length; i++){
+  if(i &lt; u.length) v[i] = u[i]; else v[i] = 0;
+  }
+  for(int i = 0; i &lt; v.length; i++){
+    double d = 0;
+    if(i &lt; voice.length) d = voice[i];
+    v[i] = ((learn_param_x - 1.0) * v[i] - d) / learn_param_x;
+  }
+  ((VoiceTemplate)(voice_template.get(voice_no0))).voice = v;
+  update_display();
+}
+</codetext>
+</operation>
+<relation>
+<ID>_R123</ID>
+<pin1name>_P121</pin1name>
+<pin2name>_O122</pin2name>
+</relation>
+<codeclip>
+<ID>_C124</ID>
+<x0>514</x0>
+<y0>145</y0>
+<width>157</width>
+<height>31</height>
+<codetext>// 認識結果(音声番号)
+int voice_no0;
+</codetext>
+</codeclip>
 </xobject>
 <relation>
 <ID>_R89</ID>
@@ -793,8 +867,8 @@ record_thread.join();
 <width>65</width>
 <height>29</height>
 <text>save()</text>
-<px>0</px>
-<py>42</py>
+<px>123</px>
+<py>12</py>
 </pin>
 <pin>
 <ID>_P12</ID>
@@ -803,8 +877,8 @@ record_thread.join();
 <width>60</width>
 <height>30</height>
 <text>load()</text>
-<px>0</px>
-<py>28</py>
+<px>83</px>
+<py>33</py>
 </pin>
 <operation>
 <ID>_O13</ID>
@@ -877,7 +951,8 @@ while(true){
   if( line.startsWith(&quot;thresh_recognize=&quot;))   thresh_recognize=Double.parseDouble(line.substring(17));
   if( line.startsWith(&quot;bias=&quot;))               bias=Double.parseDouble(line.substring(5));
   if( line.startsWith(&quot;acompress=&quot;))          acompress=Double.parseDouble(line.substring(10));
-  if( line.startsWith(&quot;learn_param=&quot;))        learn_param=Double.parseDouble(line.substring(12));
+  if( line.startsWith(&quot;learn_param_o=&quot;))      learn_param_o=Double.parseDouble(line.substring(14));
+  if( line.startsWith(&quot;learn_param_x=&quot;))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
 }
 
@@ -956,7 +1031,8 @@ try{
   dout.write(&quot;thresh_recognize=&quot; + thresh_recognize + &quot;\n&quot;);
   dout.write(&quot;bias=&quot; + bias + &quot;\n&quot;);
   dout.write(&quot;acompress=&quot; + acompress + &quot;\n&quot;);
-  dout.write(&quot;learn_param=&quot; + learn_param + &quot;\n&quot;);
+  dout.write(&quot;learn_param_o=&quot; + learn_param_o + &quot;\n&quot;);
+  dout.write(&quot;learn_param_x=&quot; + learn_param_x + &quot;\n&quot;);
   dout.write(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
   dout.write(&quot;\n&quot;);
 
@@ -994,8 +1070,8 @@ try{
 </xobject>
 <xobject>
 <ID>_X92</ID>
-<x0>436</x0>
-<y0>367</y0>
+<x0>435</x0>
+<y0>373</y0>
 <width>178</width>
 <height>191</height>
 <ID_maker>44</ID_maker>
@@ -1501,10 +1577,10 @@ update_display();
 </relation>
 <codeclip>
 <ID>_C103</ID>
-<x0>622</x0>
-<y0>82</y0>
-<width>358</width>
-<height>219</height>
+<x0>1</x0>
+<y0>89</y0>
+<width>361</width>
+<height>126</height>
 <codetext>// 音声テンプレート
 Vector voice_template;
 class VoiceTemplate{
@@ -1513,6 +1589,7 @@ class VoiceTemplate{
   int code;        // キーコード
   double[] voice; // 音声データ
   VoiceTemplate( String t, double w, int c, double[] v ){
+
     text = t;
     weight = w;
     code = c;
@@ -1524,13 +1601,14 @@ class VoiceTemplate{
 </codeclip>
 <codeclip>
 <ID>_C104</ID>
-<x0>6</x0>
+<x0>685</x0>
 <y0>0</y0>
-<width>308</width>
-<height>220</height>
+<width>306</width>
+<height>246</height>
 <codetext>// 各種パラメータ
 boolean flog_scale = false; // 周波数スケール
 boolean alog_scale = false; // 振幅スケール
+boolean auto_learn=false;
 int startup_time = 300;
 double sound_filter = 150.0;
 double thresh_trigger_on = 2;
@@ -1540,11 +1618,10 @@ int thresh_count_off = 10;
 double thresh_recognize = 0.1;
 double bias = 1; // ノイズ抑制用バイアス
 double acompress = 0.3;  // 振幅圧縮係数
-double learn_param = 8;  // 学習パラメータ
+double learn_param_o = 8;  // 学習パラメータ
+double learn_param_x =128; // 学習パラメータ
 double limit_length = 1.1; // 音声の長さ比較用
 
-
-boolean auto_learn=false;
 </codetext>
 </codeclip>
 <relation>
@@ -1556,11 +1633,6 @@ boolean auto_learn=false;
 <ID>_R106</ID>
 <pin1name>_X91(_P12)</pin1name>
 <pin2name>_X_G87(_P88)</pin2name>
-</relation>
-<relation>
-<ID>_R108</ID>
-<pin1name>_A88(_PAsave)</pin1name>
-<pin2name>_X91(_P1)</pin2name>
 </relation>
 <relation>
 <ID>_R111</ID>
@@ -1590,8 +1662,8 @@ File voice_data_file = new File( &quot;/sdcard/VoiceData.txt&quot; );
 <ID>_O117</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>636</x0>
-<y0>307</y0>
+<x0>656</x0>
+<y0>272</y0>
 <width>125</width>
 <height>51</height>
 <inconnectx0>0</inconnectx0>
@@ -1631,7 +1703,7 @@ update_display();
 </relation>
 <codeclip>
 <ID>_C121</ID>
-<x0>622</x0>
+<x0>4</x0>
 <y0>0</y0>
 <width>284</width>
 <height>82</height>
@@ -1830,6 +1902,7 @@ public class HelloWorld extends Activity {
          try{
            ap.dbg.close();
          } catch(Exception e){}
+         ap.save();
          ap.exit();
       }
       super.onStop();
@@ -1984,8 +2057,8 @@ dprint(&quot;update display\n&quot;);
 </relation>
 <xobject>
 <ID>_X_G130</ID>
-<x0>626</x0>
-<y0>525</y0>
+<x0>651</x0>
+<y0>526</y0>
 <width>177</width>
 <height>112</height>
 <objectname>Setter</objectname>
@@ -2025,7 +2098,7 @@ dprint(&quot;update display\n&quot;);
 <width>144</width>
 <height>25</height>
 <px>0</px>
-<py>87</py>
+<py>92</py>
 </pin>
 <relation>
 <ID>_R134</ID>
@@ -2041,7 +2114,7 @@ dprint(&quot;update display\n&quot;);
 <height>29</height>
 <text>code_is(EditText e)</text>
 <px>0</px>
-<py>69</py>
+<py>74</py>
 </pin>
 <operation>
 <ID>_O145</ID>
@@ -2110,7 +2183,7 @@ dprint(&quot;update display\n&quot;);
 <height>31</height>
 <text>text_is(EditText t)</text>
 <px>0</px>
-<py>34</py>
+<py>36</py>
 </pin>
 <relation>
 <ID>_R149</ID>
@@ -2125,7 +2198,7 @@ dprint(&quot;update display\n&quot;);
 <height>29</height>
 <text>weight_is(EditText t)</text>
 <px>0</px>
-<py>52</py>
+<py>54</py>
 </pin>
 <operation>
 <ID>_O158</ID>
@@ -2166,11 +2239,6 @@ dprint(&quot;update display\n&quot;);
 <pin2name>_X_G130(_P144)</pin2name>
 </relation>
 <relation>
-<ID>_R145</ID>
-<pin1name>_A88(_PAlearn)</pin1name>
-<pin2name>_X_G87(_P91)</pin2name>
-</relation>
-<relation>
 <ID>_R146</ID>
 <pin1name>_A88(_PAins)</pin1name>
 <pin2name>_X_G87(_P111)</pin2name>
@@ -2182,8 +2250,8 @@ dprint(&quot;update display\n&quot;);
 </relation>
 <codeclip>
 <ID>_C148</ID>
-<x0>315</x0>
-<y0>0</y0>
+<x0>382</x0>
+<y0>4</y0>
 <width>291</width>
 <height>214</height>
 <codetext>// 変数
@@ -2204,8 +2272,8 @@ boolean is_running = false; // 実行中フラグ
 </codeclip>
 <pin>
 <ID>_P149</ID>
-<x0>651</x0>
-<y0>361</y0>
+<x0>678</x0>
+<y0>355</y0>
 <width>44</width>
 <height>26</height>
 <text>exit()</text>
@@ -2254,17 +2322,17 @@ boolean is_running = false; // 実行中フラグ
 </relation>
 <xobject>
 <ID>_X160</ID>
-<x0>10</x0>
-<y0>271</y0>
+<x0>9</x0>
+<y0>281</y0>
 <width>107</width>
 <height>68</height>
-<ID_maker>30</ID_maker>
+<ID_maker>52</ID_maker>
 <objectname>config</objectname>
 <description></description>
 <pin>
 <ID>_P1</ID>
-<x0>21</x0>
-<y0>63</y0>
+<x0>14</x0>
+<y0>24</y0>
 <width>109</width>
 <height>26</height>
 <text>start(Object l)</text>
@@ -2273,8 +2341,8 @@ boolean is_running = false; // 実行中フラグ
 </pin>
 <pin>
 <ID>_P4</ID>
-<x0>102</x0>
-<y0>399</y0>
+<x0>887</x0>
+<y0>157</y0>
 <width>60</width>
 <height>30</height>
 <text>config()</text>
@@ -2285,8 +2353,8 @@ boolean is_running = false; // 実行中フラグ
 <ID>_O5</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>144</x0>
-<y0>59</y0>
+<x0>143</x0>
+<y0>9</y0>
 <width>164</width>
 <height>52</height>
 <inconnectx0>0</inconnectx0>
@@ -2322,10 +2390,1121 @@ main_container = (AbsoluteLayout)o;
 <pin1name>_O5</pin1name>
 <pin2name>_A2(_Pstart)</pin2name>
 </relation>
+<codeclip>
+<ID>_C8</ID>
+<x0>41</x0>
+<y0>317</y0>
+<width>262</width>
+<height>66</height>
+<codetext>// コンテナ
+AbsoluteLayout main_container;
+AbsoluteLayout config_container;
+AbsoluteLayout equalizer_container;
+</codetext>
+</codeclip>
+<operation>
+<ID>_O10</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>671</x0>
+<y0>6</y0>
+<width>164</width>
+<height>52</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(Object o)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>27</inpiny0>
+<inpinwidth>83</inpinwidth>
+<inpinheight>25</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>114</outpinx0>
+<outpiny0>32</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// コンテナを取得
+
+
+
+config_container = (AbsoluteLayout)o;
+ACTIVITY.setContentView(main_container);
+</codetext>
+</operation>
+<relation>
+<ID>_R11</ID>
+<pin1name>_A2(_PGUIout)</pin1name>
+<pin2name>_O10</pin2name>
+</relation>
+<operation>
+<ID>_O12</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>686</x0>
+<y0>146</y0>
+<width>171</width>
+<height>51</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>118</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>43</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// データをセットして表示
+
+
+
+
+  cflog_scale.setChecked(flog_scale);
+  calog_scale.setChecked(alog_scale);
+  cauto_learn.setChecked(auto_learn);
+  cstartup_time.setText(&quot;&quot; + startup_time);
+  csound_filter.setText(&quot;&quot; + sound_filter);
+  cthresh_trigger_on.setText(&quot;&quot; + thresh_trigger_on);
+  cthresh_trigger_off.setText(&quot;&quot; + thresh_trigger_off);
+  cthresh_count_on.setText(&quot;&quot; + thresh_count_on);
+  cthresh_count_off.setText(&quot;&quot; + thresh_count_off);
+  cthresh_recognize.setText(&quot;&quot; + thresh_recognize);
+  cbias.setText(&quot;&quot; + bias);
+  cacompress.setText(&quot;&quot; + acompress);
+  clearn_param_o.setText(&quot;&quot; + learn_param_o);
+  clearn_param_x.setText(&quot;&quot; + learn_param_x);
+  climit_length.setText(&quot;&quot; + limit_length);
+  ACTIVITY.setContentView(config_container);
+  
+</codetext>
+</operation>
+<relation>
+<ID>_R13</ID>
+<pin1name>_P4</pin1name>
+<pin2name>_O12</pin2name>
+</relation>
+<operation>
+<ID>_O19</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>109</x0>
+<y0>67</y0>
+<width>174</width>
+<height>49</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>126</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// 変数をセットして閉じる
+
+
+  flog_scale=cflog_scale.isChecked();
+  alog_scale=calog_scale.isChecked();
+  auto_learn=cauto_learn.isChecked();
+  startup_time=get_int(cstartup_time);
+  sound_filter=get_double(csound_filter);
+  thresh_trigger_on=get_double(cthresh_trigger_on);
+  thresh_trigger_off=get_double(cthresh_trigger_off);
+  thresh_count_on=get_int(cthresh_count_on);
+  thresh_count_off=get_int(cthresh_count_off);
+  thresh_recognize=get_double(cthresh_recognize);
+  bias=get_double(cbias);
+  acompress=get_double(cacompress);
+  learn_param_o=get_double(clearn_param_o);
+  learn_param_x=get_double(clearn_param_x);
+  limit_length=get_double(climit_length);
+
+  ACTIVITY.setContentView(main_container);
+  
+</codetext>
+</operation>
+<relation>
+<ID>_R20</ID>
+<pin1name>_A2(_PAclose)</pin1name>
+<pin2name>_O19</pin2name>
+</relation>
+<operation>
+<ID>_O21</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>156</x0>
+<y0>227</y0>
+<width>121</width>
+<height>49</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>70</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>//データを消去
+
+
+try{
+
+  int cnt = 0;
+  InputStream is = ACTIVITY.getResources().openRawResource(R.raw.voicedata);
+  while (is.read()!=-1) cnt++;
+  byte[] b = new byte[cnt];
+  is.reset();
+  is.read(b);
+  is.close();
+  FileOutputStream os = new FileOutputStream(voice_data_file);
+  os.write(b);
+  os.close();
+
+String line = null;
+BufferedReader din = new BufferedReader( new FileReader(voice_data_file));
+
+// 変数を読み込む
+while(true){
+  if( ( line=din.readLine() ) == null ) return;
+  if( line.equals( &quot;&quot; ) ) break;
+  if( line.equals(&quot;debug_mode=true&quot;))         debug_mode=true;
+  if( line.equals(&quot;debug_mode=false&quot;))        debug_mode=false;
+  if( line.equals(&quot;flog_scale=true&quot;))         flog_scale=true;
+  if( line.equals(&quot;flog_scale=false&quot;))        flog_scale=false;
+  if( line.equals(&quot;alog_scale=true&quot;))         alog_scale=true;
+  if( line.equals(&quot;alog_scale=false&quot;))        alog_scale=false;
+  if( line.equals(&quot;auto_learn=true&quot;))         auto_learn=true;
+  if( line.equals(&quot;auto_learn=false&quot;))        auto_learn=false;
+  if( line.startsWith(&quot;startup_time=&quot;))       startup_time=Integer.parseInt(line.substring(13));
+  if( line.startsWith(&quot;sound_filter=&quot;))       sound_filter=Double.parseDouble(line.substring(13));
+  if( line.startsWith(&quot;thresh_trigger_on=&quot;))  thresh_trigger_on=Double.parseDouble(line.substring(18));
+  if( line.startsWith(&quot;thresh_trigger_off=&quot;)) thresh_trigger_off=Double.parseDouble(line.substring(19));
+  if( line.startsWith(&quot;thresh_count_on=&quot;))    thresh_count_on=Integer.parseInt(line.substring(16));
+  if( line.startsWith(&quot;thresh_count_off=&quot;))   thresh_count_off=Integer.parseInt(line.substring(17));
+  if( line.startsWith(&quot;thresh_recognize=&quot;))   thresh_recognize=Double.parseDouble(line.substring(17));
+  if( line.startsWith(&quot;bias=&quot;))               bias=Double.parseDouble(line.substring(5));
+  if( line.startsWith(&quot;acompress=&quot;))          acompress=Double.parseDouble(line.substring(10));
+  if( line.startsWith(&quot;learn_param_o=&quot;))      learn_param_o=Double.parseDouble(line.substring(14));
+  if( line.startsWith(&quot;learn_param_x=&quot;))      learn_param_x=Double.parseDouble(line.substring(14));
+  if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
+}
+
+hosei = new double[HEARING_HEIGHT];
+for(int i = 0; true; i++){
+  if((line=din.readLine()) == null){din.close(); return;}
+  if( line.equals( &quot;&quot; ) ) break;
+  hosei[i%HEARING_HEIGHT] = Double.parseDouble(line);
+}
+
+// 音声データを読み込む
+voice_template = new Vector();
+while(true){
+  if((line=din.readLine()) == null){din.close(); return;}
+  if(line.equals(&quot;END&quot;)) break;
+  String t = line;
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  double w = Double.parseDouble(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int c = Integer.parseInt(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int s = Integer.parseInt(line);
+  double[] v = new double[s];
+  for(int i = 0; i &lt; s; i++){
+    if((line=din.readLine()) == null){din.close(); return;}
+    v[i] = Double.parseDouble(line);
+  }
+  voice_template.add(new VoiceTemplate(t, w, c, v));
+}
+
+din.close();
+} catch( Exception e ){ dprint(e+&quot;\n&quot;); }
+
+voice_no = 0;
+</codetext>
+</operation>
+<relation>
+<ID>_R22</ID>
+<pin1name>_A2(_PAclear)</pin1name>
+<pin2name>_O21</pin2name>
+</relation>
+<operation>
+<ID>_O23</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>82</x0>
+<y0>125</y0>
+<width>200</width>
+<height>46</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>154</inpinx0>
+<inpiny0>26</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// SDカードにバックアップする
+
+
+//音声テンプレートを保存する
+
+try{
+
+  String line = null;
+  int cnt = 0;
+  BufferedWriter dout = new BufferedWriter( new FileWriter(voice_data_file) );
+  
+  // 変数を保存する
+  dout.write(&quot;flog_scale=&quot; + flog_scale + &quot;\n&quot;);
+  dout.write(&quot;alog_scale=&quot; + alog_scale + &quot;\n&quot;);
+  dout.write(&quot;auto_learn=&quot; + auto_learn + &quot;\n&quot;);
+  dout.write(&quot;startup_time=&quot; + startup_time + &quot;\n&quot;);
+  dout.write(&quot;sound_filter=&quot; + sound_filter + &quot;\n&quot;);
+  dout.write(&quot;thresh_trigger_on=&quot; + thresh_trigger_on + &quot;\n&quot;);
+  dout.write(&quot;thresh_trigger_off=&quot; + thresh_trigger_off + &quot;\n&quot;);
+  dout.write(&quot;thresh_count_on=&quot; + thresh_count_on + &quot;\n&quot;);
+  dout.write(&quot;thresh_count_off=&quot; + thresh_count_off + &quot;\n&quot;);
+  dout.write(&quot;thresh_recognize=&quot; + thresh_recognize + &quot;\n&quot;);
+  dout.write(&quot;bias=&quot; + bias + &quot;\n&quot;);
+  dout.write(&quot;acompress=&quot; + acompress + &quot;\n&quot;);
+  dout.write(&quot;learn_param_o=&quot; + learn_param_o + &quot;\n&quot;);
+  dout.write(&quot;learn_param_x=&quot; + learn_param_x + &quot;\n&quot;);
+  dout.write(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
+  dout.write(&quot;\n&quot;);
+
+  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
+    dout.write(hosei[i] + &quot;\n&quot;);
+  }
+  dout.write(&quot;\n&quot;);
+  
+  // 音声データを保存する
+  for( int i = 0; i &lt; voice_template.size(); i++ ){
+    dout.write(((VoiceTemplate)voice_template.get(i)).text + &quot;\n&quot; );
+    dout.write(((VoiceTemplate)voice_template.get(i)).weight + &quot;\n&quot; );
+    dout.write(((VoiceTemplate)voice_template.get(i)).code + &quot;\n&quot; );
+    double[] v = ((VoiceTemplate)(voice_template.get(i))).voice;
+    dout.write(v.length + &quot;\n&quot;);
+    for (int j = 0; j &lt;  v.length; j++){
+      dout.write(v[j] + &quot;\n&quot;);
+    }
+  }
+  dout.write(&quot;END\n&quot;);
+  dout.close();
+
+  // バックアップファイルにコピーする
+  FileInputStream is = new FileInputStream(voice_data_file);;
+  while (is.read()!=-1) cnt++;
+  byte[] b = new byte[cnt];
+  is.reset();
+  is.read(b);
+  is.close();
+  FileOutputStream os = new FileOutputStream(backup_file);
+  os.write(b);
+  os.close();
+
+} catch( Exception e ){dprint(e+&quot;\n&quot;);}
+</codetext>
+</operation>
+<relation>
+<ID>_R24</ID>
+<pin1name>_A2(_PAbackup)</pin1name>
+<pin2name>_O23</pin2name>
+</relation>
+<operation>
+<ID>_O25</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>50</x0>
+<y0>177</y0>
+<width>230</width>
+<height>47</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>179</inpinx0>
+<inpiny0>26</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>//バックアップしたデータを呼び出す
+
+
+try{
+  String line = null;
+  int cnt = 0;
+
+  // バックアップファイルからコピーする
+  FileInputStream is = new FileInputStream(backup_file);;
+  while (is.read()!=-1) cnt++;
+  byte[] b = new byte[cnt];
+  is.reset();
+  is.read(b);
+  is.close();
+  FileOutputStream os = new FileOutputStream(voice_data_file);
+  os.write(b);
+  os.close();
+
+
+
+BufferedReader din = new BufferedReader( new FileReader(voice_data_file));
+
+// 変数を読み込む
+while(true){
+  if( ( line=din.readLine() ) == null ) return;
+  if( line.equals( &quot;&quot; ) ) break;
+  if( line.equals(&quot;debug_mode=true&quot;))         debug_mode=true;
+  if( line.equals(&quot;debug_mode=false&quot;))        debug_mode=false;
+  if( line.equals(&quot;flog_scale=true&quot;))         flog_scale=true;
+  if( line.equals(&quot;flog_scale=false&quot;))        flog_scale=false;
+  if( line.equals(&quot;alog_scale=true&quot;))         alog_scale=true;
+  if( line.equals(&quot;alog_scale=false&quot;))        alog_scale=false;
+  if( line.equals(&quot;auto_learn=true&quot;))         auto_learn=true;
+  if( line.equals(&quot;auto_learn=false&quot;))        auto_learn=false;
+  if( line.startsWith(&quot;startup_time=&quot;))       startup_time=Integer.parseInt(line.substring(13));
+  if( line.startsWith(&quot;sound_filter=&quot;))       sound_filter=Double.parseDouble(line.substring(13));
+  if( line.startsWith(&quot;thresh_trigger_on=&quot;))  thresh_trigger_on=Double.parseDouble(line.substring(18));
+  if( line.startsWith(&quot;thresh_trigger_off=&quot;)) thresh_trigger_off=Double.parseDouble(line.substring(19));
+  if( line.startsWith(&quot;thresh_count_on=&quot;))    thresh_count_on=Integer.parseInt(line.substring(16));
+  if( line.startsWith(&quot;thresh_count_off=&quot;))   thresh_count_off=Integer.parseInt(line.substring(17));
+  if( line.startsWith(&quot;thresh_recognize=&quot;))   thresh_recognize=Double.parseDouble(line.substring(17));
+  if( line.startsWith(&quot;bias=&quot;))               bias=Double.parseDouble(line.substring(5));
+  if( line.startsWith(&quot;acompress=&quot;))          acompress=Double.parseDouble(line.substring(10));
+  if( line.startsWith(&quot;learn_param_o=&quot;))      learn_param_o=Double.parseDouble(line.substring(14));
+  if( line.startsWith(&quot;learn_param_x=&quot;))      learn_param_x=Double.parseDouble(line.substring(14));
+  if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
+}
+
+hosei = new double[HEARING_HEIGHT];
+for(int i = 0; true; i++){
+  if((line=din.readLine()) == null){din.close(); return;}
+  if( line.equals( &quot;&quot; ) ) break;
+  hosei[i%HEARING_HEIGHT] = Double.parseDouble(line);
+}
+
+// 音声データを読み込む
+voice_template = new Vector();
+while(true){
+  if((line=din.readLine()) == null){din.close(); return;}
+  if(line.equals(&quot;END&quot;)) break;
+  String t = line;
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  double w = Double.parseDouble(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int c = Integer.parseInt(line);
+  if( ( line=din.readLine() ) == null ){din.close(); return;}
+  int s = Integer.parseInt(line);
+  double[] v = new double[s];
+  for(int i = 0; i &lt; s; i++){
+    if((line=din.readLine()) == null){din.close(); return;}
+    v[i] = Double.parseDouble(line);
+  }
+  voice_template.add(new VoiceTemplate(t, w, c, v));
+}
+
+din.close();
+} catch( Exception e ){ dprint(e+&quot;\n&quot;); }
+
+voice_no = 0;
+</codetext>
+</operation>
+<relation>
+<ID>_R26</ID>
+<pin1name>_A2(_PArestore)</pin1name>
+<pin2name>_O25</pin2name>
+</relation>
+<codeclip>
+<ID>_C29</ID>
+<x0>341</x0>
+<y0>12</y0>
+<width>297</width>
+<height>36</height>
+<codetext>// バックアップファイル
+File backup_file = new File( Environment.getExternalStorageDirectory(),&quot;VKeyboaed.bak&quot; );
+</codetext>
+</codeclip>
+<xobject>
+<ID>_X30</ID>
+<x0>676</x0>
+<y0>63</y0>
+<width>165</width>
+<height>76</height>
+<ID_maker>26</ID_maker>
+<objectname>Equalizer</objectname>
+<description></description>
+<pin>
+<ID>_P0</ID>
+<x0>12</x0>
+<y0>176</y0>
+<width>60</width>
+<height>30</height>
+<text>start()</text>
+<px>11</px>
+<py>33</py>
+</pin>
+<pin>
+<ID>_P1</ID>
+<x0>276</x0>
+<y0>477</y0>
+<width>79</width>
+<height>31</height>
+<text>equalizer()</text>
+<px>7</px>
+<py>51</py>
+</pin>
+<relation>
+<ID>_R3</ID>
+<pin1name>_P0</pin1name>
+<pin2name>_A2(_Pstart)</pin2name>
+</relation>
+<operation>
+<ID>_O4</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>429</x0>
+<y0>135</y0>
+<width>149</width>
+<height>54</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(Object o)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>33</inpiny0>
+<inpinwidth>82</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>//  コンテナをセット
+
+
+
+equalizer_container = (AbsoluteLayout)o;
+</codetext>
+</operation>
+<relation>
+<ID>_R5</ID>
+<pin1name>_A2(_PGUIout)</pin1name>
+<pin2name>_O4</pin2name>
+</relation>
+<operation>
+<ID>_O6</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>433</x0>
+<y0>456</y0>
+<width>150</width>
+<height>48</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>27</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// イコライザを表示
+
+
+double a = 0;
+int i=1;
+a=0;
+for(int j=1; j&lt;HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e0.setProgress((int)(a/(HEARING_HEIGHT/8-1)*100));
+a=0;
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e1.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e2.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e3.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e4.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e5.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e6.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e7.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+ACTIVITY.setContentView(equalizer_container);
+</codetext>
+</operation>
+<relation>
+<ID>_R7</ID>
+<pin1name>_P1</pin1name>
+<pin2name>_O6</pin2name>
+</relation>
+<operation>
+<ID>_O8</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>431</x0>
+<y0>396</y0>
+<width>150</width>
+<height>48</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>27</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// イコライザを非表示
+
+
+hosei[0]=0;
+int i=1;
+for(int j=1; j&lt;HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e0.getProgress()/100;
+}
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e1.getProgress()/100;
+}
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e2.getProgress()/100;
+}
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e3.getProgress()/100;
+}
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e4.getProgress()/100;
+}
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e5.getProgress()/100;
+}
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e6.getProgress()/100;
+}
+for(int j=0; j&lt;HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e7.getProgress()/100;
+}
+ACTIVITY.setContentView(config_container);
+</codetext>
+</operation>
+<relation>
+<ID>_R10</ID>
+<pin1name>_A2(_PAclose)</pin1name>
+<pin2name>_O8</pin2name>
+</relation>
+<xobject>
+<ID>_X11</ID>
+<x0>439</x0>
+<y0>205</y0>
+<width>139</width>
+<height>177</height>
+<ID_maker>24</ID_maker>
+<objectname>setter</objectname>
+<description></description>
+<pin>
+<ID>_P0</ID>
+<x0>18</x0>
+<y0>33</y0>
+<width>123</width>
+<height>26</height>
+<text>e0_is(SeekBar b)</text>
+<px>0</px>
+<py>31</py>
+</pin>
+<pin>
+<ID>_P1</ID>
+<x0>19</x0>
+<y0>100</y0>
+<width>123</width>
+<height>26</height>
+<text>e1_is(SeekBar b)</text>
+<px>1</px>
+<py>49</py>
+</pin>
+<pin>
+<ID>_P2</ID>
+<x0>18</x0>
+<y0>176</y0>
+<width>123</width>
+<height>26</height>
+<text>e2_is(SeekBar b)</text>
+<px>0</px>
+<py>67</py>
+</pin>
+<pin>
+<ID>_P3</ID>
+<x0>18</x0>
+<y0>248</y0>
+<width>123</width>
+<height>26</height>
+<text>e3_is(SeekBar b)</text>
+<px>0</px>
+<py>85</py>
+</pin>
+<pin>
+<ID>_P4</ID>
+<x0>18</x0>
+<y0>319</y0>
+<width>123</width>
+<height>26</height>
+<text>e4_is(SeekBar b)</text>
+<px>0</px>
+<py>103</py>
+</pin>
+<pin>
+<ID>_P5</ID>
+<x0>23</x0>
+<y0>392</y0>
+<width>123</width>
+<height>26</height>
+<text>e5_is(SeekBar b)</text>
+<px>0</px>
+<py>121</py>
+</pin>
+<pin>
+<ID>_P6</ID>
+<x0>22</x0>
+<y0>470</y0>
+<width>123</width>
+<height>26</height>
+<text>e6_is(SeekBar b)</text>
+<px>0</px>
+<py>139</py>
+</pin>
+<pin>
+<ID>_P7</ID>
+<x0>23</x0>
+<y0>550</y0>
+<width>123</width>
+<height>26</height>
+<text>e7_is(SeekBar b)</text>
+<px>0</px>
+<py>157</py>
+</pin>
+<operation>
+<ID>_O8</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>178</x0>
+<y0>6</y0>
+<width>120</width>
+<height>57</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(SeekBar b)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>99</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>e0=b;
+</codetext>
+</operation>
+<relation>
+<ID>_R9</ID>
+<pin1name>_P0</pin1name>
+<pin2name>_O8</pin2name>
+</relation>
+<operation>
+<ID>_O10</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>178</x0>
+<y0>84</y0>
+<width>120</width>
+<height>57</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(SeekBar b)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>99</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>e1=b;
+</codetext>
+</operation>
+<operation>
+<ID>_O11</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>175</x0>
+<y0>159</y0>
+<width>120</width>
+<height>57</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(SeekBar b)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>99</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>e2=b;
+</codetext>
+</operation>
+<operation>
+<ID>_O12</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>177</x0>
+<y0>228</y0>
+<width>120</width>
+<height>57</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(SeekBar b)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>99</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>e3=b;
+</codetext>
+</operation>
+<operation>
+<ID>_O13</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>182</x0>
+<y0>303</y0>
+<width>120</width>
+<height>57</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(SeekBar b)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>99</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>e4=b;
+</codetext>
+</operation>
+<operation>
+<ID>_O14</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>174</x0>
+<y0>373</y0>
+<width>120</width>
+<height>57</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(SeekBar b)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>99</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>e5=b;
+</codetext>
+</operation>
+<operation>
+<ID>_O15</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>180</x0>
+<y0>456</y0>
+<width>120</width>
+<height>57</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(SeekBar b)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>99</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>e6=b;
+</codetext>
+</operation>
+<operation>
+<ID>_O16</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>180</x0>
+<y0>539</y0>
+<width>120</width>
+<height>57</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(SeekBar b)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>36</inpiny0>
+<inpinwidth>99</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>e7=b;
+</codetext>
+</operation>
+<relation>
+<ID>_R17</ID>
+<pin1name>_P1</pin1name>
+<pin2name>_O10</pin2name>
+</relation>
+<relation>
+<ID>_R18</ID>
+<pin1name>_P2</pin1name>
+<pin2name>_O11</pin2name>
+</relation>
+<relation>
+<ID>_R19</ID>
+<pin1name>_P4</pin1name>
+<pin2name>_O13</pin2name>
+</relation>
+<relation>
+<ID>_R20</ID>
+<pin1name>_P3</pin1name>
+<pin2name>_O12</pin2name>
+</relation>
+<relation>
+<ID>_R21</ID>
+<pin1name>_P5</pin1name>
+<pin2name>_O14</pin2name>
+</relation>
+<relation>
+<ID>_R22</ID>
+<pin1name>_P6</pin1name>
+<pin2name>_O15</pin2name>
+</relation>
+<relation>
+<ID>_R23</ID>
+<pin1name>_P7</pin1name>
+<pin2name>_O16</pin2name>
+</relation>
+</xobject>
+<relation>
+<ID>_R12</ID>
+<pin1name>_A2(_Pe0)</pin1name>
+<pin2name>_X11(_P0)</pin2name>
+</relation>
+<relation>
+<ID>_R13</ID>
+<pin1name>_A2(_Pe1)</pin1name>
+<pin2name>_X11(_P1)</pin2name>
+</relation>
+<relation>
+<ID>_R14</ID>
+<pin1name>_A2(_Pe2)</pin1name>
+<pin2name>_X11(_P2)</pin2name>
+</relation>
+<relation>
+<ID>_R15</ID>
+<pin1name>_A2(_Pe3)</pin1name>
+<pin2name>_X11(_P3)</pin2name>
+</relation>
+<relation>
+<ID>_R19</ID>
+<pin1name>_A2(_Pe4)</pin1name>
+<pin2name>_X11(_P4)</pin2name>
+</relation>
+<relation>
+<ID>_R20</ID>
+<pin1name>_A2(_Pe5)</pin1name>
+<pin2name>_X11(_P5)</pin2name>
+</relation>
+<relation>
+<ID>_R21</ID>
+<pin1name>_A2(_Pe6)</pin1name>
+<pin2name>_X11(_P6)</pin2name>
+</relation>
+<relation>
+<ID>_R22</ID>
+<pin1name>_A2(_Pe7)</pin1name>
+<pin2name>_X11(_P7)</pin2name>
+</relation>
+<codeclip>
+<ID>_C23</ID>
+<x0>304</x0>
+<y0>16</y0>
+<width>224</width>
+<height>34</height>
+<codetext>// イコライザ用のシークバー
+SeekBar e0,e1,e2,e3,e4,e5,e6,e7;
+</codetext>
+</codeclip>
+<operation>
+<ID>_O24</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>298</x0>
+<y0>83</y0>
+<width>164</width>
+<height>45</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>24</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// メインコンテナを表示
+
+
+ACTIVITY.setContentView(main_container);
+</codetext>
+</operation>
+<relation>
+<ID>_R25</ID>
+<pin1name>_A2(_Pstart)</pin1name>
+<pin2name>_O24</pin2name>
+</relation>
 <aobject>
 <ID>_A2</ID>
-<x0>324</x0>
-<y0>85</y0>
+<x0>120</x0>
+<y0>164</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
@@ -2394,12 +3573,1102 @@ XGUI x = new XGUI();
 </codetext>
 </operation>
 <pin>
-<ID>_Ptext</ID>
+<ID>_Pe0</ID>
 <x0>0</x0>
 <y0>110</y0>
 <width>200</width>
 <height>26</height>
-<text>text_created(EditText e)</text>
+<text>e0_created(SeekBar b)</text>
+<px>0</px>
+<py>72</py>
+</pin>
+<pin>
+<ID>_Pe1</ID>
+<x0>0</x0>
+<y0>138</y0>
+<width>200</width>
+<height>26</height>
+<text>e1_created(SeekBar b)</text>
+<px>0</px>
+<py>90</py>
+</pin>
+<pin>
+<ID>_Pe2</ID>
+<x0>0</x0>
+<y0>166</y0>
+<width>200</width>
+<height>26</height>
+<text>e2_created(SeekBar b)</text>
+<px>0</px>
+<py>108</py>
+</pin>
+<pin>
+<ID>_Pe3</ID>
+<x0>0</x0>
+<y0>194</y0>
+<width>200</width>
+<height>26</height>
+<text>e3_created(SeekBar b)</text>
+<px>0</px>
+<py>126</py>
+</pin>
+<pin>
+<ID>_Pe4</ID>
+<x0>0</x0>
+<y0>222</y0>
+<width>200</width>
+<height>26</height>
+<text>e4_created(SeekBar b)</text>
+<px>0</px>
+<py>144</py>
+</pin>
+<pin>
+<ID>_Pe5</ID>
+<x0>0</x0>
+<y0>250</y0>
+<width>200</width>
+<height>26</height>
+<text>e5_created(SeekBar b)</text>
+<px>0</px>
+<py>162</py>
+</pin>
+<pin>
+<ID>_Pe6</ID>
+<x0>0</x0>
+<y0>278</y0>
+<width>200</width>
+<height>26</height>
+<text>e6_created(SeekBar b)</text>
+<px>0</px>
+<py>180</py>
+</pin>
+<pin>
+<ID>_Pe7</ID>
+<x0>0</x0>
+<y0>306</y0>
+<width>200</width>
+<height>26</height>
+<text>e7_created(SeekBar b)</text>
+<px>0</px>
+<py>198</py>
+</pin>
+<pin>
+<ID>_PAclose</ID>
+<x0>0</x0>
+<y0>334</y0>
+<width>200</width>
+<height>26</height>
+<text>close_clicked()</text>
+<px>0</px>
+<py>216</py>
+</pin>
+<codeclip>
+<ID>_CXSTART</ID>
+<x0>0</x0>
+<y0>0</y0>
+<width>300</width>
+<height>26</height>
+<codetext> class XGUI{
+LABEL0 ILABEL0;
+ class LABEL0 extends TextView{
+ LABEL0(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 30f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 254, 254, 254 ));
+ setText( &quot;EQUALIZER&quot; );
+}
+}
+e0 Ie0;
+ class e0 extends SeekBar{
+ e0(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e0_created( this );
+}
+}
+e1 Ie1;
+ class e1 extends SeekBar{
+ e1(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e1_created( this );
+}
+}
+e2 Ie2;
+ class e2 extends SeekBar{
+ e2(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e2_created( this );
+}
+}
+e3 Ie3;
+ class e3 extends SeekBar{
+ e3(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e3_created( this );
+}
+}
+e4 Ie4;
+ class e4 extends SeekBar{
+ e4(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e4_created( this );
+}
+}
+e5 Ie5;
+ class e5 extends SeekBar{
+ e5(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e5_created( this );
+}
+}
+e6 Ie6;
+ class e6 extends SeekBar{
+ e6(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e6_created( this );
+}
+}
+e7 Ie7;
+ class e7 extends SeekBar{
+ e7(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e7_created( this );
+}
+}
+close Iclose;
+ class close extends Button{
+ close(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;X&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {close_clicked();}} );
+}
+}
+ XGUI(){
+ AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+layout.setBackgroundColor(Color.rgb( 210, 252, 253));
+ACTIVITY.setContentView(layout);
+ACTIVITY.setTitle(&quot;VKeyboard設定&quot;);
+ ILABEL0 = new LABEL0();
+ ILABEL0.setLayoutParams( new AbsoluteLayout.LayoutParams( 562,88,0,8 ) );
+ layout.addView( ILABEL0 );
+ Ie0 = new e0();
+ Ie0.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,2,112 ) );
+ layout.addView( Ie0 );
+ Ie1 = new e1();
+ Ie1.setLayoutParams( new AbsoluteLayout.LayoutParams( 672,72,0,194 ) );
+ layout.addView( Ie1 );
+ Ie2 = new e2();
+ Ie2.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,74,0,282 ) );
+ layout.addView( Ie2 );
+ Ie3 = new e3();
+ Ie3.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,72,0,370 ) );
+ layout.addView( Ie3 );
+ Ie4 = new e4();
+ Ie4.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,0,458 ) );
+ layout.addView( Ie4 );
+ Ie5 = new e5();
+ Ie5.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,68,0,544 ) );
+ layout.addView( Ie5 );
+ Ie6 = new e6();
+ Ie6.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,0,630 ) );
+ layout.addView( Ie6 );
+ Ie7 = new e7();
+ Ie7.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,74,0,714 ) );
+ layout.addView( Ie7 );
+ Iclose = new close();
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 96,98,570,0 ) );
+ layout.addView( Iclose );
+ GUI_created( layout );
+}
+}
+</codetext>
+</codeclip>
+<ID_maker>29</ID_maker>
+<height>238</height>
+<レイアウト>VKeyboard設定
+335
+400
+210
+252
+253
+xxscale=2
+LABEL;LABEL0;EQUALIZER;0;4;281;44;51;51;51;254;254;254;Dialog;30;null;0;0;1;0;0;TextView;
+HSLIDER;e0;0;100;1;56;337;33;163;184;204;255;255;255;1;1;0;SeekBar;
+HSLIDER;e1;0;100;0;97;336;36;163;184;204;255;255;255;1;1;0;SeekBar;
+HSLIDER;e2;0;100;0;141;337;37;163;184;204;255;255;255;1;1;0;SeekBar;
+HSLIDER;e3;0;100;0;185;337;36;163;184;204;255;255;255;1;1;0;SeekBar;
+HSLIDER;e4;0;100;0;229;337;33;163;184;204;255;255;255;1;1;0;SeekBar;
+HSLIDER;e5;0;100;0;272;337;34;163;184;204;255;255;255;1;1;0;SeekBar;
+HSLIDER;e6;0;100;0;315;337;33;163;184;204;255;255;255;1;1;0;SeekBar;
+HSLIDER;e7;0;100;0;357;337;37;163;184;204;255;255;255;1;1;0;SeekBar;
+BUTTON;close;X;285;0;48;49;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;1;Button;
+</レイアウト>
+</aobject>
+</xobject>
+<relation>
+<ID>_R31</ID>
+<pin1name>_A2(_Pstart)</pin1name>
+<pin2name>_X30(_P0)</pin2name>
+</relation>
+<relation>
+<ID>_R32</ID>
+<pin1name>_A2(_PAequalizer)</pin1name>
+<pin2name>_X30(_P1)</pin2name>
+</relation>
+<xobject>
+<ID>_X33</ID>
+<x0>664</x0>
+<y0>204</y0>
+<width>314</width>
+<height>331</height>
+<ID_maker>46</ID_maker>
+<objectname>setter</objectname>
+<description></description>
+<pin>
+<ID>_P0</ID>
+<x0>22</x0>
+<y0>29</y0>
+<width>248</width>
+<height>25</height>
+<text>cflog_scale_created(CheckBox c)</text>
+<px>0</px>
+<py>34</py>
+</pin>
+<pin>
+<ID>_P1</ID>
+<x0>24</x0>
+<y0>58</y0>
+<width>224</width>
+<height>27</height>
+<text>calog_scale_created(CheckBox c)</text>
+<px>0</px>
+<py>54</py>
+</pin>
+<pin>
+<ID>_P2</ID>
+<x0>17</x0>
+<y0>95</y0>
+<width>228</width>
+<height>25</height>
+<text>csound_filter_created(EditText e)</text>
+<px>0</px>
+<py>91</py>
+</pin>
+<pin>
+<ID>_P3</ID>
+<x0>27</x0>
+<y0>132</y0>
+<width>231</width>
+<height>26</height>
+<text>cstartup_time_created(EditText e)</text>
+<px>0</px>
+<py>109</py>
+</pin>
+<pin>
+<ID>_P4</ID>
+<x0>20</x0>
+<y0>166</y0>
+<width>256</width>
+<height>27</height>
+<text>cthresh_trigger_on_created(EditText e)</text>
+<px>0</px>
+<py>130</py>
+</pin>
+<pin>
+<ID>_P5</ID>
+<x0>10</x0>
+<y0>203</y0>
+<width>289</width>
+<height>29</height>
+<text>cthresh_trigger_off_created(EditText e)</text>
+<px>0</px>
+<py>148</py>
+</pin>
+<pin>
+<ID>_P6</ID>
+<x0>22</x0>
+<y0>249</y0>
+<width>262</width>
+<height>30</height>
+<text>cthresh_count_on_created(EditText e)</text>
+<px>0</px>
+<py>168</py>
+</pin>
+<pin>
+<ID>_P7</ID>
+<x0>21</x0>
+<y0>295</y0>
+<width>254</width>
+<height>29</height>
+<text>cthresh_count_off_created(EditText e)</text>
+<px>0</px>
+<py>188</py>
+</pin>
+<pin>
+<ID>_P8</ID>
+<x0>21</x0>
+<y0>335</y0>
+<width>262</width>
+<height>30</height>
+<text>cthresh_recognize_created(EditText e)</text>
+<px>0</px>
+<py>209</py>
+</pin>
+<pin>
+<ID>_P9</ID>
+<x0>20</x0>
+<y0>418</y0>
+<width>191</width>
+<height>29</height>
+<text>cbias_created(EditText e)</text>
+<px>0</px>
+<py>231</py>
+</pin>
+<pin>
+<ID>_P10</ID>
+<x0>15</x0>
+<y0>464</y0>
+<width>204</width>
+<height>25</height>
+<text>cacompress_created(EditText e)</text>
+<px>0</px>
+<py>252</py>
+</pin>
+<pin>
+<ID>_P11</ID>
+<x0>15</x0>
+<y0>501</y0>
+<width>226</width>
+<height>30</height>
+<text>clearn_param_o_created(EditText e)</text>
+<px>0</px>
+<py>269</py>
+</pin>
+<pin>
+<ID>_P12</ID>
+<x0>19</x0>
+<y0>373</y0>
+<width>218</width>
+<height>35</height>
+<text>climit_length_created(EditText e)</text>
+<px>0</px>
+<py>307</py>
+</pin>
+<operation>
+<ID>_O13</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>290</x0>
+<y0>6</y0>
+<width>135</width>
+<height>51</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(CheckBox c)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>100</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cflog_scale=c;
+</codetext>
+</operation>
+<relation>
+<ID>_R14</ID>
+<pin1name>_P0</pin1name>
+<pin2name>_O13</pin2name>
+</relation>
+<operation>
+<ID>_O15</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>479</x0>
+<y0>32</y0>
+<width>135</width>
+<height>51</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(CheckBox c)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>100</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>calog_scale=c;
+</codetext>
+</operation>
+<relation>
+<ID>_R16</ID>
+<pin1name>_P1</pin1name>
+<pin2name>_O15</pin2name>
+</relation>
+<operation>
+<ID>_O17</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>284</x0>
+<y0>80</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>csound_filter=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R18</ID>
+<pin1name>_P2</pin1name>
+<pin2name>_O17</pin2name>
+</relation>
+<operation>
+<ID>_O19</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>472</x0>
+<y0>105</y0>
+<width>199</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cstartup_time=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R20</ID>
+<pin1name>_P3</pin1name>
+<pin2name>_O19</pin2name>
+</relation>
+<operation>
+<ID>_O21</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>683</x0>
+<y0>133</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cthresh_trigger_on=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R22</ID>
+<pin1name>_P4</pin1name>
+<pin2name>_O21</pin2name>
+</relation>
+<operation>
+<ID>_O23</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>320</x0>
+<y0>182</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cthresh_trigger_off=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R24</ID>
+<pin1name>_P5</pin1name>
+<pin2name>_O23</pin2name>
+</relation>
+<operation>
+<ID>_O25</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>524</x0>
+<y0>220</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cthresh_count_on=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R26</ID>
+<pin1name>_P6</pin1name>
+<pin2name>_O25</pin2name>
+</relation>
+<operation>
+<ID>_O27</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>725</x0>
+<y0>260</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cthresh_count_off=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R28</ID>
+<pin1name>_P7</pin1name>
+<pin2name>_O27</pin2name>
+</relation>
+<operation>
+<ID>_O29</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>323</x0>
+<y0>314</y0>
+<width>185</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cthresh_recognize=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R30</ID>
+<pin1name>_P8</pin1name>
+<pin2name>_O29</pin2name>
+</relation>
+<operation>
+<ID>_O31</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>522</x0>
+<y0>344</y0>
+<width>177</width>
+<height>45</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>climit_length=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R32</ID>
+<pin1name>_P12</pin1name>
+<pin2name>_O31</pin2name>
+</relation>
+<operation>
+<ID>_O34</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>716</x0>
+<y0>384</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cbias=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R35</ID>
+<pin1name>_P9</pin1name>
+<pin2name>_O34</pin2name>
+</relation>
+<operation>
+<ID>_O36</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>330</x0>
+<y0>440</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cacompress=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R37</ID>
+<pin1name>_P10</pin1name>
+<pin2name>_O36</pin2name>
+</relation>
+<operation>
+<ID>_O38</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>533</x0>
+<y0>475</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>clearn_param_o=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R39</ID>
+<pin1name>_P11</pin1name>
+<pin2name>_O38</pin2name>
+</relation>
+<pin>
+<ID>_P40</ID>
+<x0>10</x0>
+<y0>540</y0>
+<width>236</width>
+<height>31</height>
+<text>clearn_param_x_created(EditText e)</text>
+<px>0</px>
+<py>289</py>
+</pin>
+<pin>
+<ID>_P41</ID>
+<x0>18</x0>
+<y0>588</y0>
+<width>222</width>
+<height>31</height>
+<text>cauto_learn_created(CheckBox c)</text>
+<px>3</px>
+<py>72</py>
+</pin>
+<operation>
+<ID>_O42</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>730</x0>
+<y0>507</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>clearn_param_x=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R43</ID>
+<pin1name>_P40</pin1name>
+<pin2name>_O42</pin2name>
+</relation>
+<operation>
+<ID>_O44</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>338</x0>
+<y0>566</y0>
+<width>135</width>
+<height>51</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(CheckBox c)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>100</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>cauto_learn=c;
+</codetext>
+</operation>
+<relation>
+<ID>_R45</ID>
+<pin1name>_P41</pin1name>
+<pin2name>_O44</pin2name>
+</relation>
+</xobject>
+<relation>
+<ID>_R34</ID>
+<pin1name>_A2(_Pcflog_scale)</pin1name>
+<pin2name>_X33(_P0)</pin2name>
+</relation>
+<relation>
+<ID>_R35</ID>
+<pin1name>_A2(_Pcalog_scale)</pin1name>
+<pin2name>_X33(_P1)</pin2name>
+</relation>
+<relation>
+<ID>_R36</ID>
+<pin1name>_A2(_Pcsound_filter)</pin1name>
+<pin2name>_X33(_P2)</pin2name>
+</relation>
+<relation>
+<ID>_R37</ID>
+<pin1name>_A2(_Pcstartup_time)</pin1name>
+<pin2name>_X33(_P3)</pin2name>
+</relation>
+<relation>
+<ID>_R38</ID>
+<pin1name>_A2(_Pcthresh_trigger_on)</pin1name>
+<pin2name>_X33(_P4)</pin2name>
+</relation>
+<relation>
+<ID>_R39</ID>
+<pin1name>_A2(_Pcthresh_trigger_off)</pin1name>
+<pin2name>_X33(_P5)</pin2name>
+</relation>
+<relation>
+<ID>_R40</ID>
+<pin1name>_A2(_Pcthresh_count_on)</pin1name>
+<pin2name>_X33(_P6)</pin2name>
+</relation>
+<relation>
+<ID>_R41</ID>
+<pin1name>_A2(_Pcthresh_count_off)</pin1name>
+<pin2name>_X33(_P7)</pin2name>
+</relation>
+<relation>
+<ID>_R42</ID>
+<pin1name>_A2(_Pcthresh_recognize)</pin1name>
+<pin2name>_X33(_P8)</pin2name>
+</relation>
+<relation>
+<ID>_R43</ID>
+<pin1name>_A2(_Pcbias)</pin1name>
+<pin2name>_X33(_P9)</pin2name>
+</relation>
+<relation>
+<ID>_R44</ID>
+<pin1name>_A2(_Pcacompress)</pin1name>
+<pin2name>_X33(_P10)</pin2name>
+</relation>
+<relation>
+<ID>_R46</ID>
+<pin1name>_A2(_Pclimit_length)</pin1name>
+<pin2name>_X33(_P12)</pin2name>
+</relation>
+<codeclip>
+<ID>_C47</ID>
+<x0>41</x0>
+<y0>388</y0>
+<width>261</width>
+<height>246</height>
+<codetext>//各パラメータ
+CheckBox cflog_scale;
+CheckBox calog_scale;
+CheckBox cauto_learn;
+EditText csound_filter;
+EditText cstartup_time;
+EditText cthresh_trigger_on;
+EditText cthresh_trigger_off;
+EditText cthresh_count_on;
+EditText cthresh_count_off;
+EditText cthresh_recognize;
+EditText cbias;
+EditText cacompress;
+EditText clearn_param_o;
+EditText clearn_param_x;
+EditText climit_length;
+</codetext>
+</codeclip>
+<codeclip>
+<ID>_C48</ID>
+<x0>42</x0>
+<y0>284</y0>
+<width>224</width>
+<height>31</height>
+<codetext>  // EditTextから数値を得る
+  public int get_int( EditText e ){
+    return Integer.parseInt( get_text(e) ); 
+  }
+
+  // EditTextから数値を得る
+  public double get_double( EditText e ){
+    return Double.parseDouble( get_text(e) ); 
+  }
+
+  // EditTextから文字列を得る
+  public String get_text( EditText e ){
+    return ((SpannableStringBuilder)e.getText()).toString(); 
+  }
+
+</codetext>
+</codeclip>
+<aobject>
+<ID>_A2</ID>
+<x0>328</x0>
+<y0>95</y0>
+<width>280</width>
+<objectname>GUI</objectname>
+<description>GUIオブジェクト
+</description>
+<state>
+<ID>_SINIT</ID>
+<x0>0</x0>
+<y0>40</y0>
+<width>70</width>
+<height>40</height>
+<text>  InitState</text>
+<isinitstate>1</isinitstate>
+</state>
+<pin>
+<ID>_Pstart</ID>
+<x0>400</x0>
+<y0>100</y0>
+<width>80</width>
+<height>26</height>
+<text>Start()</text>
+<px>0</px>
+<py>36</py>
+</pin>
+<pin>
+<ID>_PGUIout</ID>
+<x0>0</x0>
+<y0>84</y0>
+<width>180</width>
+<height>26</height>
+<text>GUI_created(AbsoluteLayout l)</text>
+<px>0</px>
+<py>54</py>
+</pin>
+<action>
+<ID>_Astart</ID>
+<comp1name>_Pstart</comp1name>
+<comp2name>_Ocreate</comp2name>
+</action>
+<operation>
+<ID>_Ocreate</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>220</x0>
+<y0>40</y0>
+<width>130</width>
+<height>64</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>30</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>30</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>90</inpinx0>
+<inpiny0>43</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// GUIを作成する
+XGUI x = new XGUI();
+
+</codetext>
+</operation>
+<pin>
+<ID>_PAequalizer</ID>
+<x0>0</x0>
+<y0>110</y0>
+<width>200</width>
+<height>26</height>
+<text>equalizer_clicked()</text>
 <px>0</px>
 <py>72</py>
 </pin>
@@ -2414,44 +4683,184 @@ XGUI x = new XGUI();
 <py>90</py>
 </pin>
 <pin>
-<ID>_PAslider</ID>
+<ID>_PAbackup</ID>
 <x0>0</x0>
 <y0>166</y0>
 <width>200</width>
 <height>26</height>
-<text>slider_changed(int val)</text>
+<text>backup_clicked()</text>
 <px>0</px>
 <py>108</py>
 </pin>
 <pin>
-<ID>_PAbackup</ID>
+<ID>_PArestore</ID>
 <x0>0</x0>
 <y0>194</y0>
 <width>200</width>
 <height>26</height>
-<text>backup_clicked()</text>
+<text>restore_clicked()</text>
 <px>0</px>
 <py>126</py>
 </pin>
 <pin>
-<ID>_PArestore</ID>
+<ID>_PAclear</ID>
 <x0>0</x0>
 <y0>222</y0>
 <width>200</width>
 <height>26</height>
-<text>restore_clicked()</text>
+<text>clear_clicked()</text>
 <px>0</px>
 <py>144</py>
 </pin>
 <pin>
-<ID>_PAclear</ID>
+<ID>_Pcflog_scale</ID>
 <x0>0</x0>
 <y0>250</y0>
 <width>200</width>
 <height>26</height>
-<text>clear_clicked()</text>
+<text>cflog_scale_created(CheckBox c)</text>
 <px>0</px>
 <py>162</py>
+</pin>
+<pin>
+<ID>_Pcalog_scale</ID>
+<x0>0</x0>
+<y0>278</y0>
+<width>200</width>
+<height>26</height>
+<text>calog_scale_created(CheckBox c)</text>
+<px>0</px>
+<py>180</py>
+</pin>
+<pin>
+<ID>_Pcauto_learn</ID>
+<x0>0</x0>
+<y0>306</y0>
+<width>200</width>
+<height>26</height>
+<text>cauto_learn_created(CheckBox c)</text>
+<px>0</px>
+<py>198</py>
+</pin>
+<pin>
+<ID>_Pcsound_filter</ID>
+<x0>0</x0>
+<y0>334</y0>
+<width>200</width>
+<height>26</height>
+<text>csound_filter_created(EditText e)</text>
+<px>0</px>
+<py>216</py>
+</pin>
+<pin>
+<ID>_Pcstartup_time</ID>
+<x0>0</x0>
+<y0>362</y0>
+<width>200</width>
+<height>26</height>
+<text>cstartup_time_created(EditText e)</text>
+<px>0</px>
+<py>234</py>
+</pin>
+<pin>
+<ID>_Pcthresh_trigger_on</ID>
+<x0>0</x0>
+<y0>390</y0>
+<width>200</width>
+<height>26</height>
+<text>cthresh_trigger_on_created(EditText e)</text>
+<px>0</px>
+<py>252</py>
+</pin>
+<pin>
+<ID>_Pcthresh_trigger_off</ID>
+<x0>0</x0>
+<y0>418</y0>
+<width>200</width>
+<height>26</height>
+<text>cthresh_trigger_off_created(EditText e)</text>
+<px>0</px>
+<py>270</py>
+</pin>
+<pin>
+<ID>_Pcthresh_count_on</ID>
+<x0>0</x0>
+<y0>446</y0>
+<width>200</width>
+<height>26</height>
+<text>cthresh_count_on_created(EditText e)</text>
+<px>0</px>
+<py>288</py>
+</pin>
+<pin>
+<ID>_Pcthresh_count_off</ID>
+<x0>0</x0>
+<y0>474</y0>
+<width>200</width>
+<height>26</height>
+<text>cthresh_count_off_created(EditText e)</text>
+<px>0</px>
+<py>306</py>
+</pin>
+<pin>
+<ID>_Pcthresh_recognize</ID>
+<x0>0</x0>
+<y0>502</y0>
+<width>200</width>
+<height>26</height>
+<text>cthresh_recognize_created(EditText e)</text>
+<px>0</px>
+<py>324</py>
+</pin>
+<pin>
+<ID>_Pcbias</ID>
+<x0>0</x0>
+<y0>530</y0>
+<width>200</width>
+<height>26</height>
+<text>cbias_created(EditText e)</text>
+<px>0</px>
+<py>342</py>
+</pin>
+<pin>
+<ID>_Pcacompress</ID>
+<x0>0</x0>
+<y0>558</y0>
+<width>200</width>
+<height>26</height>
+<text>cacompress_created(EditText e)</text>
+<px>0</px>
+<py>360</py>
+</pin>
+<pin>
+<ID>_Pclearn_param_o</ID>
+<x0>0</x0>
+<y0>586</y0>
+<width>200</width>
+<height>26</height>
+<text>clearn_param_o_created(EditText e)</text>
+<px>0</px>
+<py>378</py>
+</pin>
+<pin>
+<ID>_Pclearn_param_x</ID>
+<x0>0</x0>
+<y0>614</y0>
+<width>200</width>
+<height>26</height>
+<text>clearn_param_x_created(EditText e)</text>
+<px>0</px>
+<py>396</py>
+</pin>
+<pin>
+<ID>_Pclimit_length</ID>
+<x0>0</x0>
+<y0>642</y0>
+<width>200</width>
+<height>26</height>
+<text>climit_length_created(EditText e)</text>
+<px>0</px>
+<py>414</py>
 </pin>
 <codeclip>
 <ID>_CXSTART</ID>
@@ -2460,16 +4869,16 @@ XGUI x = new XGUI();
 <width>300</width>
 <height>26</height>
 <codetext> class XGUI{
-text Itext;
- class text extends EditText{
- text(){
+equalizer Iequalizer;
+ class equalizer extends Button{
+ equalizer(){
  super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
- setGravity(Gravity.LEFT | Gravity.TOP);
- setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 255, 255, 255 ));
- setText( &quot;&quot; );
- text_created( this );
+ setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;EQUALIZER&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {equalizer_clicked();}} );
 }
 }
 close Iclose;
@@ -2482,20 +4891,6 @@ close Iclose;
  setBackgroundColor( Color.rgb( 192, 192, 192 ));
  setText( &quot;X&quot; );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {close_clicked();}} );
-}
-}
-slider Islider;
- class slider extends SeekBar{
- slider(){
- super(ACTIVITY);
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setProgress( 0 );
- setMax( 10000 );
- setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
- public void onStopTrackingTouch(SeekBar seekBar) {}
- public void onStartTrackingTouch(SeekBar seekBar) {}
- public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { slider_changed( progress ); }
- });
 }
 }
 backup Ibackup;
@@ -2516,7 +4911,7 @@ restore Irestore;
  super(ACTIVITY);
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
- setTextSize( 15f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
  setBackgroundColor( Color.rgb( 192, 192, 192 ));
  setText( &quot;RESTORE&quot; );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {restore_clicked();}} );
@@ -2534,628 +4929,509 @@ clear Iclear;
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {clear_clicked();}} );
 }
 }
+cflog_scale Icflog_scale;
+ class cflog_scale extends CheckBox{
+ cflog_scale(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ cflog_scale_created( this );
+}
+}
+LABEL8 ILABEL8;
+ class LABEL8 extends TextView{
+ LABEL8(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;flog_scale&quot; );
+}
+}
+calog_scale Icalog_scale;
+ class calog_scale extends CheckBox{
+ calog_scale(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ calog_scale_created( this );
+}
+}
+cauto_learn Icauto_learn;
+ class cauto_learn extends CheckBox{
+ cauto_learn(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ cauto_learn_created( this );
+}
+}
+csound_filter Icsound_filter;
+ class csound_filter extends EditText{
+ csound_filter(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ csound_filter_created( this );
+}
+}
+LABEL11 ILABEL11;
+ class LABEL11 extends TextView{
+ LABEL11(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;alog_scale&quot; );
+}
+}
+LABEL12 ILABEL12;
+ class LABEL12 extends TextView{
+ LABEL12(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;startup time&quot; );
+}
+}
+cstartup_time Icstartup_time;
+ class cstartup_time extends EditText{
+ cstartup_time(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ cstartup_time_created( this );
+}
+}
+LABEL14 ILABEL14;
+ class LABEL14 extends TextView{
+ LABEL14(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;sound_filter&quot; );
+}
+}
+LABEL15 ILABEL15;
+ class LABEL15 extends TextView{
+ LABEL15(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;thresh_trigger_on&quot; );
+}
+}
+LABEL16 ILABEL16;
+ class LABEL16 extends TextView{
+ LABEL16(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;thresh_trigger_off&quot; );
+}
+}
+LABEL17 ILABEL17;
+ class LABEL17 extends TextView{
+ LABEL17(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;thresh_count_on&quot; );
+}
+}
+LABEL18 ILABEL18;
+ class LABEL18 extends TextView{
+ LABEL18(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;thresh_count_off&quot; );
+}
+}
+LABEL19 ILABEL19;
+ class LABEL19 extends TextView{
+ LABEL19(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;thresh_recognize&quot; );
+}
+}
+LABEL20 ILABEL20;
+ class LABEL20 extends TextView{
+ LABEL20(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;bias&quot; );
+}
+}
+LABEL21 ILABEL21;
+ class LABEL21 extends TextView{
+ LABEL21(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;acompress&quot; );
+}
+}
+LABEL22 ILABEL22;
+ class LABEL22 extends TextView{
+ LABEL22(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;learn_param_o&quot; );
+}
+}
+LABEL23 ILABEL23;
+ class LABEL23 extends TextView{
+ LABEL23(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;limit_length&quot; );
+}
+}
+cthresh_trigger_on Icthresh_trigger_on;
+ class cthresh_trigger_on extends EditText{
+ cthresh_trigger_on(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ cthresh_trigger_on_created( this );
+}
+}
+cthresh_trigger_off Icthresh_trigger_off;
+ class cthresh_trigger_off extends EditText{
+ cthresh_trigger_off(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ cthresh_trigger_off_created( this );
+}
+}
+cthresh_count_on Icthresh_count_on;
+ class cthresh_count_on extends EditText{
+ cthresh_count_on(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ cthresh_count_on_created( this );
+}
+}
+cthresh_count_off Icthresh_count_off;
+ class cthresh_count_off extends EditText{
+ cthresh_count_off(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ cthresh_count_off_created( this );
+}
+}
+cthresh_recognize Icthresh_recognize;
+ class cthresh_recognize extends EditText{
+ cthresh_recognize(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ cthresh_recognize_created( this );
+}
+}
+cbias Icbias;
+ class cbias extends EditText{
+ cbias(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ cbias_created( this );
+}
+}
+cacompress Icacompress;
+ class cacompress extends EditText{
+ cacompress(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ cacompress_created( this );
+}
+}
+clearn_param_o Iclearn_param_o;
+ class clearn_param_o extends EditText{
+ clearn_param_o(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ clearn_param_o_created( this );
+}
+}
+clearn_param_x Iclearn_param_x;
+ class clearn_param_x extends EditText{
+ clearn_param_x(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ clearn_param_x_created( this );
+}
+}
+climit_length Iclimit_length;
+ class climit_length extends EditText{
+ climit_length(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ climit_length_created( this );
+}
+}
+LABEL31 ILABEL31;
+ class LABEL31 extends TextView{
+ LABEL31(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;auto_learn&quot; );
+}
+}
+LABEL33 ILABEL33;
+ class LABEL33 extends TextView{
+ LABEL33(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;learn_param_x&quot; );
+}
+}
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
-layout.setBackgroundColor(Color.rgb( 247, 249, 165));
+layout.setBackgroundColor(Color.rgb( 217, 255, 253));
 ACTIVITY.setContentView(layout);
-ACTIVITY.setTitle(&quot;Config&quot;);
- Itext = new text();
- Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 594,610,4,174 ) );
- layout.addView( Itext );
+ACTIVITY.setTitle(&quot;VKeyboard設定&quot;);
+ Iequalizer = new equalizer();
+ Iequalizer.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,76,232,80 ) );
+ layout.addView( Iequalizer );
  Iclose = new close();
- Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 70,70,524,0 ) );
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,152,462,2 ) );
  layout.addView( Iclose );
- Islider = new slider();
- Islider.setLayoutParams( new AbsoluteLayout.LayoutParams( 596,78,0,84 ) );
- layout.addView( Islider );
  Ibackup = new backup();
- Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( 168,70,154,0 ) );
+ Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( 216,74,4,0 ) );
  layout.addView( Ibackup );
  Irestore = new restore();
- Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( 190,70,328,0 ) );
+ Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,72,232,0 ) );
  layout.addView( Irestore );
  Iclear = new clear();
- Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( 146,70,0,0 ) );
+ Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( 214,74,4,82 ) );
  layout.addView( Iclear );
+ Icflog_scale = new cflog_scale();
+ Icflog_scale.setLayoutParams( new AbsoluteLayout.LayoutParams( 52,48,296,164 ) );
+ layout.addView( Icflog_scale );
+ ILABEL8 = new LABEL8();
+ ILABEL8.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,46,0,162 ) );
+ layout.addView( ILABEL8 );
+ Icalog_scale = new calog_scale();
+ Icalog_scale.setLayoutParams( new AbsoluteLayout.LayoutParams( 52,46,296,218 ) );
+ layout.addView( Icalog_scale );
+ Icauto_learn = new cauto_learn();
+ Icauto_learn.setLayoutParams( new AbsoluteLayout.LayoutParams( 54,46,298,268 ) );
+ layout.addView( Icauto_learn );
+ Icsound_filter = new csound_filter();
+ Icsound_filter.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,376 ) );
+ layout.addView( Icsound_filter );
+ ILABEL11 = new LABEL11();
+ ILABEL11.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,48,0,214 ) );
+ layout.addView( ILABEL11 );
+ ILABEL12 = new LABEL12();
+ ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,54,0,320 ) );
+ layout.addView( ILABEL12 );
+ Icstartup_time = new cstartup_time();
+ Icstartup_time.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,54,298,320 ) );
+ layout.addView( Icstartup_time );
+ ILABEL14 = new LABEL14();
+ ILABEL14.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,50,0,378 ) );
+ layout.addView( ILABEL14 );
+ ILABEL15 = new LABEL15();
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 292,48,0,432 ) );
+ layout.addView( ILABEL15 );
+ ILABEL16 = new LABEL16();
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,484 ) );
+ layout.addView( ILABEL16 );
+ ILABEL17 = new LABEL17();
+ ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,536 ) );
+ layout.addView( ILABEL17 );
+ ILABEL18 = new LABEL18();
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,588 ) );
+ layout.addView( ILABEL18 );
+ ILABEL19 = new LABEL19();
+ ILABEL19.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,640 ) );
+ layout.addView( ILABEL19 );
+ ILABEL20 = new LABEL20();
+ ILABEL20.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,42,0,688 ) );
+ layout.addView( ILABEL20 );
+ ILABEL21 = new LABEL21();
+ ILABEL21.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,734 ) );
+ layout.addView( ILABEL21 );
+ ILABEL22 = new LABEL22();
+ ILABEL22.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,782 ) );
+ layout.addView( ILABEL22 );
+ ILABEL23 = new LABEL23();
+ ILABEL23.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,880 ) );
+ layout.addView( ILABEL23 );
+ Icthresh_trigger_on = new cthresh_trigger_on();
+ Icthresh_trigger_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,430 ) );
+ layout.addView( Icthresh_trigger_on );
+ Icthresh_trigger_off = new cthresh_trigger_off();
+ Icthresh_trigger_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,302,484 ) );
+ layout.addView( Icthresh_trigger_off );
+ Icthresh_count_on = new cthresh_count_on();
+ Icthresh_count_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,302,538 ) );
+ layout.addView( Icthresh_count_on );
+ Icthresh_count_off = new cthresh_count_off();
+ Icthresh_count_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,588 ) );
+ layout.addView( Icthresh_count_off );
+ Icthresh_recognize = new cthresh_recognize();
+ Icthresh_recognize.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,638 ) );
+ layout.addView( Icthresh_recognize );
+ Icbias = new cbias();
+ Icbias.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,686 ) );
+ layout.addView( Icbias );
+ Icacompress = new cacompress();
+ Icacompress.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,734 ) );
+ layout.addView( Icacompress );
+ Iclearn_param_o = new clearn_param_o();
+ Iclearn_param_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,782 ) );
+ layout.addView( Iclearn_param_o );
+ Iclearn_param_x = new clearn_param_x();
+ Iclearn_param_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,832 ) );
+ layout.addView( Iclearn_param_x );
+ Iclimit_length = new climit_length();
+ Iclimit_length.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,48,300,880 ) );
+ layout.addView( Iclimit_length );
+ ILABEL31 = new LABEL31();
+ ILABEL31.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,46,0,268 ) );
+ layout.addView( ILABEL31 );
+ ILABEL33 = new LABEL33();
+ ILABEL33.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,832 ) );
+ layout.addView( ILABEL33 );
  GUI_created( layout );
 }
 }
 </codetext>
 </codeclip>
-<ID_maker>26</ID_maker>
-<height>184</height>
-<レイアウト>Config
-306
-403
-247
-249
-165
+<ID_maker>40</ID_maker>
+<height>436</height>
+<レイアウト>VKeyboard設定
+528
+498
+217
+255
+253
 xxscale=2
-TEXTAREA;text;null;2;87;297;305;51;51;51;255;255;255;Dialog;16;1;1;1;EditText;
-BUTTON;close;X;262;0;35;35;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
-HSLIDER;slider;0;10000;0;42;298;39;163;184;204;238;238;238;1;0;1;SeekBar;
-BUTTON;backup;BACKUP;77;0;84;35;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
-BUTTON;restore;RESTORE;164;0;95;35;51;51;51;192;192;192;Dialog;15;null;0;0;1;0;1;Button;
-BUTTON;clear;CLEAR;0;0;73;35;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+BUTTON;equalizer;EQUALIZER;116;40;109;38;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+BUTTON;close;X;231;1;65;76;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+BUTTON;backup;BACKUP;2;0;108;37;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+BUTTON;restore;RESTORE;116;0;109;36;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+BUTTON;clear;CLEAR;2;41;107;37;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
+CHECKBOX;cflog_scale;1;148;82;26;24;51;51;51;238;238;238;1;1;0;CheckBox;
+LABEL;LABEL8;flog_scale;0;81;144;23;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+CHECKBOX;calog_scale;1;148;109;26;23;51;51;51;238;238;238;1;1;0;CheckBox;
+CHECKBOX;cauto_learn;0;149;134;27;23;51;51;51;238;238;238;1;1;0;CheckBox;
+TEXTFIELD;csound_filter;null;150;188;147;26;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+LABEL;LABEL11;alog_scale;0;107;144;24;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL12;startup time;0;160;145;27;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+TEXTFIELD;cstartup_time;null;149;160;148;27;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+LABEL;LABEL14;sound_filter;0;189;145;25;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL15;thresh_trigger_on;0;216;146;24;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL16;thresh_trigger_off;0;242;148;24;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL17;thresh_count_on;0;268;148;24;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL18;thresh_count_off;0;294;148;24;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL19;thresh_recognize;0;320;148;22;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL20;bias;0;344;148;21;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL21;acompress;0;367;148;22;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL22;learn_param_o;0;391;148;23;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL23;limit_length;0;440;148;23;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+TEXTFIELD;cthresh_trigger_on;null;150;215;147;26;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;cthresh_trigger_off;null;151;242;147;26;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;cthresh_count_on;null;151;269;147;24;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;cthresh_count_off;null;150;294;149;24;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;cthresh_recognize;null;150;319;149;24;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;cbias;null;150;343;149;23;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;cacompress;null;151;367;148;23;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;clearn_param_o;null;151;391;148;23;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;clearn_param_x;null;150;416;149;23;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+TEXTFIELD;climit_length;null;150;440;150;24;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+LABEL;LABEL31;auto_learn;0;134;144;23;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL33;learn_param_x;0;416;148;22;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
 </レイアウト>
 </aobject>
-<codeclip>
-<ID>_C8</ID>
-<x0>347</x0>
-<y0>22</y0>
-<width>254</width>
-<height>54</height>
-<codetext>// コンテナ
-AbsoluteLayout main_container;
-AbsoluteLayout this_container;
-</codetext>
-</codeclip>
-<operation>
-<ID>_O10</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>638</x0>
-<y0>76</y0>
-<width>164</width>
-<height>52</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(Object o)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>27</inpiny0>
-<inpinwidth>83</inpinwidth>
-<inpinheight>25</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>114</outpinx0>
-<outpiny0>32</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>// コンテナを取得
-
-
-
-this_container = (AbsoluteLayout)o;
-ACTIVITY.setContentView(main_container);
-</codetext>
-</operation>
 <relation>
-<ID>_R11</ID>
-<pin1name>_A2(_PGUIout)</pin1name>
-<pin2name>_O10</pin2name>
+<ID>_R49</ID>
+<pin1name>_A2(_Pclearn_param_o)</pin1name>
+<pin2name>_X33(_P11)</pin2name>
 </relation>
-<operation>
-<ID>_O12</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>199</x0>
-<y0>374</y0>
-<width>197</width>
-<height>50</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in()</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>30</inpiny0>
-<inpinwidth>40</inpinwidth>
-<inpinheight>20</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>// データをセットして表示
-
-
-
-
-  text.setText(&quot;&quot;);
-  text.append(&quot;startup_time=&quot; + startup_time + &quot;\n&quot;);
-  text.append(&quot;sound_filter=&quot; + sound_filter + &quot;\n&quot;);
-  text.append(&quot;thresh_trigger_on=&quot; + thresh_trigger_on + &quot;\n&quot;);
-  text.append(&quot;thresh_trigger_off=&quot; + thresh_trigger_off + &quot;\n&quot;);
-  text.append(&quot;thresh_count_on=&quot; + thresh_count_on + &quot;\n&quot;);
-  text.append(&quot;thresh_count_off=&quot; + thresh_count_off + &quot;\n&quot;);
-  text.append(&quot;thresh_recognize=&quot; + thresh_recognize + &quot;\n&quot;);
-  text.append(&quot;bias=&quot; + bias + &quot;\n&quot;);
-  text.append(&quot;acompress=&quot; + acompress + &quot;\n&quot;);
-  text.append(&quot;learn_param=&quot; + learn_param + &quot;\n&quot;);
-  text.append(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
-  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
-    text.append(hosei[i] + &quot;\n&quot;);
-  }
-  ACTIVITY.setContentView(this_container);
-  
-</codetext>
-</operation>
 <relation>
-<ID>_R13</ID>
-<pin1name>_P4</pin1name>
-<pin2name>_O12</pin2name>
+<ID>_R50</ID>
+<pin1name>_A2(_Pclearn_param_x)</pin1name>
+<pin2name>_X33(_P40)</pin2name>
 </relation>
-<codeclip>
-<ID>_C14</ID>
-<x0>625</x0>
-<y0>17</y0>
-<width>181</width>
-<height>48</height>
-<codetext>EditText text;
-int line_p;
-String source;
-</codetext>
-</codeclip>
-<operation>
-<ID>_O15</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>637</x0>
-<y0>137</y0>
-<width>106</width>
-<height>48</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(EditText t)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>27</inpiny0>
-<inpinwidth>93</inpinwidth>
-<inpinheight>22</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>text = t;
-
-</codetext>
-</operation>
 <relation>
-<ID>_R16</ID>
-<pin1name>_A2(_Ptext)</pin1name>
-<pin2name>_O15</pin2name>
+<ID>_R51</ID>
+<pin1name>_A2(_Pcauto_learn)</pin1name>
+<pin2name>_X33(_P41)</pin2name>
 </relation>
-<codeclip>
-<ID>_C17</ID>
-<x0>446</x0>
-<y0>276</y0>
-<width>419</width>
-<height>65</height>
-<codetext>public void text_home(){
-  source = ((SpannableStringBuilder)text.getText()).toString();
-  line_p = -1;
-}
-</codetext>
-</codeclip>
-<codeclip>
-<ID>_C18</ID>
-<x0>449</x0>
-<y0>352</y0>
-<width>279</width>
-<height>123</height>
-<codetext>public String get_line(){
-  String s;
-  int i = source.indexOf( &quot;\n&quot;, line_p+1 );
-  if( i == -1 )return null;
-  s = source.substring( line_p+1, i );
-  line_p = i;
-  return s;
-}
-</codetext>
-</codeclip>
-<operation>
-<ID>_O19</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>136</x0>
-<y0>119</y0>
-<width>174</width>
-<height>49</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in()</inpintext>
-<inpinx0>126</inpinx0>
-<inpiny0>29</inpiny0>
-<inpinwidth>40</inpinwidth>
-<inpinheight>20</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>// 変数をセットして閉じる
-
-
-  text_home();
-  startup_time=Integer.parseInt(get_line().substring(13));
-  sound_filter=Double.parseDouble(get_line().substring(13));
-  thresh_trigger_on=Double.parseDouble(get_line().substring(18));
-  thresh_trigger_off=Double.parseDouble(get_line().substring(19));
-  thresh_count_on=Integer.parseInt(get_line().substring(16));
-  thresh_count_off=Integer.parseInt(get_line().substring(17));
-  thresh_recognize=Double.parseDouble(get_line().substring(17));
-  bias=Double.parseDouble(get_line().substring(5));
-  acompress=Double.parseDouble(get_line().substring(10));
-  learn_param=Double.parseDouble(get_line().substring(12));
-  limit_length=Double.parseDouble(get_line().substring(13));
-
-  hosei = new double[HEARING_HEIGHT];
-  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
-    hosei[i%HEARING_HEIGHT] = Double.parseDouble(get_line());
-  }
-  ACTIVITY.setContentView(main_container);
-</codetext>
-</operation>
-<relation>
-<ID>_R20</ID>
-<pin1name>_A2(_PAclose)</pin1name>
-<pin2name>_O19</pin2name>
-</relation>
-<operation>
-<ID>_O21</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>209</x0>
-<y0>318</y0>
-<width>121</width>
-<height>49</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in()</inpintext>
-<inpinx0>70</inpinx0>
-<inpiny0>29</inpiny0>
-<inpinwidth>40</inpinwidth>
-<inpinheight>20</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>//データを消去
-
-
-try{
-
-  int cnt = 0;
-  InputStream is = ACTIVITY.getResources().openRawResource(R.raw.voicedata);
-  while (is.read()!=-1) cnt++;
-  byte[] b = new byte[cnt];
-  is.reset();
-  is.read(b);
-  is.close();
-  FileOutputStream os = new FileOutputStream(voice_data_file);
-  os.write(b);
-  os.close();
-
-String line = null;
-BufferedReader din = new BufferedReader( new FileReader(voice_data_file));
-
-// 変数を読み込む
-while(true){
-  if( ( line=din.readLine() ) == null ) return;
-  if( line.equals( &quot;&quot; ) ) break;
-  if( line.equals(&quot;debug_mode=true&quot;))         debug_mode=true;
-  if( line.equals(&quot;debug_mode=false&quot;))        debug_mode=false;
-  if( line.equals(&quot;auto_learn=true&quot;))         auto_learn=true;
-  if( line.equals(&quot;auto_learn=false&quot;))        auto_learn=false;
-  if( line.equals(&quot;flog_scale=true&quot;))         flog_scale=true;
-  if( line.equals(&quot;flog_scale=false&quot;))        flog_scale=false;
-  if( line.equals(&quot;alog_scale=true&quot;))         alog_scale=true;
-  if( line.equals(&quot;alog_scale=false&quot;))        alog_scale=false;
-  if( line.startsWith(&quot;startup_time=&quot;))       startup_time=Integer.parseInt(line.substring(13));
-  if( line.startsWith(&quot;sound_filter=&quot;))       sound_filter=Double.parseDouble(line.substring(13));
-  if( line.startsWith(&quot;thresh_trigger_on=&quot;))  thresh_trigger_on=Double.parseDouble(line.substring(18));
-  if( line.startsWith(&quot;thresh_trigger_off=&quot;)) thresh_trigger_off=Double.parseDouble(line.substring(19));
-  if( line.startsWith(&quot;thresh_count_on=&quot;))    thresh_count_on=Integer.parseInt(line.substring(16));
-  if( line.startsWith(&quot;thresh_count_off=&quot;))   thresh_count_off=Integer.parseInt(line.substring(17));
-  if( line.startsWith(&quot;thresh_recognize=&quot;))   thresh_recognize=Double.parseDouble(line.substring(17));
-  if( line.startsWith(&quot;bias=&quot;))               bias=Double.parseDouble(line.substring(5));
-  if( line.startsWith(&quot;acompress=&quot;))          acompress=Double.parseDouble(line.substring(10));
-  if( line.startsWith(&quot;learn_param=&quot;))        learn_param=Double.parseDouble(line.substring(12));
-  if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
-}
-
-hosei = new double[HEARING_HEIGHT];
-for(int i = 0; true; i++){
-  if((line=din.readLine()) == null){din.close(); return;}
-  if( line.equals( &quot;&quot; ) ) break;
-  hosei[i%HEARING_HEIGHT] = Double.parseDouble(line);
-}
-
-// 音声データを読み込む
-voice_template = new Vector();
-while(true){
-  if((line=din.readLine()) == null){din.close(); return;}
-  if(line.equals(&quot;END&quot;)) break;
-  String t = line;
-  if( ( line=din.readLine() ) == null ){din.close(); return;}
-  double w = Double.parseDouble(line);
-  if( ( line=din.readLine() ) == null ){din.close(); return;}
-  int c = Integer.parseInt(line);
-  if( ( line=din.readLine() ) == null ){din.close(); return;}
-  int s = Integer.parseInt(line);
-  double[] v = new double[s];
-  for(int i = 0; i &lt; s; i++){
-    if((line=din.readLine()) == null){din.close(); return;}
-    v[i] = Double.parseDouble(line);
-  }
-  voice_template.add(new VoiceTemplate(t, w, c, v));
-}
-
-din.close();
-} catch( Exception e ){ dprint(e+&quot;\n&quot;); }
-
-voice_no = 0;
-</codetext>
-</operation>
-<relation>
-<ID>_R22</ID>
-<pin1name>_A2(_PAclear)</pin1name>
-<pin2name>_O21</pin2name>
-</relation>
-<operation>
-<ID>_O23</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>75</x0>
-<y0>178</y0>
-<width>200</width>
-<height>46</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in()</inpintext>
-<inpinx0>154</inpinx0>
-<inpiny0>26</inpiny0>
-<inpinwidth>40</inpinwidth>
-<inpinheight>20</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>// SDカードにバックアップする
-
-
-//音声テンプレートを保存する
-
-try{
-
-  String line = null;
-  int cnt = 0;
-  BufferedWriter dout = new BufferedWriter( new FileWriter(voice_data_file) );
-  
-  // 変数を保存する
-  dout.write(&quot;auto_learn=&quot; + auto_learn + &quot;\n&quot;);
-  dout.write(&quot;flog_scale=&quot; + flog_scale + &quot;\n&quot;);
-  dout.write(&quot;alog_scale=&quot; + alog_scale + &quot;\n&quot;);
-  dout.write(&quot;startup_time=&quot; + startup_time + &quot;\n&quot;);
-  dout.write(&quot;sound_filter=&quot; + sound_filter + &quot;\n&quot;);
-  dout.write(&quot;thresh_trigger_on=&quot; + thresh_trigger_on + &quot;\n&quot;);
-  dout.write(&quot;thresh_trigger_off=&quot; + thresh_trigger_off + &quot;\n&quot;);
-  dout.write(&quot;thresh_count_on=&quot; + thresh_count_on + &quot;\n&quot;);
-  dout.write(&quot;thresh_count_off=&quot; + thresh_count_off + &quot;\n&quot;);
-  dout.write(&quot;thresh_recognize=&quot; + thresh_recognize + &quot;\n&quot;);
-  dout.write(&quot;bias=&quot; + bias + &quot;\n&quot;);
-  dout.write(&quot;acompress=&quot; + acompress + &quot;\n&quot;);
-  dout.write(&quot;learn_param=&quot; + learn_param + &quot;\n&quot;);
-  dout.write(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
-  dout.write(&quot;\n&quot;);
-
-  for(int i = 0; i &lt; HEARING_HEIGHT; i++){
-    dout.write(hosei[i] + &quot;\n&quot;);
-  }
-  dout.write(&quot;\n&quot;);
-  
-  // 音声データを保存する
-  for( int i = 0; i &lt; voice_template.size(); i++ ){
-    dout.write(((VoiceTemplate)voice_template.get(i)).text + &quot;\n&quot; );
-    dout.write(((VoiceTemplate)voice_template.get(i)).weight + &quot;\n&quot; );
-    dout.write(((VoiceTemplate)voice_template.get(i)).code + &quot;\n&quot; );
-    double[] v = ((VoiceTemplate)(voice_template.get(i))).voice;
-    dout.write(v.length + &quot;\n&quot;);
-    for (int j = 0; j &lt;  v.length; j++){
-      dout.write(v[j] + &quot;\n&quot;);
-    }
-  }
-  dout.write(&quot;END\n&quot;);
-  dout.close();
-
-  // バックアップファイルにコピーする
-  FileInputStream is = new FileInputStream(voice_data_file);;
-  while (is.read()!=-1) cnt++;
-  byte[] b = new byte[cnt];
-  is.reset();
-  is.read(b);
-  is.close();
-  FileOutputStream os = new FileOutputStream(backup_file);
-  os.write(b);
-  os.close();
-
-} catch( Exception e ){dprint(e+&quot;\n&quot;);}
-</codetext>
-</operation>
-<relation>
-<ID>_R24</ID>
-<pin1name>_A2(_PAbackup)</pin1name>
-<pin2name>_O23</pin2name>
-</relation>
-<operation>
-<ID>_O25</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>47</x0>
-<y0>237</y0>
-<width>230</width>
-<height>47</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in()</inpintext>
-<inpinx0>179</inpinx0>
-<inpiny0>26</inpiny0>
-<inpinwidth>40</inpinwidth>
-<inpinheight>20</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>//バックアップしたデータを呼び出す
-
-
-try{
-  String line = null;
-  int cnt = 0;
-
-  // バックアップファイルからコピーする
-  FileInputStream is = new FileInputStream(backup_file);;
-  while (is.read()!=-1) cnt++;
-  byte[] b = new byte[cnt];
-  is.reset();
-  is.read(b);
-  is.close();
-  FileOutputStream os = new FileOutputStream(voice_data_file);
-  os.write(b);
-  os.close();
-
-
-
-BufferedReader din = new BufferedReader( new FileReader(voice_data_file));
-
-// 変数を読み込む
-while(true){
-  if( ( line=din.readLine() ) == null ) return;
-  if( line.equals( &quot;&quot; ) ) break;
-  if( line.equals(&quot;debug_mode=true&quot;))         debug_mode=true;
-  if( line.equals(&quot;debug_mode=false&quot;))        debug_mode=false;
-  if( line.equals(&quot;auto_learn=true&quot;))         auto_learn=true;
-  if( line.equals(&quot;auto_learn=false&quot;))        auto_learn=false;
-  if( line.equals(&quot;flog_scale=true&quot;))         flog_scale=true;
-  if( line.equals(&quot;flog_scale=false&quot;))        flog_scale=false;
-  if( line.equals(&quot;alog_scale=true&quot;))         alog_scale=true;
-  if( line.equals(&quot;alog_scale=false&quot;))        alog_scale=false;
-  if( line.startsWith(&quot;startup_time=&quot;))       startup_time=Integer.parseInt(line.substring(13));
-  if( line.startsWith(&quot;sound_filter=&quot;))       sound_filter=Double.parseDouble(line.substring(13));
-  if( line.startsWith(&quot;thresh_trigger_on=&quot;))  thresh_trigger_on=Double.parseDouble(line.substring(18));
-  if( line.startsWith(&quot;thresh_trigger_off=&quot;)) thresh_trigger_off=Double.parseDouble(line.substring(19));
-  if( line.startsWith(&quot;thresh_count_on=&quot;))    thresh_count_on=Integer.parseInt(line.substring(16));
-  if( line.startsWith(&quot;thresh_count_off=&quot;))   thresh_count_off=Integer.parseInt(line.substring(17));
-  if( line.startsWith(&quot;thresh_recognize=&quot;))   thresh_recognize=Double.parseDouble(line.substring(17));
-  if( line.startsWith(&quot;bias=&quot;))               bias=Double.parseDouble(line.substring(5));
-  if( line.startsWith(&quot;acompress=&quot;))          acompress=Double.parseDouble(line.substring(10));
-  if( line.startsWith(&quot;learn_param=&quot;))        learn_param=Double.parseDouble(line.substring(12));
-  if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
-}
-
-hosei = new double[HEARING_HEIGHT];
-for(int i = 0; true; i++){
-  if((line=din.readLine()) == null){din.close(); return;}
-  if( line.equals( &quot;&quot; ) ) break;
-  hosei[i%HEARING_HEIGHT] = Double.parseDouble(line);
-}
-
-// 音声データを読み込む
-voice_template = new Vector();
-while(true){
-  if((line=din.readLine()) == null){din.close(); return;}
-  if(line.equals(&quot;END&quot;)) break;
-  String t = line;
-  if( ( line=din.readLine() ) == null ){din.close(); return;}
-  double w = Double.parseDouble(line);
-  if( ( line=din.readLine() ) == null ){din.close(); return;}
-  int c = Integer.parseInt(line);
-  if( ( line=din.readLine() ) == null ){din.close(); return;}
-  int s = Integer.parseInt(line);
-  double[] v = new double[s];
-  for(int i = 0; i &lt; s; i++){
-    if((line=din.readLine()) == null){din.close(); return;}
-    v[i] = Double.parseDouble(line);
-  }
-  voice_template.add(new VoiceTemplate(t, w, c, v));
-}
-
-din.close();
-} catch( Exception e ){ dprint(e+&quot;\n&quot;); }
-
-voice_no = 0;
-</codetext>
-</operation>
-<relation>
-<ID>_R26</ID>
-<pin1name>_A2(_PArestore)</pin1name>
-<pin2name>_O25</pin2name>
-</relation>
-<operation>
-<ID>_O27</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>638</x0>
-<y0>192</y0>
-<width>182</width>
-<height>54</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(int v)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>32</inpiny0>
-<inpinwidth>62</inpinwidth>
-<inpinheight>21</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>// テキストを移動する
-
-
-String s= ((SpannableStringBuilder)text.getText()).toString();
-int len = s.length();
-text.setSelection( v * len /10000 );
-</codetext>
-</operation>
-<relation>
-<ID>_R28</ID>
-<pin1name>_A2(_PAslider)</pin1name>
-<pin2name>_O27</pin2name>
-</relation>
-<codeclip>
-<ID>_C29</ID>
-<x0>453</x0>
-<y0>486</y0>
-<width>297</width>
-<height>36</height>
-<codetext>// バックアップファイル
-File backup_file = new File( Environment.getExternalStorageDirectory(),&quot;VKeyboaed.bak&quot; );
-</codetext>
-</codeclip>
 </xobject>
 <relation>
 <ID>_R164</ID>
@@ -3167,10 +5443,179 @@ File backup_file = new File( Environment.getExternalStorageDirectory(),&quot;VKe
 <pin1name>_A88(_PGUIout)</pin1name>
 <pin2name>_X160(_P1)</pin2name>
 </relation>
+<ImgIcon>
+<ID>_I166</ID>
+<x0>844</x0>
+<y0>513</y0>
+<width>123</width>
+<height>125</height>
+<image>ppinppaoaaabkegejegeaabacaaaaabaaabaaaaapplnaadeaaiagagahagafaia
+hahahajajaiakamaebnamalalamajbcbdbpaebnbkbpbobnbkbmbmbacecochcac
+ccmcdcmbmbichdjcmcadbdedededpbhcjdndidcdmdocddedcdpplnaadebajaja
+jamalamaibnanaibcdbcmbbccdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd
+cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdppam
+aabbiaaagjaagjdabaccaacabbbadabbbappemaapbaaaabafababababababaaa
+aaaaaaaaaaaaaabacadaeafagahaiajakalappemaaflabaacabadadacaeadafa
+faeaeaaaaabanhbacadaaaeabbfacbbcbdbegadbbfbghaccbhebcdbibjbkiadc
+ceblbmfbcfbnapecddcgchcijakagbhbibjbkbfcgchcicjckcedfdgdhdidjdkd
+deeefegeheiejekedfefffgfhfifjfkfdgegfggghgigjgkgdhehfhghhhihjhkh
+dieifigihiiijikicjdjejfjgjhjijjjkjckdkekfkgkhkikjkkkcldlelflglhl
+iljlklcmdmemfmgmhmimjmkmcndnenfngnhninjnknbocodoeofogohoiojokobp
+cpdpepfpgphpipjpkpppemaapbbaaadabababababababababaaaaaaaaaaaaaba
+cadaeafagahaiajakalappemaaflbbaacabacaeaeadaeahafaeaeaaabacahhaa
+bacadabbeafabcbdgacbbebfhabgbhdbcccdbiiaebcebjbkblbmjadcddcfapfb
+cgchbnkagbecedbofcbphbibjbkbgchcicjckcfdgdhdidjdkddeeefegeheieje
+kedfefffgfhfifjfkfdgegfggghgigjgkgdhehfhghhhihjhkhcidieifigihiii
+jikicjdjejfjgjhjijjjkjckdkekfkgkhkikjkkkcldlelflglhliljlklcmdmem
+fmgmhmimjmkmcndnenfngnhninjnkncodoeofogohoiojokocpdpepfpgphpipjp
+kpppknaamadabaaacabbdabbaapdaahpkpjcjcigaackkiicaackkiicaackijjf
+aeeobibflfmndedhhbljeajmedhgdkgmbmbimpfeaaifckkiicaackkiicaackki
+icaackkiicaackkiicaackkiicaackkiicaackkiicaaekgcgjilpfjiohacnhhb
+beoignmnpllnfdjcfielccbdhjbmlpfonhgpeodainaljkejejffinmboohljkpf
+ihollgipcoijhebolhgdlndchijagpcmkdgjdgmigeibabaalpineplohbcifdjg
+edlhnpmejgknnfnoonpichbllmkalneedcnifgaajigdjjkaokiakaihidomlgde
+ceapclknbmebkpclhenccnagfmogmldmigaaamefhagiacphbbobilamokijadfp
+fddpihmogpebggbonedhnbafdmnnnffjpmlifdnlipppaaeigephmckhkogblppl
+ncinnpkgfgbpekafaikngjhjkkifhkhhiheekmodgkccinkpephkoaejmodojlpk
+gdmbnebfpdohgapjffpigebfmlipjigkhacjnakajbfdlkejacjdhlagalhmojlj
+fkpgejnhgapeflofappjjifchncoplkikoknlalglojbmpjickgipgfdjdafkmde
+agahbeepnojfhbkpnanlfmcnpnknjdclendoldcjgofdompedkhkjegaidhoapac
+dpffmljaikmnonihlmfmckkommkfomfaljleibjdnflnnfjedfnnieafbehpgool
+djpcmmjgdgdgooigkpdkgjfkhdnapmjeckajehfkpkafmmicckkiaaicckkiaaic
+ckkiaajcddleoflgbpgcomlflilngalehcjlemngnjklpoincacplddggokpgpak
+pajenmncihpdeifhlkpnpaloofhcljcgccknkfknejelnlgnmlioejmlijecomge
+hapfoeilfbjogbojidclpeoajokpokpkfcnkpklnhggbbpnkmkppaakggechemaa
+mkdkojmjbpfmaafhnicnmlholfiikgphfbedcmoeepcneljpgckaadcejelcngjb
+epidpfcnhlednfkgdpkfgnmdnefgdhmbghgpkdehlolgmabnbdcbbdjnjljmepgm
+hfhaloofjgdkfebhopljdheklghbgpknfhfmdmndikfcecjhebcbmdgmggcflfbh
+eohgakfmchcojgoenkjcceoanmlkfbgaejokpmoeloafofndmmgfchflmjlcndan
+jboigdnhbkpigklhhfnjkgkjpljiedhpglgilnpfgjjgooibnojfmkaobcffhfeh
+miiebeanpafoffeppaibihhlffhlblilgjcpomidpogfhffikjlmhhbdalmaoajb
+nhheeolghodcbjffeienljmelogjccncifnnapgbdkmkoflnmnnhckmnfdjjkjge
+hbnabcmclbpdhhobojfplnhpcoclgblmfmaljolgghfcbnekcapcademnceodeoi
+plonfdgmkopjbbfhnkncpkpblpkbomgolahekijcobjdjjdhecdifiaadifpokme
+ogheofnlofigfeccigenafniljndocbljjomnjdonooacoodkjejdfjnmendghpk
+kjhiapkndoopfaifhdobkcbpnbojikkpnhhmhimkmmblemdlabhleocankojeihk
+mgefkhgifllkollkekkgleakhangcdbofoadhmihmbkmnklbbcdakcjdlbcllchk
+hckmblidmecemjoppbcflkffmidkdginfmncdgiokhnmpjiiedikfdldjamdlmjg
+bijcbjciiaidacoiemabbenkmhhnhnmjcebnfeebaabffeebaabffeebaagfgcnk
+bonglamfgjjdfhneccomgpiehnkgedbpgakcnddllfehafhahcfhbolblgneoacp
+hmdmgdkdggjjfddmdchblgfeihjigfhagooemphgobgialeppmbakghmemkngghk
+pkkognhhgjkpcgjmgplelelfbcpgkbiepnemaeidpddokiepkiicdaommldefbhm
+gimpbamkpgkjpbglkghbfcmhlmihjnchdnkmabmbcbjhaaopnjlcmiljnfdnehco
+mcaglelidiaabbejflfiekjnoiaibjamkphflhbpcfncopjalgcjkefknjfonldm
+pjooikfjhhpbamdbmfanjpgagaadoagekdafhancjhokjgkbdiemphelfgdnocbn
+kfidongonndjahfhkndmcbmamboikdbpgnllphlaipjbgididkknnnofjnnengag
+ecigfgdlcfjbjjdpllhhecpbnlknnjbkflnmemhppbhganpbafbdmpcilehiifao
+haobjphccikdjcnkfanlenmhbcmhfglldnpdcojehhibgcndcdlnphinggmbbbfi
+afcnlcfhomidacgpccfkfmbdmnlocamnfmchbjmkbhlbpalcjbncdpgiobnniahm
+cppkedbphkbiokngnopgokmcfjoceljkpgckplkjimdcjafjajfabcibhgacaiid
+hmmbfnbgnkloojecendkbpgefjahnccoglggoicmcmphjlcchgcbjhiliojembph
+hhdaonelokmpbelkihjmdbkecnelnodfiefnckfjmahnggffcpnoabdiilcjoaec
+kmeobaoiekobianmlchkbkcfhkicekongmfdgmplikihgiepkogfkldbknjjccbb
+gocpeobaelcbkhocpecflhkamhjalkjhimcnmnjfmopmmmjkdbhgapfclkdgifap
+ogdkdkifcmgpkjinadheiigpndcjahldnhcnlckdbnocckhanohhjajcmogfpcpc
+dadpeddofbfbegnejnmmiohfkfopdkobfkhgjglkolljckppaaigoelpngebmccn
+blpdadpnmpdcodijkolgbkdnmdlcbgfcepahlnoflggdhhchmblailfhjbjbbifp
+kcjngaclmlicaplnihjgokekccidmihpdbddojljmenkdijphfbeckkfippmjfdn
+ppaahledlcljnfocfnbelhldlgljafnomhpdnldcobdghaalobjlkkbbdlhaiifl
+plgapnhefgdojbdckldnfgngglkpmnbfjhagdbbnhgbecmojamoilcanfndimami
+ohfbkmigkfgkpjdopkmanmnbfoakgffcnkpomogceofmackohkjpdijokibmhjcm
+onhcapfjjiklappoiiocfhlalgbefjcnpcbjjfofbdmplahcafnhnaaakhfgfbpi
+bonnoghnemkhfcgkblegemlnnngcfphaikfphamnmbkiinakcakiicakcakiicak
+oalacohgkiflpckajokfehkjjghlfiokpogbonlflkijlmfmcapjcomgefgfkjpb
+mifliekjdhbpoahafldjoofdginjhbioemkjnopomgnofllajfncpgncdoilhlaj
+bgcofjdelcpaahlgbiapbcclapglnlmkihndcooicndeehhnghdcakilfigmohpf
+hpahgeicbaknhndimpmekjncbnhifmhbkheklnlfnhfkmobfiiokdcdcgaddflch
+oaddcildkjcoedlnijellgnakdlbligjlhlafnhamenlmhbjccbjpjjcpiapklep
+bmlohmolndapdpknmldjhfapmcknofdjphbknkkppebolkcpjfbgilhmljdgocle
+gapiopkhcainimpdpfmfaifhonkaljbbnflfdjcikailpbijopciklcnlcamepla
+pidbiokfcjnfjfinkflnbmebbgofannnjjgbfollejhcijdphnhadcjooflipgbp
+pedmeaiipkoohkdnocphkilblmhhcfpadlaaefopgaaiadfhnkobdpcmklfpnnfp
+fknjfmonhinhpcpjkckfgmeglhjdpeonbchemcmkjhdobknmehojcadnogmoepjj
+fpnbcegbcilpcfijpmecmachcgbfcpckpjnhakhgmndnpefmpedahiknmdbeogom
+ldgeoipnjmigpdfbmhabpdgokdpjmicdppaabpfdkcjcldkjkdcjbhfolhkbofpc
+jjdbhecpljpokmkoaakpmbhngjipdihfkbofmjeeagjejhdhijnkbghahjdhhmeo
+ddcjkghpiimdchklnpjpkbfanjnmionibhmbclgmanemndifdlaalhghgadlepnj
+bbnkoopncfenogfaonhkeclhmeijcmgmplnnbejoefgghdopbbilfcapflokjiah
+cpjhbbkcjigdmbpgbmjmjbephcfdhnmhjcenfogbkdhigioceohgljgebjeemcnn
+kfnnbmbdnpbhimmpfaggaggglkiodhnjhdcoomoiaobofdlejdnoeghmdhibdphb
+kpanhadeaolllnnfhdkfbpfjoldkcdbemhkjjjilijkmbodhdaiccplnojincoll
+lkljlnlhlejeocokggienkdonfpodcmbicobjlokhhemondaanmllfeccfkoajle
+gockejcbdejcnijjjajmgehmbfhmkhlmpibofheimigjkngjnkkkkokfegeajhkb
+nhnmhmooejoaaidogjpbkfaahjboeecfpccicbfodkigbkmlklilklcigdiblclb
+imkeopmjopfdonefjekbembkbfceikibaaoaaajkigaackkiicaackkiicaamknd
+hhdmkdhfjinkdklieffldpmhglnnebkifmobdckomkadbenkkmdeaemblcmphdgl
+afhcdlhnfdlmnhbejdkifopokfnfojlnlbfodckolcdcofflbpmmbbceogellnne
+bhbchanpcckmpecccfpdlodjbhpjbkpkbfgkhlobelbaaohggmkfahdgmaglkpcj
+nfhhhlgdcfogpmhkkenkcoihmphfpcgifkfnpnpehjkebnccihmpdodcfijlgjcd
+amcbebhgigjbponmlhelkjgofjdbejhjdfdlgenbdeoeakpignjlpbkikdfllimh
+ddfneihhabmnfdencgonfboiaelnnnijaagapdpdcmaijdionkbncamckeoaaaff
+idjmndhifdgnjfipodjgafndfohmhjpjaobedjjpgnheeimomlnmoekmjbjlcpdj
+dhlhajpdgmnlocaiadncmljcgkamdekdmlmokdpgogpdbcjfoplccnakkignldll
+ihgngdgfknlpgabahafkfhfpnicobjppaaebnopmfnphepbcaeobhhjfoobddopi
+iakeodapenjbdhmocgpgapnkkapmbfgomheeapehdajkklojmelhmchcpjgnaind
+klkiicakcakijcicbaigckkiaaicckkiaaicckkiaalcnmmpdhlckoodjccnmphd
+mddpbefklmhgndnococmgohdjliaaeifhpoaaejmjmhmkfepkidppkjigjnkggkp
+pejienallinebjbkllknddoppiocfboipdjnbcneaabhdkcmofnbmfmobnmgcmob
+aihmmjpajkgoliphjaiogdhjblonlnjoajhemdhgichfdchajocnhlhgbinkfokc
+embbenadiolmindijojfkbgjfklhjgikknjfjfiohpkfmihnabnlgminiemabbie
+eaaikhcpigdablapjippaajijnppaaokngnfnpihoibjdoniocdnffeijmddjfnn
+gephjhpgjhjbfiblpnikpkggdlmlciopfnocncekjfccajegkdmjkiaablifolkc
+pdbppemnnhdfppaacefbelkhhfpbdonaaefboicmddgjpmjjacobnnfaaachefpm
+malnnpllcofmdkghdneljoechcnbfoldheionaiekkjfciikjmhcaagfgabilkko
+gfobkchnfdnobdfefniknjmgnmjjacjbdoiiagfjogmmibcjldobohelbapoejfj
+bjbklogdkfgpmjkjfieicklehhdobkmaekfhgfhaajbeimfmmgafbafeebafbafe
+ebafbafeebafbafeebafbaffokncckklcilejhdkhfkifekckonniandfejfekak
+pafcjlheiphhhloefnbongdebmpoocncochldbfdbidgemmehammlomjaomiojfn
+fnihpicmpalknakdlpgeolkboflkhkdbgplebjobfpbbhlongedfenbbjfhpghjo
+pkmpgfoicneplclniggljejhmandojjhibokcpldnolahmgnlllhlkilmcnoekjl
+jlfjcccifdmncpjdambffpakoakbkmcooolpemcbippegmgjkbnglpndjljlfljl
+ieohjeanmbadicdhelmioifpbdipbfboipjbekbnfoenehjhpeecinofkdocphnn
+eckihicmoioplcbpnfhnmimencobjjmbpbcgcnlmmajbhfjdjhahkhcaaedajoof
+fiaeobphdhaoppaakbcebiehpniihhbeldnkonpjebempihpaigajlnfndfhfhll
+gnnkfpjedollnhodmolfflenbhjhbgjmfeoggepenklhnbembnlflfjmmdomcbic
+enllblioaaeokjcoohnbjpkjmjkhgpplfcjkkidnifpllpfeikajchbpeaffgfdc
+glbhkjaacmlldjlplcdmkhgijlecjfgbjogljnbdopglggldafpaemkiemdneplp
+pnhalnjnigkjmmobleiejlginooacgnjomjfbipdcmaoojhipkkgmoflmhihdkco
+gcpjakcmffelnpialanpbehedejcppaacfpjhinciphfdgjkjggfkhompjfdoibk
+mghjgbcnmikdieidpdaonhfmaajhmggeppaaieenpjdfbnnbcffopmkpnemlpjko
+okamibbanppadkoahemhoilcanmhjdcolipcbblfjdeijefaenmbmfknkeohihpi
+plikndiiaohnhbphaknmbooepgocojdofenacppfkdoolgbeinleoijflhpgnopn
+gnklddbofblgieocmkpggfnagfcbofknjpdfacegmalkmaopbpiaibacpjbhcidd
+aenbakjdfkmkpcpakgpolkifplknncollmpheagilalmahlnmljkhabkooiabmha
+ankinnakcakikeicbaigckkiaaicckkiaajcjcigakoapeemodnaneggkpnaoepm
+bfklcnfplgehbdfknnbleaejhcldjfpemaddlojfdmbomlhfcpekolgchnfdnbih
+hekmlfmnbbmbaclpgmijhabpokgpkiaakiidgniccmacbaaaamaaagbacfbnfeaa
+dhojjdelljafapoclljgogddedglcdkkpadfelbpcfipcfopnadecmkfnennalca
+jancdgkchaogaafmogojfjgoimkjhidmnhgefoagaljlplapfkemnicdnkclpodj
+pechchdmhggfcejemdehakjapkbopflampbfdnfllafflchgcondgnhlkmpacaeh
+nfbnpdennicmnlmaehpkpchjhflicohbkimdodedigocpfkednocnefpnnmoanel
+leiljcialiilnaemdjpmgklcenhbfkaaheccjaeflkaaafapbejbeahfebednmle
+bmomnkbolpjhpgephgdgpllemadalndjmpafgbpdhhhcejhcoionfjnncfcgaijd
+phpanhkkloiffnfljeeploliiaoomdikcooimhpgngaifoiieadoikpbfifhebag
+kakfaakejcigakcakiicakcakiicakcakiicakcakiicakcakiicakcaljkiicak
+fafmncebafbafeebafbafeebafbafeebafhappjn</image>
+</ImgIcon>
+<pin>
+<ID>_P167</ID>
+<x0>625</x0>
+<y0>239</y0>
+<width>53</width>
+<height>30</height>
+<text>save()</text>
+<px>10</px>
+<py>40</py>
+</pin>
+<relation>
+<ID>_R168</ID>
+<pin1name>_P167</pin1name>
+<pin2name>_X91(_P1)</pin2name>
+</relation>
 <aobject>
 <ID>_A88</ID>
-<x0>137</x0>
-<y0>235</y0>
+<x0>136</x0>
+<y0>238</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
@@ -3249,22 +5694,22 @@ XGUI x = new XGUI();
 <py>72</py>
 </pin>
 <pin>
-<ID>_PAsave</ID>
+<ID>_PAlearn_o</ID>
 <x0>0</x0>
 <y0>138</y0>
 <width>200</width>
 <height>26</height>
-<text>save_clicked()</text>
+<text>learn_o_clicked()</text>
 <px>0</px>
 <py>90</py>
 </pin>
 <pin>
-<ID>_PAlearn</ID>
+<ID>_PAlearn_x</ID>
 <x0>0</x0>
 <y0>166</y0>
 <width>200</width>
 <height>26</height>
-<text>learn_clicked()</text>
+<text>learn_x_clicked()</text>
 <px>0</px>
 <py>108</py>
 </pin>
@@ -3432,33 +5877,33 @@ config Iconfig;
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 192, 192, 192 ));
- setText( &quot;Config&quot; );
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
+ setText( &quot;CONFIG&quot; );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {config_clicked();}} );
 }
 }
-save Isave;
- class save extends Button{
- save(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 16f ); setTextColor( Color.rgb( 0, 0, 0 ));
- setBackgroundColor( Color.rgb( 214, 214, 214 ));
- setText( &quot;SAVE&quot; );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {save_clicked();}} );
-}
-}
-learn Ilearn;
- class learn extends Button{
- learn(){
+learn_o Ilearn_o;
+ class learn_o extends Button{
+ learn_o(){
  super(ACTIVITY);
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 5, 3, 0 ));
- setBackgroundColor( Color.rgb( 214, 214, 214 ));
- setText( &quot;LEARN&quot; );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_clicked();}} );
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
+ setText( &quot;O&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_o_clicked();}} );
+}
+}
+learn_x Ilearn_x;
+ class learn_x extends Button{
+ learn_x(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
+ setText( &quot;X&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_x_clicked();}} );
 }
 }
 ins Iins;
@@ -3468,7 +5913,7 @@ ins Iins;
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 214, 214, 214 ));
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
  setText( &quot;INS&quot; );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {ins_clicked();}} );
 }
@@ -3480,7 +5925,7 @@ del Idel;
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 214, 214, 214 ));
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
  setText( &quot;DEL&quot; );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {del_clicked();}} );
 }
@@ -3694,25 +6139,25 @@ layout.setBackgroundColor(Color.rgb( 223, 253, 248));
 ACTIVITY.setContentView(layout);
 ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
  Iconfig = new config();
- Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 280,70,182,882 ) );
+ Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 158,60,484,8 ) );
  layout.addView( Iconfig );
- Isave = new save();
- Isave.setLayoutParams( new AbsoluteLayout.LayoutParams( 156,60,484,6 ) );
- layout.addView( Isave );
- Ilearn = new learn();
- Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( 156,60,0,8 ) );
- layout.addView( Ilearn );
+ Ilearn_o = new learn_o();
+ Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 94,60,0,8 ) );
+ layout.addView( Ilearn_o );
+ Ilearn_x = new learn_x();
+ Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 94,60,102,8 ) );
+ layout.addView( Ilearn_x );
  Iins = new ins();
- Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 138,60,168,8 ) );
+ Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 128,60,204,8 ) );
  layout.addView( Iins );
  Idel = new del();
- Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 150,60,320,6 ) );
+ Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 136,60,340,8 ) );
  layout.addView( Idel );
  Iprev = new prev();
  Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( 74,280,2,76 ) );
  layout.addView( Iprev );
  Inext = new next();
- Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,284,566,74 ) );
+ Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,282,566,76 ) );
  layout.addView( Inext );
  Ivoice_no = new voice_no();
  Ivoice_no.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,70,132,368 ) );
@@ -3767,19 +6212,19 @@ ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
 <ID_maker>38</ID_maker>
 <height>400</height>
 <レイアウト>音声キーボード設定
-328
-481
+392
+526
 223
 253
 248
 xxscale=2
-BUTTON;config;Config;91;441;140;35;51;51;51;192;192;192;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;save;SAVE;242;3;78;30;0;0;0;214;214;214;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;learn;LEARN;0;4;78;30;5;3;0;214;214;214;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;ins;INS;84;4;69;30;51;51;51;214;214;214;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;del;DEL;160;3;75;30;51;51;51;214;214;214;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;config;CONFIG;242;4;79;30;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;learn_o;O;0;4;47;30;5;3;0;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;learn_x;X;51;4;47;30;51;51;51;193;189;189;Dialog;12;null;0;0;1;0;1;Button;
+BUTTON;ins;INS;102;4;64;30;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;del;DEL;170;4;68;30;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;prev;&lt;;1;38;37;140;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
-BUTTON;next;&gt;;283;37;39;142;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
+BUTTON;next;&gt;;283;38;39;141;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
 HSLIDER;voice_no;0;100;66;184;256;35;163;184;204;238;238;238;1;0;1;SeekBar;
 HSLIDER;bright;0;100;65;221;256;34;163;184;204;238;238;238;1;0;1;SeekBar;
 HSLIDER;length;0;100;62;257;259;31;163;184;204;238;238;238;1;0;1;SeekBar;
@@ -3797,158 +6242,14 @@ LABEL;LABEL17;Weight;0;325;63;35;51;51;51;255;255;255;Dialog;12;null;0;0;1;0;0;T
 LABEL;LABEL15;Length;0;257;65;31;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
 </レイアウト>
 </aobject>
-<ImgIcon>
-<ID>_I166</ID>
-<x0>842</x0>
-<y0>441</y0>
-<width>149</width>
-<height>149</height>
-<image>ppinppaoaaabkegejegeaabacaaaaabaaabaaaaapplnaadeaaiagagahagafaia
-hahahajajaiakamaebnamalalamajbcbdbpaebnbkbpbobnbkbmbmbacecochcac
-ccmcdcmbmbichdjcmcadbdedededpbhcjdndidcdmdocddedcdpplnaadebajaja
-jamalamaibnanaibcdbcmbbccdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd
-cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdppam
-aabbiaaagjaagjdabaccaacabbbadabbbappemaapbaaaabafababababababaaa
-aaaaaaaaaaaaaabacadaeafagahaiajakalappemaaflabaacabadadacaeadafa
-faeaeaaaaabanhbacadaaaeabbfacbbcbdbegadbbfbghaccbhebcdbibjbkiadc
-ceblbmfbcfbnapecddcgchcijakagbhbibjbkbfcgchcicjckcedfdgdhdidjdkd
-deeefegeheiejekedfefffgfhfifjfkfdgegfggghgigjgkgdhehfhghhhihjhkh
-dieifigihiiijikicjdjejfjgjhjijjjkjckdkekfkgkhkikjkkkcldlelflglhl
-iljlklcmdmemfmgmhmimjmkmcndnenfngnhninjnknbocodoeofogohoiojokobp
-cpdpepfpgphpipjpkpppemaapbbaaadabababababababababaaaaaaaaaaaaaba
-cadaeafagahaiajakalappemaaflbbaacabacaeaeadaeahafaeaeaaabacahhaa
-bacadabbeafabcbdgacbbebfhabgbhdbcccdbiiaebcebjbkblbmjadcddcfapfb
-cgchbnkagbecedbofcbphbibjbkbgchcicjckcfdgdhdidjdkddeeefegeheieje
-kedfefffgfhfifjfkfdgegfggghgigjgkgdhehfhghhhihjhkhcidieifigihiii
-jikicjdjejfjgjhjijjjkjckdkekfkgkhkikjkkkcldlelflglhliljlklcmdmem
-fmgmhmimjmkmcndnenfngnhninjnkncodoeofogohoiojokocpdpepfpgphpipjp
-kpppknaamadabaaacabbdabbaapdaahpkpjcjcigaackkiicaackkiicaackijjf
-aeeobibflfmndedhhbljeajmedhgdkgmbmbimpfeaaifckkiicaackkiicaackki
-icaackkiicaackkiicaackkiicaackkiicaackkiicaaekgcgjilpfjiohacnhhb
-beoignmnpllnfdjcfielccbdhjbmlpfonhgpeodainaljkejejffinmboohljkpf
-ihollgipcoijhebolhgdlndchijagpcmkdgjdgmigeibabaalpineplohbcifdjg
-edlhnpmejgknnfnoonpichbllmkalneedcnifgaajigdjjkaokiakaihidomlgde
-ceapclknbmebkpclhenccnagfmogmldmigaaamefhagiacphbbobilamokijadfp
-fddpihmogpebggbonedhnbafdmnnnffjpmlifdnlipppaaeigephmckhkogblppl
-ncinnpkgfgbpekafaikngjhjkkifhkhhiheekmodgkccinkpephkoaejmodojlpk
-gdmbnebfpdohgapjffpigebfmlipjigkhacjnakajbfdlkejacjdhlagalhmojlj
-fkpgejnhgapeflofappjjifchncoplkikoknlalglojbmpjickgipgfdjdafkmde
-agahbeepnojfhbkpnanlfmcnpnknjdclendoldcjgofdompedkhkjegaidhoapac
-dpffmljaikmnonihlmfmckkommkfomfaljleibjdnflnnfjedfnnieafbehpgool
-djpcmmjgdgdgooigkpdkgjfkhdnapmjeckajehfkpkafmmicckkiaaicckkiaaic
-ckkiaajcddleoflgbpgcomlflilngalehcjlemngnjklpoincacplddggokpgpak
-pajenmncihpdeifhlkpnpaloofhcljcgccknkfknejelnlgnmlioejmlijecomge
-hapfoeilfbjogbojidclpeoajokpokpkfcnkpklnhggbbpnkmkppaakggechemaa
-mkdkojmjbpfmaafhnicnmlholfiikgphfbedcmoeepcneljpgckaadcejelcngjb
-epidpfcnhlednfkgdpkfgnmdnefgdhmbghgpkdehlolgmabnbdcbbdjnjljmepgm
-hfhaloofjgdkfebhopljdheklghbgpknfhfmdmndikfcecjhebcbmdgmggcflfbh
-eohgakfmchcojgoenkjcceoanmlkfbgaejokpmoeloafofndmmgfchflmjlcndan
-jboigdnhbkpigklhhfnjkgkjpljiedhpglgilnpfgjjgooibnojfmkaobcffhfeh
-miiebeanpafoffeppaibihhlffhlblilgjcpomidpogfhffikjlmhhbdalmaoajb
-nhheeolghodcbjffeienljmelogjccncifnnapgbdkmkoflnmnnhckmnfdjjkjge
-hbnabcmclbpdhhobojfplnhpcoclgblmfmaljolgghfcbnekcapcademnceodeoi
-plonfdgmkopjbbfhnkncpkpblpkbomgolahekijcobjdjjdhecdifiaadifpokme
-ogheofnlofigfeccigenafniljndocbljjomnjdonooacoodkjejdfjnmendghpk
-kjhiapkndoopfaifhdobkcbpnbojikkpnhhmhimkmmblemdlabhleocankojeihk
-mgefkhgifllkollkekkgleakhangcdbofoadhmihmbkmnklbbcdakcjdlbcllchk
-hckmblidmecemjoppbcflkffmidkdginfmncdgiokhnmpjiiedikfdldjamdlmjg
-bijcbjciiaidacoiemabbenkmhhnhnmjcebnfeebaabffeebaabffeebaagfgcnk
-bonglamfgjjdfhneccomgpiehnkgedbpgakcnddllfehafhahcfhbolblgneoacp
-hmdmgdkdggjjfddmdchblgfeihjigfhagooemphgobgialeppmbakghmemkngghk
-pkkognhhgjkpcgjmgplelelfbcpgkbiepnemaeidpddokiepkiicdaommldefbhm
-gimpbamkpgkjpbglkghbfcmhlmihjnchdnkmabmbcbjhaaopnjlcmiljnfdnehco
-mcaglelidiaabbejflfiekjnoiaibjamkphflhbpcfncopjalgcjkefknjfonldm
-pjooikfjhhpbamdbmfanjpgagaadoagekdafhancjhokjgkbdiemphelfgdnocbn
-kfidongonndjahfhkndmcbmamboikdbpgnllphlaipjbgididkknnnofjnnengag
-ecigfgdlcfjbjjdpllhhecpbnlknnjbkflnmemhppbhganpbafbdmpcilehiifao
-haobjphccikdjcnkfanlenmhbcmhfglldnpdcojehhibgcndcdlnphinggmbbbfi
-afcnlcfhomidacgpccfkfmbdmnlocamnfmchbjmkbhlbpalcjbncdpgiobnniahm
-cppkedbphkbiokngnopgokmcfjoceljkpgckplkjimdcjafjajfabcibhgacaiid
-hmmbfnbgnkloojecendkbpgefjahnccoglggoicmcmphjlcchgcbjhiliojembph
-hhdaonelokmpbelkihjmdbkecnelnodfiefnckfjmahnggffcpnoabdiilcjoaec
-kmeobaoiekobianmlchkbkcfhkicekongmfdgmplikihgiepkogfkldbknjjccbb
-gocpeobaelcbkhocpecflhkamhjalkjhimcnmnjfmopmmmjkdbhgapfclkdgifap
-ogdkdkifcmgpkjinadheiigpndcjahldnhcnlckdbnocckhanohhjajcmogfpcpc
-dadpeddofbfbegnejnmmiohfkfopdkobfkhgjglkolljckppaaigoelpngebmccn
-blpdadpnmpdcodijkolgbkdnmdlcbgfcepahlnoflggdhhchmblailfhjbjbbifp
-kcjngaclmlicaplnihjgokekccidmihpdbddojljmenkdijphfbeckkfippmjfdn
-ppaahledlcljnfocfnbelhldlgljafnomhpdnldcobdghaalobjlkkbbdlhaiifl
-plgapnhefgdojbdckldnfgngglkpmnbfjhagdbbnhgbecmojamoilcanfndimami
-ohfbkmigkfgkpjdopkmanmnbfoakgffcnkpomogceofmackohkjpdijokibmhjcm
-onhcapfjjiklappoiiocfhlalgbefjcnpcbjjfofbdmplahcafnhnaaakhfgfbpi
-bonnoghnemkhfcgkblegemlnnngcfphaikfphamnmbkiinakcakiicakcakiicak
-oalacohgkiflpckajokfehkjjghlfiokpogbonlflkijlmfmcapjcomgefgfkjpb
-mifliekjdhbpoahafldjoofdginjhbioemkjnopomgnofllajfncpgncdoilhlaj
-bgcofjdelcpaahlgbiapbcclapglnlmkihndcooicndeehhnghdcakilfigmohpf
-hpahgeicbaknhndimpmekjncbnhifmhbkheklnlfnhfkmobfiiokdcdcgaddflch
-oaddcildkjcoedlnijellgnakdlbligjlhlafnhamenlmhbjccbjpjjcpiapklep
-bmlohmolndapdpknmldjhfapmcknofdjphbknkkppebolkcpjfbgilhmljdgocle
-gapiopkhcainimpdpfmfaifhonkaljbbnflfdjcikailpbijopciklcnlcamepla
-pidbiokfcjnfjfinkflnbmebbgofannnjjgbfollejhcijdphnhadcjooflipgbp
-pedmeaiipkoohkdnocphkilblmhhcfpadlaaefopgaaiadfhnkobdpcmklfpnnfp
-fknjfmonhinhpcpjkckfgmeglhjdpeonbchemcmkjhdobknmehojcadnogmoepjj
-fpnbcegbcilpcfijpmecmachcgbfcpckpjnhakhgmndnpefmpedahiknmdbeogom
-ldgeoipnjmigpdfbmhabpdgokdpjmicdppaabpfdkcjcldkjkdcjbhfolhkbofpc
-jjdbhecpljpokmkoaakpmbhngjipdihfkbofmjeeagjejhdhijnkbghahjdhhmeo
-ddcjkghpiimdchklnpjpkbfanjnmionibhmbclgmanemndifdlaalhghgadlepnj
-bbnkoopncfenogfaonhkeclhmeijcmgmplnnbejoefgghdopbbilfcapflokjiah
-cpjhbbkcjigdmbpgbmjmjbephcfdhnmhjcenfogbkdhigioceohgljgebjeemcnn
-kfnnbmbdnpbhimmpfaggaggglkiodhnjhdcoomoiaobofdlejdnoeghmdhibdphb
-kpanhadeaolllnnfhdkfbpfjoldkcdbemhkjjjilijkmbodhdaiccplnojincoll
-lkljlnlhlejeocokggienkdonfpodcmbicobjlokhhemondaanmllfeccfkoajle
-gockejcbdejcnijjjajmgehmbfhmkhlmpibofheimigjkngjnkkkkokfegeajhkb
-nhnmhmooejoaaidogjpbkfaahjboeecfpccicbfodkigbkmlklilklcigdiblclb
-imkeopmjopfdonefjekbembkbfceikibaaoaaajkigaackkiicaackkiicaamknd
-hhdmkdhfjinkdklieffldpmhglnnebkifmobdckomkadbenkkmdeaemblcmphdgl
-afhcdlhnfdlmnhbejdkifopokfnfojlnlbfodckolcdcofflbpmmbbceogellnne
-bhbchanpcckmpecccfpdlodjbhpjbkpkbfgkhlobelbaaohggmkfahdgmaglkpcj
-nfhhhlgdcfogpmhkkenkcoihmphfpcgifkfnpnpehjkebnccihmpdodcfijlgjcd
-amcbebhgigjbponmlhelkjgofjdbejhjdfdlgenbdeoeakpignjlpbkikdfllimh
-ddfneihhabmnfdencgonfboiaelnnnijaagapdpdcmaijdionkbncamckeoaaaff
-idjmndhifdgnjfipodjgafndfohmhjpjaobedjjpgnheeimomlnmoekmjbjlcpdj
-dhlhajpdgmnlocaiadncmljcgkamdekdmlmokdpgogpdbcjfoplccnakkignldll
-ihgngdgfknlpgabahafkfhfpnicobjppaaebnopmfnphepbcaeobhhjfoobddopi
-iakeodapenjbdhmocgpgapnkkapmbfgomheeapehdajkklojmelhmchcpjgnaind
-klkiicakcakijcicbaigckkiaaicckkiaaicckkiaalcnmmpdhlckoodjccnmphd
-mddpbefklmhgndnococmgohdjliaaeifhpoaaejmjmhmkfepkidppkjigjnkggkp
-pejienallinebjbkllknddoppiocfboipdjnbcneaabhdkcmofnbmfmobnmgcmob
-aihmmjpajkgoliphjaiogdhjblonlnjoajhemdhgichfdchajocnhlhgbinkfokc
-embbenadiolmindijojfkbgjfklhjgikknjfjfiohpkfmihnabnlgminiemabbie
-eaaikhcpigdablapjippaajijnppaaokngnfnpihoibjdoniocdnffeijmddjfnn
-gephjhpgjhjbfiblpnikpkggdlmlciopfnocncekjfccajegkdmjkiaablifolkc
-pdbppemnnhdfppaacefbelkhhfpbdonaaefboicmddgjpmjjacobnnfaaachefpm
-malnnpllcofmdkghdneljoechcnbfoldheionaiekkjfciikjmhcaagfgabilkko
-gfobkchnfdnobdfefniknjmgnmjjacjbdoiiagfjogmmibcjldobohelbapoejfj
-bjbklogdkfgpmjkjfieicklehhdobkmaekfhgfhaajbeimfmmgafbafeebafbafe
-ebafbafeebafbafeebafbaffokncckklcilejhdkhfkifekckonniandfejfekak
-pafcjlheiphhhloefnbongdebmpoocncochldbfdbidgemmehammlomjaomiojfn
-fnihpicmpalknakdlpgeolkboflkhkdbgplebjobfpbbhlongedfenbbjfhpghjo
-pkmpgfoicneplclniggljejhmandojjhibokcpldnolahmgnlllhlkilmcnoekjl
-jlfjcccifdmncpjdambffpakoakbkmcooolpemcbippegmgjkbnglpndjljlfljl
-ieohjeanmbadicdhelmioifpbdipbfboipjbekbnfoenehjhpeecinofkdocphnn
-eckihicmoioplcbpnfhnmimencobjjmbpbcgcnlmmajbhfjdjhahkhcaaedajoof
-fiaeobphdhaoppaakbcebiehpniihhbeldnkonpjebempihpaigajlnfndfhfhll
-gnnkfpjedollnhodmolfflenbhjhbgjmfeoggepenklhnbembnlflfjmmdomcbic
-enllblioaaeokjcoohnbjpkjmjkhgpplfcjkkidnifpllpfeikajchbpeaffgfdc
-glbhkjaacmlldjlplcdmkhgijlecjfgbjogljnbdopglggldafpaemkiemdneplp
-pnhalnjnigkjmmobleiejlginooacgnjomjfbipdcmaoojhipkkgmoflmhihdkco
-gcpjakcmffelnpialanpbehedejcppaacfpjhinciphfdgjkjggfkhompjfdoibk
-mghjgbcnmikdieidpdaonhfmaajhmggeppaaieenpjdfbnnbcffopmkpnemlpjko
-okamibbanppadkoahemhoilcanmhjdcolipcbblfjdeijefaenmbmfknkeohihpi
-plikndiiaohnhbphaknmbooepgocojdofenacppfkdoolgbeinleoijflhpgnopn
-gnklddbofblgieocmkpggfnagfcbofknjpdfacegmalkmaopbpiaibacpjbhcidd
-aenbakjdfkmkpcpakgpolkifplknncollmpheagilalmahlnmljkhabkooiabmha
-ankinnakcakikeicbaigckkiaaicckkiaajcjcigakoapeemodnaneggkpnaoepm
-bfklcnfplgehbdfknnbleaejhcldjfpemaddlojfdmbomlhfcpekolgchnfdnbih
-hekmlfmnbbmbaclpgmijhabpokgpkiaakiidgniccmacbaaaamaaagbacfbnfeaa
-dhojjdelljafapoclljgogddedglcdkkpadfelbpcfipcfopnadecmkfnennalca
-jancdgkchaogaafmogojfjgoimkjhidmnhgefoagaljlplapfkemnicdnkclpodj
-pechchdmhggfcejemdehakjapkbopflampbfdnfllafflchgcondgnhlkmpacaeh
-nfbnpdennicmnlmaehpkpchjhflicohbkimdodedigocpfkednocnefpnnmoanel
-leiljcialiilnaemdjpmgklcenhbfkaaheccjaeflkaaafapbejbeahfebednmle
-bmomnkbolpjhpgephgdgpllemadalndjmpafgbpdhhhcejhcoionfjnncfcgaijd
-phpanhkkloiffnfljeeploliiaoomdikcooimhpgngaifoiieadoikpbfifhebag
-kakfaakejcigakcakiicakcakiicakcakiicakcakiicakcakiicakcaljkiicak
-fafmncebafbafeebafbafeebafbafeebafhappjn</image>
-</ImgIcon>
+<relation>
+<ID>_R169</ID>
+<pin1name>_A88(_PAlearn_o)</pin1name>
+<pin2name>_X_G87(_P91)</pin2name>
+</relation>
+<relation>
+<ID>_R170</ID>
+<pin1name>_A88(_PAlearn_x)</pin1name>
+<pin2name>_X_G87(_P121)</pin2name>
+</relation>
 </xobject>

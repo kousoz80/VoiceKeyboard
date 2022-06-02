@@ -61,6 +61,7 @@ public class VKeyboardControl extends Activity {
          try{
            ap.dbg.close();
          } catch(Exception e){}
+         ap.save();
          ap.exit();
       }
       super.onStop();
@@ -81,6 +82,7 @@ class VoiceTemplate{
   int code;        // キーコード
   double[] voice; // 音声データ
   VoiceTemplate( String t, double w, int c, double[] v ){
+
     text = t;
     weight = w;
     code = c;
@@ -92,6 +94,7 @@ class VoiceTemplate{
 // 各種パラメータ
 boolean flog_scale = false; // 周波数スケール
 boolean alog_scale = false; // 振幅スケール
+boolean auto_learn=false;
 int startup_time = 300;
 double sound_filter = 150.0;
 double thresh_trigger_on = 2;
@@ -101,11 +104,10 @@ int thresh_count_off = 10;
 double thresh_recognize = 0.1;
 double bias = 1; // ノイズ抑制用バイアス
 double acompress = 0.3;  // 振幅圧縮係数
-double learn_param = 8;  // 学習パラメータ
+double learn_param_o = 8;  // 学習パラメータ
+double learn_param_x =128; // 学習パラメータ
 double limit_length = 1.1; // 音声の長さ比較用
 
-
-boolean auto_learn=false;
 
 // 音声テンプレートファイル
 File voice_data_file = new File( "/sdcard/VoiceData.txt" );
@@ -172,6 +174,9 @@ IGUI.Start();
 public void exit(){
 IControl.exit();
 }
+public void save(){
+IFile_IO.save();
+}
 private void _O117_in(String s){
 // 結果を表示する
 
@@ -199,33 +204,33 @@ config Iconfig;
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 192, 192, 192 ));
- setText( "Config" );
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
+ setText( "CONFIG" );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {config_clicked();}} );
 }
 }
-save Isave;
- class save extends Button{
- save(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 16f ); setTextColor( Color.rgb( 0, 0, 0 ));
- setBackgroundColor( Color.rgb( 214, 214, 214 ));
- setText( "SAVE" );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {save_clicked();}} );
-}
-}
-learn Ilearn;
- class learn extends Button{
- learn(){
+learn_o Ilearn_o;
+ class learn_o extends Button{
+ learn_o(){
  super(ACTIVITY);
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 5, 3, 0 ));
- setBackgroundColor( Color.rgb( 214, 214, 214 ));
- setText( "LEARN" );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_clicked();}} );
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
+ setText( "O" );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_o_clicked();}} );
+}
+}
+learn_x Ilearn_x;
+ class learn_x extends Button{
+ learn_x(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
+ setText( "X" );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_x_clicked();}} );
 }
 }
 ins Iins;
@@ -235,7 +240,7 @@ ins Iins;
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 214, 214, 214 ));
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
  setText( "INS" );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {ins_clicked();}} );
 }
@@ -247,7 +252,7 @@ del Idel;
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 214, 214, 214 ));
+ setBackgroundColor( Color.rgb( 193, 189, 189 ));
  setText( "DEL" );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {del_clicked();}} );
 }
@@ -461,25 +466,25 @@ layout.setBackgroundColor(Color.rgb( 223, 253, 248));
 ACTIVITY.setContentView(layout);
 ACTIVITY.setTitle("音声キーボード設定");
  Iconfig = new config();
- Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 280,70,182,882 ) );
+ Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 158,60,484,8 ) );
  layout.addView( Iconfig );
- Isave = new save();
- Isave.setLayoutParams( new AbsoluteLayout.LayoutParams( 156,60,484,6 ) );
- layout.addView( Isave );
- Ilearn = new learn();
- Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( 156,60,0,8 ) );
- layout.addView( Ilearn );
+ Ilearn_o = new learn_o();
+ Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 94,60,0,8 ) );
+ layout.addView( Ilearn_o );
+ Ilearn_x = new learn_x();
+ Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 94,60,102,8 ) );
+ layout.addView( Ilearn_x );
  Iins = new ins();
- Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 138,60,168,8 ) );
+ Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 128,60,204,8 ) );
  layout.addView( Iins );
  Idel = new del();
- Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 150,60,320,6 ) );
+ Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 136,60,340,8 ) );
  layout.addView( Idel );
  Iprev = new prev();
  Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( 74,280,2,76 ) );
  layout.addView( Iprev );
  Inext = new next();
- Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,284,566,74 ) );
+ Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,282,566,76 ) );
  layout.addView( Inext );
  Ivoice_no = new voice_no();
  Ivoice_no.setLayoutParams( new AbsoluteLayout.LayoutParams( 512,70,132,368 ) );
@@ -543,13 +548,13 @@ public void config_clicked(){
 STATE2 = STATE;
 parent.Iconfig.config();
 }
-public void save_clicked(){
+public void learn_o_clicked(){
 STATE2 = STATE;
-parent.IFile_IO.save();
+parent.IControl.learn_o();
 }
-public void learn_clicked(){
+public void learn_x_clicked(){
 STATE2 = STATE;
-parent.IControl.learn();
+parent.IControl.learn_x();
 }
 public void ins_clicked(){
 STATE2 = STATE;
@@ -612,7 +617,7 @@ STATE2 = STATE;
 parent.ISetter.result_is(t);
 }
 private void _Ocreate_in(){
-if( STATE2 != 1217278828 ) return;
+if( STATE2 != 432064631 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -624,7 +629,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1217278828;
+STATE = 432064631;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -671,9 +676,15 @@ public void recognize( double[] voice) {
   }
       
   // 認識結果を送る
-  if( max > thresh_recognize ) result( ((VoiceTemplate)(voice_template.get(maxi))).text+"("+max+")\n");
-  else result("***("+max+")\n");
+  if( max > thresh_recognize ){
+    voice_no0 = maxi;
+    result( ((VoiceTemplate)(voice_template.get(maxi))).text+"("+max+")\n");
+  }
 
+  else{
+    voice_no0 = -1;
+    result("***("+max+")\n");
+  }
 }
 
 
@@ -1033,10 +1044,13 @@ dprint("start rec thread\n");
 // 三角関数テーブル
 double[][] sin_table, cos_table;
 
+// 認識結果(音声番号)
+int voice_no0;
+
 public void start(){
 _O89_in();
 }
-public void learn(){
+public void learn_o(){
 _O93_in();
 }
 public void result(String s){
@@ -1050,6 +1064,9 @@ _O116_in();
 }
 public void exit(){
 _O118_in();
+}
+public void learn_x(){
+_O122_in();
 }
 private void _O89_in(){
 // 初期設定
@@ -1098,7 +1115,7 @@ record_thread.start();
 
 }
 private void _O93_in(){
-// 録音した音声を学習する
+// 録音した音声を学習する(報酬)
 
 
 if(tsize > 0){
@@ -1110,7 +1127,7 @@ if(tsize > 0){
   for(int i = 0; i < v.length; i++){
     double d = 0;
     if(i < voice.length) d = voice[i];
-    v[i] = ((learn_param - 1.0) * v[i] + d) / learn_param;
+    v[i] = ((learn_param_o - 1.0) * v[i] + d) / learn_param_o;
   }
   ((VoiceTemplate)(voice_template.get(voice_no))).voice = v;
   update_display();
@@ -1156,6 +1173,26 @@ try{
 is_running = false;
 record_thread.join();
 } catch(Exception e){}
+
+}
+private void _O122_in(){
+// 録音した音声を学習する(ペナルティ)
+
+
+if(tsize > 0 && voice_no0 >= 0){
+  double[] u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
+  double[] v = new double[tsize];
+  for(int i = 0; i < v.length; i++){
+  if(i < u.length) v[i] = u[i]; else v[i] = 0;
+  }
+  for(int i = 0; i < v.length; i++){
+    double d = 0;
+    if(i < voice.length) d = voice[i];
+    v[i] = ((learn_param_x - 1.0) * v[i] - d) / learn_param_x;
+  }
+  ((VoiceTemplate)(voice_template.get(voice_no0))).voice = v;
+  update_display();
+}
 
 }
 Control( VoiceKeyboardControl pnt ){
@@ -1221,7 +1258,8 @@ while(true){
   if( line.startsWith("thresh_recognize="))   thresh_recognize=Double.parseDouble(line.substring(17));
   if( line.startsWith("bias="))               bias=Double.parseDouble(line.substring(5));
   if( line.startsWith("acompress="))          acompress=Double.parseDouble(line.substring(10));
-  if( line.startsWith("learn_param="))        learn_param=Double.parseDouble(line.substring(12));
+  if( line.startsWith("learn_param_o="))      learn_param_o=Double.parseDouble(line.substring(14));
+  if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
 }
 
@@ -1277,7 +1315,8 @@ try{
   dout.write("thresh_recognize=" + thresh_recognize + "\n");
   dout.write("bias=" + bias + "\n");
   dout.write("acompress=" + acompress + "\n");
-  dout.write("learn_param=" + learn_param + "\n");
+  dout.write("learn_param_o=" + learn_param_o + "\n");
+  dout.write("learn_param_x=" + learn_param_x + "\n");
   dout.write("limit_length=" + limit_length + "\n");
   dout.write("\n");
 
@@ -1514,28 +1553,44 @@ class config{
 VoiceKeyboardControl parent;
 // コンテナ
 AbsoluteLayout main_container;
-AbsoluteLayout this_container;
-
-EditText text;
-int line_p;
-String source;
-
-public void text_home(){
-  source = ((SpannableStringBuilder)text.getText()).toString();
-  line_p = -1;
-}
-
-public String get_line(){
-  String s;
-  int i = source.indexOf( "\n", line_p+1 );
-  if( i == -1 )return null;
-  s = source.substring( line_p+1, i );
-  line_p = i;
-  return s;
-}
+AbsoluteLayout config_container;
+AbsoluteLayout equalizer_container;
 
 // バックアップファイル
 File backup_file = new File( Environment.getExternalStorageDirectory(),"VKeyboaed.bak" );
+
+//各パラメータ
+CheckBox cflog_scale;
+CheckBox calog_scale;
+CheckBox cauto_learn;
+EditText csound_filter;
+EditText cstartup_time;
+EditText cthresh_trigger_on;
+EditText cthresh_trigger_off;
+EditText cthresh_count_on;
+EditText cthresh_count_off;
+EditText cthresh_recognize;
+EditText cbias;
+EditText cacompress;
+EditText clearn_param_o;
+EditText clearn_param_x;
+EditText climit_length;
+
+  // EditTextから数値を得る
+  public int get_int( EditText e ){
+    return Integer.parseInt( get_text(e) ); 
+  }
+
+  // EditTextから数値を得る
+  public double get_double( EditText e ){
+    return Double.parseDouble( get_text(e) ); 
+  }
+
+  // EditTextから文字列を得る
+  public String get_text( EditText e ){
+    return ((SpannableStringBuilder)e.getText()).toString(); 
+  }
+
 
 public void start(Object l){
 _O5_in(l);
@@ -1558,7 +1613,7 @@ private void _O10_in(Object o){
 
 
 
-this_container = (AbsoluteLayout)o;
+config_container = (AbsoluteLayout)o;
 ACTIVITY.setContentView(main_container);
 
 }
@@ -1568,52 +1623,47 @@ private void _O12_in(){
 
 
 
-  text.setText("");
-  text.append("startup_time=" + startup_time + "\n");
-  text.append("sound_filter=" + sound_filter + "\n");
-  text.append("thresh_trigger_on=" + thresh_trigger_on + "\n");
-  text.append("thresh_trigger_off=" + thresh_trigger_off + "\n");
-  text.append("thresh_count_on=" + thresh_count_on + "\n");
-  text.append("thresh_count_off=" + thresh_count_off + "\n");
-  text.append("thresh_recognize=" + thresh_recognize + "\n");
-  text.append("bias=" + bias + "\n");
-  text.append("acompress=" + acompress + "\n");
-  text.append("learn_param=" + learn_param + "\n");
-  text.append("limit_length=" + limit_length + "\n");
-  for(int i = 0; i < HEARING_HEIGHT; i++){
-    text.append(hosei[i] + "\n");
-  }
-  ACTIVITY.setContentView(this_container);
+  cflog_scale.setChecked(flog_scale);
+  calog_scale.setChecked(alog_scale);
+  cauto_learn.setChecked(auto_learn);
+  cstartup_time.setText("" + startup_time);
+  csound_filter.setText("" + sound_filter);
+  cthresh_trigger_on.setText("" + thresh_trigger_on);
+  cthresh_trigger_off.setText("" + thresh_trigger_off);
+  cthresh_count_on.setText("" + thresh_count_on);
+  cthresh_count_off.setText("" + thresh_count_off);
+  cthresh_recognize.setText("" + thresh_recognize);
+  cbias.setText("" + bias);
+  cacompress.setText("" + acompress);
+  clearn_param_o.setText("" + learn_param_o);
+  clearn_param_x.setText("" + learn_param_x);
+  climit_length.setText("" + limit_length);
+  ACTIVITY.setContentView(config_container);
   
-
-}
-private void _O15_in(EditText t){
-text = t;
-
 
 }
 private void _O19_in(){
 // 変数をセットして閉じる
 
 
-  text_home();
-  startup_time=Integer.parseInt(get_line().substring(13));
-  sound_filter=Double.parseDouble(get_line().substring(13));
-  thresh_trigger_on=Double.parseDouble(get_line().substring(18));
-  thresh_trigger_off=Double.parseDouble(get_line().substring(19));
-  thresh_count_on=Integer.parseInt(get_line().substring(16));
-  thresh_count_off=Integer.parseInt(get_line().substring(17));
-  thresh_recognize=Double.parseDouble(get_line().substring(17));
-  bias=Double.parseDouble(get_line().substring(5));
-  acompress=Double.parseDouble(get_line().substring(10));
-  learn_param=Double.parseDouble(get_line().substring(12));
-  limit_length=Double.parseDouble(get_line().substring(13));
+  flog_scale=cflog_scale.isChecked();
+  alog_scale=calog_scale.isChecked();
+  auto_learn=cauto_learn.isChecked();
+  startup_time=get_int(cstartup_time);
+  sound_filter=get_double(csound_filter);
+  thresh_trigger_on=get_double(cthresh_trigger_on);
+  thresh_trigger_off=get_double(cthresh_trigger_off);
+  thresh_count_on=get_int(cthresh_count_on);
+  thresh_count_off=get_int(cthresh_count_off);
+  thresh_recognize=get_double(cthresh_recognize);
+  bias=get_double(cbias);
+  acompress=get_double(cacompress);
+  learn_param_o=get_double(clearn_param_o);
+  learn_param_x=get_double(clearn_param_x);
+  limit_length=get_double(climit_length);
 
-  hosei = new double[HEARING_HEIGHT];
-  for(int i = 0; i < HEARING_HEIGHT; i++){
-    hosei[i%HEARING_HEIGHT] = Double.parseDouble(get_line());
-  }
   ACTIVITY.setContentView(main_container);
+  
 
 }
 private void _O21_in(){
@@ -1642,12 +1692,12 @@ while(true){
   if( line.equals( "" ) ) break;
   if( line.equals("debug_mode=true"))         debug_mode=true;
   if( line.equals("debug_mode=false"))        debug_mode=false;
-  if( line.equals("auto_learn=true"))         auto_learn=true;
-  if( line.equals("auto_learn=false"))        auto_learn=false;
   if( line.equals("flog_scale=true"))         flog_scale=true;
   if( line.equals("flog_scale=false"))        flog_scale=false;
   if( line.equals("alog_scale=true"))         alog_scale=true;
   if( line.equals("alog_scale=false"))        alog_scale=false;
+  if( line.equals("auto_learn=true"))         auto_learn=true;
+  if( line.equals("auto_learn=false"))        auto_learn=false;
   if( line.startsWith("startup_time="))       startup_time=Integer.parseInt(line.substring(13));
   if( line.startsWith("sound_filter="))       sound_filter=Double.parseDouble(line.substring(13));
   if( line.startsWith("thresh_trigger_on="))  thresh_trigger_on=Double.parseDouble(line.substring(18));
@@ -1657,7 +1707,8 @@ while(true){
   if( line.startsWith("thresh_recognize="))   thresh_recognize=Double.parseDouble(line.substring(17));
   if( line.startsWith("bias="))               bias=Double.parseDouble(line.substring(5));
   if( line.startsWith("acompress="))          acompress=Double.parseDouble(line.substring(10));
-  if( line.startsWith("learn_param="))        learn_param=Double.parseDouble(line.substring(12));
+  if( line.startsWith("learn_param_o="))      learn_param_o=Double.parseDouble(line.substring(14));
+  if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
 }
 
@@ -1707,9 +1758,9 @@ try{
   BufferedWriter dout = new BufferedWriter( new FileWriter(voice_data_file) );
   
   // 変数を保存する
-  dout.write("auto_learn=" + auto_learn + "\n");
   dout.write("flog_scale=" + flog_scale + "\n");
   dout.write("alog_scale=" + alog_scale + "\n");
+  dout.write("auto_learn=" + auto_learn + "\n");
   dout.write("startup_time=" + startup_time + "\n");
   dout.write("sound_filter=" + sound_filter + "\n");
   dout.write("thresh_trigger_on=" + thresh_trigger_on + "\n");
@@ -1719,7 +1770,8 @@ try{
   dout.write("thresh_recognize=" + thresh_recognize + "\n");
   dout.write("bias=" + bias + "\n");
   dout.write("acompress=" + acompress + "\n");
-  dout.write("learn_param=" + learn_param + "\n");
+  dout.write("learn_param_o=" + learn_param_o + "\n");
+  dout.write("learn_param_x=" + learn_param_x + "\n");
   dout.write("limit_length=" + limit_length + "\n");
   dout.write("\n");
 
@@ -1785,12 +1837,12 @@ while(true){
   if( line.equals( "" ) ) break;
   if( line.equals("debug_mode=true"))         debug_mode=true;
   if( line.equals("debug_mode=false"))        debug_mode=false;
-  if( line.equals("auto_learn=true"))         auto_learn=true;
-  if( line.equals("auto_learn=false"))        auto_learn=false;
   if( line.equals("flog_scale=true"))         flog_scale=true;
   if( line.equals("flog_scale=false"))        flog_scale=false;
   if( line.equals("alog_scale=true"))         alog_scale=true;
   if( line.equals("alog_scale=false"))        alog_scale=false;
+  if( line.equals("auto_learn=true"))         auto_learn=true;
+  if( line.equals("auto_learn=false"))        auto_learn=false;
   if( line.startsWith("startup_time="))       startup_time=Integer.parseInt(line.substring(13));
   if( line.startsWith("sound_filter="))       sound_filter=Double.parseDouble(line.substring(13));
   if( line.startsWith("thresh_trigger_on="))  thresh_trigger_on=Double.parseDouble(line.substring(18));
@@ -1800,7 +1852,8 @@ while(true){
   if( line.startsWith("thresh_recognize="))   thresh_recognize=Double.parseDouble(line.substring(17));
   if( line.startsWith("bias="))               bias=Double.parseDouble(line.substring(5));
   if( line.startsWith("acompress="))          acompress=Double.parseDouble(line.substring(10));
-  if( line.startsWith("learn_param="))        learn_param=Double.parseDouble(line.substring(12));
+  if( line.startsWith("learn_param_o="))      learn_param_o=Double.parseDouble(line.substring(14));
+  if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
 }
 
@@ -1837,30 +1890,21 @@ din.close();
 voice_no = 0;
 
 }
-private void _O27_in(int v){
-// テキストを移動する
-
-
-String s= ((SpannableStringBuilder)text.getText()).toString();
-int len = s.length();
-text.setSelection( v * len /10000 );
-
-}
 GUI IGUI;
 class GUI{
 int STATE, STATE2;
 config parent;
  class XGUI{
-text Itext;
- class text extends EditText{
- text(){
+equalizer Iequalizer;
+ class equalizer extends Button{
+ equalizer(){
  super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
- setGravity(Gravity.LEFT | Gravity.TOP);
- setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 255, 255, 255 ));
- setText( "" );
- text_created( this );
+ setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "EQUALIZER" );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {equalizer_clicked();}} );
 }
 }
 close Iclose;
@@ -1873,20 +1917,6 @@ close Iclose;
  setBackgroundColor( Color.rgb( 192, 192, 192 ));
  setText( "X" );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {close_clicked();}} );
-}
-}
-slider Islider;
- class slider extends SeekBar{
- slider(){
- super(ACTIVITY);
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setProgress( 0 );
- setMax( 10000 );
- setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
- public void onStopTrackingTouch(SeekBar seekBar) {}
- public void onStartTrackingTouch(SeekBar seekBar) {}
- public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { slider_changed( progress ); }
- });
 }
 }
 backup Ibackup;
@@ -1907,7 +1937,7 @@ restore Irestore;
  super(ACTIVITY);
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
- setTextSize( 15f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
  setBackgroundColor( Color.rgb( 192, 192, 192 ));
  setText( "RESTORE" );
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {restore_clicked();}} );
@@ -1925,29 +1955,443 @@ clear Iclear;
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {clear_clicked();}} );
 }
 }
+cflog_scale Icflog_scale;
+ class cflog_scale extends CheckBox{
+ cflog_scale(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ cflog_scale_created( this );
+}
+}
+LABEL8 ILABEL8;
+ class LABEL8 extends TextView{
+ LABEL8(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "flog_scale" );
+}
+}
+calog_scale Icalog_scale;
+ class calog_scale extends CheckBox{
+ calog_scale(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ calog_scale_created( this );
+}
+}
+cauto_learn Icauto_learn;
+ class cauto_learn extends CheckBox{
+ cauto_learn(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ cauto_learn_created( this );
+}
+}
+csound_filter Icsound_filter;
+ class csound_filter extends EditText{
+ csound_filter(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ csound_filter_created( this );
+}
+}
+LABEL11 ILABEL11;
+ class LABEL11 extends TextView{
+ LABEL11(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "alog_scale" );
+}
+}
+LABEL12 ILABEL12;
+ class LABEL12 extends TextView{
+ LABEL12(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "startup time" );
+}
+}
+cstartup_time Icstartup_time;
+ class cstartup_time extends EditText{
+ cstartup_time(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cstartup_time_created( this );
+}
+}
+LABEL14 ILABEL14;
+ class LABEL14 extends TextView{
+ LABEL14(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "sound_filter" );
+}
+}
+LABEL15 ILABEL15;
+ class LABEL15 extends TextView{
+ LABEL15(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "thresh_trigger_on" );
+}
+}
+LABEL16 ILABEL16;
+ class LABEL16 extends TextView{
+ LABEL16(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "thresh_trigger_off" );
+}
+}
+LABEL17 ILABEL17;
+ class LABEL17 extends TextView{
+ LABEL17(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "thresh_count_on" );
+}
+}
+LABEL18 ILABEL18;
+ class LABEL18 extends TextView{
+ LABEL18(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "thresh_count_off" );
+}
+}
+LABEL19 ILABEL19;
+ class LABEL19 extends TextView{
+ LABEL19(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "thresh_recognize" );
+}
+}
+LABEL20 ILABEL20;
+ class LABEL20 extends TextView{
+ LABEL20(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "bias" );
+}
+}
+LABEL21 ILABEL21;
+ class LABEL21 extends TextView{
+ LABEL21(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "acompress" );
+}
+}
+LABEL22 ILABEL22;
+ class LABEL22 extends TextView{
+ LABEL22(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "learn_param_o" );
+}
+}
+LABEL23 ILABEL23;
+ class LABEL23 extends TextView{
+ LABEL23(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "limit_length" );
+}
+}
+cthresh_trigger_on Icthresh_trigger_on;
+ class cthresh_trigger_on extends EditText{
+ cthresh_trigger_on(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cthresh_trigger_on_created( this );
+}
+}
+cthresh_trigger_off Icthresh_trigger_off;
+ class cthresh_trigger_off extends EditText{
+ cthresh_trigger_off(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cthresh_trigger_off_created( this );
+}
+}
+cthresh_count_on Icthresh_count_on;
+ class cthresh_count_on extends EditText{
+ cthresh_count_on(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cthresh_count_on_created( this );
+}
+}
+cthresh_count_off Icthresh_count_off;
+ class cthresh_count_off extends EditText{
+ cthresh_count_off(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cthresh_count_off_created( this );
+}
+}
+cthresh_recognize Icthresh_recognize;
+ class cthresh_recognize extends EditText{
+ cthresh_recognize(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cthresh_recognize_created( this );
+}
+}
+cbias Icbias;
+ class cbias extends EditText{
+ cbias(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cbias_created( this );
+}
+}
+cacompress Icacompress;
+ class cacompress extends EditText{
+ cacompress(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cacompress_created( this );
+}
+}
+clearn_param_o Iclearn_param_o;
+ class clearn_param_o extends EditText{
+ clearn_param_o(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ clearn_param_o_created( this );
+}
+}
+clearn_param_x Iclearn_param_x;
+ class clearn_param_x extends EditText{
+ clearn_param_x(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ clearn_param_x_created( this );
+}
+}
+climit_length Iclimit_length;
+ class climit_length extends EditText{
+ climit_length(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ climit_length_created( this );
+}
+}
+LABEL31 ILABEL31;
+ class LABEL31 extends TextView{
+ LABEL31(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "auto_learn" );
+}
+}
+LABEL33 ILABEL33;
+ class LABEL33 extends TextView{
+ LABEL33(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "learn_param_x" );
+}
+}
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
-layout.setBackgroundColor(Color.rgb( 247, 249, 165));
+layout.setBackgroundColor(Color.rgb( 217, 255, 253));
 ACTIVITY.setContentView(layout);
-ACTIVITY.setTitle("Config");
- Itext = new text();
- Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 594,610,4,174 ) );
- layout.addView( Itext );
+ACTIVITY.setTitle("VKeyboard設定");
+ Iequalizer = new equalizer();
+ Iequalizer.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,76,232,80 ) );
+ layout.addView( Iequalizer );
  Iclose = new close();
- Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 70,70,524,0 ) );
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,152,462,2 ) );
  layout.addView( Iclose );
- Islider = new slider();
- Islider.setLayoutParams( new AbsoluteLayout.LayoutParams( 596,78,0,84 ) );
- layout.addView( Islider );
  Ibackup = new backup();
- Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( 168,70,154,0 ) );
+ Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( 216,74,4,0 ) );
  layout.addView( Ibackup );
  Irestore = new restore();
- Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( 190,70,328,0 ) );
+ Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,72,232,0 ) );
  layout.addView( Irestore );
  Iclear = new clear();
- Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( 146,70,0,0 ) );
+ Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( 214,74,4,82 ) );
  layout.addView( Iclear );
+ Icflog_scale = new cflog_scale();
+ Icflog_scale.setLayoutParams( new AbsoluteLayout.LayoutParams( 52,48,296,164 ) );
+ layout.addView( Icflog_scale );
+ ILABEL8 = new LABEL8();
+ ILABEL8.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,46,0,162 ) );
+ layout.addView( ILABEL8 );
+ Icalog_scale = new calog_scale();
+ Icalog_scale.setLayoutParams( new AbsoluteLayout.LayoutParams( 52,46,296,218 ) );
+ layout.addView( Icalog_scale );
+ Icauto_learn = new cauto_learn();
+ Icauto_learn.setLayoutParams( new AbsoluteLayout.LayoutParams( 54,46,298,268 ) );
+ layout.addView( Icauto_learn );
+ Icsound_filter = new csound_filter();
+ Icsound_filter.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,376 ) );
+ layout.addView( Icsound_filter );
+ ILABEL11 = new LABEL11();
+ ILABEL11.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,48,0,214 ) );
+ layout.addView( ILABEL11 );
+ ILABEL12 = new LABEL12();
+ ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,54,0,320 ) );
+ layout.addView( ILABEL12 );
+ Icstartup_time = new cstartup_time();
+ Icstartup_time.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,54,298,320 ) );
+ layout.addView( Icstartup_time );
+ ILABEL14 = new LABEL14();
+ ILABEL14.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,50,0,378 ) );
+ layout.addView( ILABEL14 );
+ ILABEL15 = new LABEL15();
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 292,48,0,432 ) );
+ layout.addView( ILABEL15 );
+ ILABEL16 = new LABEL16();
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,484 ) );
+ layout.addView( ILABEL16 );
+ ILABEL17 = new LABEL17();
+ ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,536 ) );
+ layout.addView( ILABEL17 );
+ ILABEL18 = new LABEL18();
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,588 ) );
+ layout.addView( ILABEL18 );
+ ILABEL19 = new LABEL19();
+ ILABEL19.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,640 ) );
+ layout.addView( ILABEL19 );
+ ILABEL20 = new LABEL20();
+ ILABEL20.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,42,0,688 ) );
+ layout.addView( ILABEL20 );
+ ILABEL21 = new LABEL21();
+ ILABEL21.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,734 ) );
+ layout.addView( ILABEL21 );
+ ILABEL22 = new LABEL22();
+ ILABEL22.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,782 ) );
+ layout.addView( ILABEL22 );
+ ILABEL23 = new LABEL23();
+ ILABEL23.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,880 ) );
+ layout.addView( ILABEL23 );
+ Icthresh_trigger_on = new cthresh_trigger_on();
+ Icthresh_trigger_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,430 ) );
+ layout.addView( Icthresh_trigger_on );
+ Icthresh_trigger_off = new cthresh_trigger_off();
+ Icthresh_trigger_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,302,484 ) );
+ layout.addView( Icthresh_trigger_off );
+ Icthresh_count_on = new cthresh_count_on();
+ Icthresh_count_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,302,538 ) );
+ layout.addView( Icthresh_count_on );
+ Icthresh_count_off = new cthresh_count_off();
+ Icthresh_count_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,588 ) );
+ layout.addView( Icthresh_count_off );
+ Icthresh_recognize = new cthresh_recognize();
+ Icthresh_recognize.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,638 ) );
+ layout.addView( Icthresh_recognize );
+ Icbias = new cbias();
+ Icbias.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,686 ) );
+ layout.addView( Icbias );
+ Icacompress = new cacompress();
+ Icacompress.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,734 ) );
+ layout.addView( Icacompress );
+ Iclearn_param_o = new clearn_param_o();
+ Iclearn_param_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,782 ) );
+ layout.addView( Iclearn_param_o );
+ Iclearn_param_x = new clearn_param_x();
+ Iclearn_param_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,832 ) );
+ layout.addView( Iclearn_param_x );
+ Iclimit_length = new climit_length();
+ Iclimit_length.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,48,300,880 ) );
+ layout.addView( Iclimit_length );
+ ILABEL31 = new LABEL31();
+ ILABEL31.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,46,0,268 ) );
+ layout.addView( ILABEL31 );
+ ILABEL33 = new LABEL33();
+ ILABEL33.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,832 ) );
+ layout.addView( ILABEL33 );
  GUI_created( layout );
 }
 }
@@ -1955,22 +2399,19 @@ ACTIVITY.setTitle("Config");
 public void Start(){
 STATE2 = STATE;
 _Ocreate_in();
+parent.IEqualizer.start();
 }
 public void GUI_created(AbsoluteLayout l){
 STATE2 = STATE;
 parent._O10_in(l);
 }
-public void text_created(EditText e){
+public void equalizer_clicked(){
 STATE2 = STATE;
-parent._O15_in(e);
+parent.IEqualizer.equalizer();
 }
 public void close_clicked(){
 STATE2 = STATE;
 parent._O19_in();
-}
-public void slider_changed(int val){
-STATE2 = STATE;
-parent._O27_in(val);
 }
 public void backup_clicked(){
 STATE2 = STATE;
@@ -1984,8 +2425,68 @@ public void clear_clicked(){
 STATE2 = STATE;
 parent._O21_in();
 }
+public void cflog_scale_created(CheckBox c){
+STATE2 = STATE;
+parent.Isetter.cflog_scale_created(c);
+}
+public void calog_scale_created(CheckBox c){
+STATE2 = STATE;
+parent.Isetter.calog_scale_created(c);
+}
+public void cauto_learn_created(CheckBox c){
+STATE2 = STATE;
+parent.Isetter.cauto_learn_created(c);
+}
+public void csound_filter_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.csound_filter_created(e);
+}
+public void cstartup_time_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cstartup_time_created(e);
+}
+public void cthresh_trigger_on_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cthresh_trigger_on_created(e);
+}
+public void cthresh_trigger_off_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cthresh_trigger_off_created(e);
+}
+public void cthresh_count_on_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cthresh_count_on_created(e);
+}
+public void cthresh_count_off_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cthresh_count_off_created(e);
+}
+public void cthresh_recognize_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cthresh_recognize_created(e);
+}
+public void cbias_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cbias_created(e);
+}
+public void cacompress_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cacompress_created(e);
+}
+public void clearn_param_o_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.clearn_param_o_created(e);
+}
+public void clearn_param_x_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.clearn_param_x_created(e);
+}
+public void climit_length_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.climit_length_created(e);
+}
 private void _Ocreate_in(){
-if( STATE2 != 1743638876 ) return;
+if( STATE2 != 1580861234 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -1997,16 +2498,523 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1743638876;
+STATE = 1580861234;
 }
 GUI( config pnt ){
  parent = pnt;
 _SINIT();
 }
 }
+Equalizer IEqualizer;
+class Equalizer{
+config parent;
+// イコライザ用のシークバー
+SeekBar e0,e1,e2,e3,e4,e5,e6,e7;
+
+public void start(){
+IGUI.Start();
+}
+public void equalizer(){
+_O6_in();
+}
+private void _O4_in(Object o){
+//  コンテナをセット
+
+
+
+equalizer_container = (AbsoluteLayout)o;
+
+}
+private void _O6_in(){
+// イコライザを表示
+
+
+double a = 0;
+int i=1;
+a=0;
+for(int j=1; j<HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e0.setProgress((int)(a/(HEARING_HEIGHT/8-1)*100));
+a=0;
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e1.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e2.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e3.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e4.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e5.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e6.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+a=0;
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+a+=hosei[i];
+}
+e7.setProgress((int)(a/(HEARING_HEIGHT/8)*100));
+ACTIVITY.setContentView(equalizer_container);
+
+}
+private void _O8_in(){
+// イコライザを非表示
+
+
+hosei[0]=0;
+int i=1;
+for(int j=1; j<HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e0.getProgress()/100;
+}
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e1.getProgress()/100;
+}
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e2.getProgress()/100;
+}
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e3.getProgress()/100;
+}
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e4.getProgress()/100;
+}
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e5.getProgress()/100;
+}
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e6.getProgress()/100;
+}
+for(int j=0; j<HEARING_HEIGHT/8;i++, j++){
+hosei[i] = (double)e7.getProgress()/100;
+}
+ACTIVITY.setContentView(config_container);
+
+}
+private void _O24_in(){
+// メインコンテナを表示
+
+
+ACTIVITY.setContentView(main_container);
+
+}
+GUI IGUI;
+class GUI{
+int STATE, STATE2;
+Equalizer parent;
+ class XGUI{
+LABEL0 ILABEL0;
+ class LABEL0 extends TextView{
+ LABEL0(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 30f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 254, 254, 254 ));
+ setText( "EQUALIZER" );
+}
+}
+e0 Ie0;
+ class e0 extends SeekBar{
+ e0(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e0_created( this );
+}
+}
+e1 Ie1;
+ class e1 extends SeekBar{
+ e1(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e1_created( this );
+}
+}
+e2 Ie2;
+ class e2 extends SeekBar{
+ e2(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e2_created( this );
+}
+}
+e3 Ie3;
+ class e3 extends SeekBar{
+ e3(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e3_created( this );
+}
+}
+e4 Ie4;
+ class e4 extends SeekBar{
+ e4(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e4_created( this );
+}
+}
+e5 Ie5;
+ class e5 extends SeekBar{
+ e5(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e5_created( this );
+}
+}
+e6 Ie6;
+ class e6 extends SeekBar{
+ e6(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e6_created( this );
+}
+}
+e7 Ie7;
+ class e7 extends SeekBar{
+ e7(){
+ super(ACTIVITY);
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setProgress( 0 );
+ setMax( 100 );
+ e7_created( this );
+}
+}
+close Iclose;
+ class close extends Button{
+ close(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "X" );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {close_clicked();}} );
+}
+}
+ XGUI(){
+ AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+layout.setBackgroundColor(Color.rgb( 210, 252, 253));
+ACTIVITY.setContentView(layout);
+ACTIVITY.setTitle("VKeyboard設定");
+ ILABEL0 = new LABEL0();
+ ILABEL0.setLayoutParams( new AbsoluteLayout.LayoutParams( 562,88,0,8 ) );
+ layout.addView( ILABEL0 );
+ Ie0 = new e0();
+ Ie0.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,2,112 ) );
+ layout.addView( Ie0 );
+ Ie1 = new e1();
+ Ie1.setLayoutParams( new AbsoluteLayout.LayoutParams( 672,72,0,194 ) );
+ layout.addView( Ie1 );
+ Ie2 = new e2();
+ Ie2.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,74,0,282 ) );
+ layout.addView( Ie2 );
+ Ie3 = new e3();
+ Ie3.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,72,0,370 ) );
+ layout.addView( Ie3 );
+ Ie4 = new e4();
+ Ie4.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,0,458 ) );
+ layout.addView( Ie4 );
+ Ie5 = new e5();
+ Ie5.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,68,0,544 ) );
+ layout.addView( Ie5 );
+ Ie6 = new e6();
+ Ie6.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,0,630 ) );
+ layout.addView( Ie6 );
+ Ie7 = new e7();
+ Ie7.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,74,0,714 ) );
+ layout.addView( Ie7 );
+ Iclose = new close();
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 96,98,570,0 ) );
+ layout.addView( Iclose );
+ GUI_created( layout );
+}
+}
+
+public void Start(){
+STATE2 = STATE;
+_Ocreate_in();
+parent._O24_in();
+}
+public void GUI_created(AbsoluteLayout l){
+STATE2 = STATE;
+parent._O4_in(l);
+}
+public void e0_created(SeekBar b){
+STATE2 = STATE;
+parent.Isetter.e0_is(b);
+}
+public void e1_created(SeekBar b){
+STATE2 = STATE;
+parent.Isetter.e1_is(b);
+}
+public void e2_created(SeekBar b){
+STATE2 = STATE;
+parent.Isetter.e2_is(b);
+}
+public void e3_created(SeekBar b){
+STATE2 = STATE;
+parent.Isetter.e3_is(b);
+}
+public void e4_created(SeekBar b){
+STATE2 = STATE;
+parent.Isetter.e4_is(b);
+}
+public void e5_created(SeekBar b){
+STATE2 = STATE;
+parent.Isetter.e5_is(b);
+}
+public void e6_created(SeekBar b){
+STATE2 = STATE;
+parent.Isetter.e6_is(b);
+}
+public void e7_created(SeekBar b){
+STATE2 = STATE;
+parent.Isetter.e7_is(b);
+}
+public void close_clicked(){
+STATE2 = STATE;
+parent._O8_in();
+}
+private void _Ocreate_in(){
+if( STATE2 != 1542723393 ) return;
+// GUIを作成する
+XGUI x = new XGUI();
+
+
+
+//   InitState に遷移する
+_SINIT();
+}
+
+//   InitState
+private void _SINIT(){
+STATE = 1542723393;
+}
+GUI( Equalizer pnt ){
+ parent = pnt;
+_SINIT();
+}
+}
+setter Isetter;
+class setter{
+Equalizer parent;
+public void e0_is(SeekBar b){
+_O8_in(b);
+}
+public void e1_is(SeekBar b){
+_O10_in(b);
+}
+public void e2_is(SeekBar b){
+_O11_in(b);
+}
+public void e3_is(SeekBar b){
+_O12_in(b);
+}
+public void e4_is(SeekBar b){
+_O13_in(b);
+}
+public void e5_is(SeekBar b){
+_O14_in(b);
+}
+public void e6_is(SeekBar b){
+_O15_in(b);
+}
+public void e7_is(SeekBar b){
+_O16_in(b);
+}
+private void _O8_in(SeekBar b){
+e0=b;
+
+}
+private void _O10_in(SeekBar b){
+e1=b;
+
+}
+private void _O11_in(SeekBar b){
+e2=b;
+
+}
+private void _O12_in(SeekBar b){
+e3=b;
+
+}
+private void _O13_in(SeekBar b){
+e4=b;
+
+}
+private void _O14_in(SeekBar b){
+e5=b;
+
+}
+private void _O15_in(SeekBar b){
+e6=b;
+
+}
+private void _O16_in(SeekBar b){
+e7=b;
+
+}
+setter( Equalizer pnt ){
+ parent = pnt;
+
+}
+}
+Equalizer( config pnt ){
+ parent = pnt;
+IGUI = new GUI( this );
+Isetter = new setter( this );
+
+}
+}
+setter Isetter;
+class setter{
+config parent;
+public void cflog_scale_created(CheckBox c){
+_O13_in(c);
+}
+public void calog_scale_created(CheckBox c){
+_O15_in(c);
+}
+public void csound_filter_created(EditText e){
+_O17_in(e);
+}
+public void cstartup_time_created(EditText e){
+_O19_in(e);
+}
+public void cthresh_trigger_on_created(EditText e){
+_O21_in(e);
+}
+public void cthresh_trigger_off_created(EditText e){
+_O23_in(e);
+}
+public void cthresh_count_on_created(EditText e){
+_O25_in(e);
+}
+public void cthresh_count_off_created(EditText e){
+_O27_in(e);
+}
+public void cthresh_recognize_created(EditText e){
+_O29_in(e);
+}
+public void cbias_created(EditText e){
+_O34_in(e);
+}
+public void cacompress_created(EditText e){
+_O36_in(e);
+}
+public void clearn_param_o_created(EditText e){
+_O38_in(e);
+}
+public void climit_length_created(EditText e){
+_O31_in(e);
+}
+public void clearn_param_x_created(EditText e){
+_O42_in(e);
+}
+public void cauto_learn_created(CheckBox c){
+_O44_in(c);
+}
+private void _O13_in(CheckBox c){
+cflog_scale=c;
+
+}
+private void _O15_in(CheckBox c){
+calog_scale=c;
+
+}
+private void _O17_in(EditText e){
+csound_filter=e;
+
+}
+private void _O19_in(EditText e){
+cstartup_time=e;
+
+}
+private void _O21_in(EditText e){
+cthresh_trigger_on=e;
+
+}
+private void _O23_in(EditText e){
+cthresh_trigger_off=e;
+
+}
+private void _O25_in(EditText e){
+cthresh_count_on=e;
+
+}
+private void _O27_in(EditText e){
+cthresh_count_off=e;
+
+}
+private void _O29_in(EditText e){
+cthresh_recognize=e;
+
+}
+private void _O31_in(EditText e){
+climit_length=e;
+
+}
+private void _O34_in(EditText e){
+cbias=e;
+
+}
+private void _O36_in(EditText e){
+cacompress=e;
+
+}
+private void _O38_in(EditText e){
+clearn_param_o=e;
+
+}
+private void _O42_in(EditText e){
+clearn_param_x=e;
+
+}
+private void _O44_in(CheckBox c){
+cauto_learn=c;
+
+}
+setter( config pnt ){
+ parent = pnt;
+
+}
+}
 config( VoiceKeyboardControl pnt ){
  parent = pnt;
 IGUI = new GUI( this );
+IEqualizer = new Equalizer( this );
+Isetter = new setter( this );
 
 }
 }

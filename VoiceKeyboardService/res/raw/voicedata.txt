@@ -1,16 +1,17 @@
-auto_learn=true
 flog_scale=false
 alog_scale=false
+auto_learn=true
 startup_time=400
 sound_filter=200.0
-thresh_trigger_on=4.0
-thresh_trigger_off=4.0
+thresh_trigger_on=3.0
+thresh_trigger_off=3.0
 thresh_count_on=4
 thresh_count_off=10
 thresh_recognize=0.5
-bias=1.0
-acompress=0.4
-learn_param=8.0
+bias=3.0
+acompress=0.3
+learn_param_o=8.0
+learn_param_x=128.0
 limit_length=1.2
 
 0.0
