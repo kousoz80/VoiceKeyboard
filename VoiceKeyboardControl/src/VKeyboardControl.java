@@ -466,19 +466,19 @@ layout.setBackgroundColor(Color.rgb( 223, 253, 248));
 ACTIVITY.setContentView(layout);
 ACTIVITY.setTitle("音声キーボード設定");
  Iconfig = new config();
- Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 158,60,484,8 ) );
+ Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,60,424,6 ) );
  layout.addView( Iconfig );
  Ilearn_o = new learn_o();
- Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 94,60,0,8 ) );
+ Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 172,72,0,800 ) );
  layout.addView( Ilearn_o );
  Ilearn_x = new learn_x();
- Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 94,60,102,8 ) );
+ Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 192,72,442,798 ) );
  layout.addView( Ilearn_x );
  Iins = new ins();
- Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 128,60,204,8 ) );
+ Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 198,62,2,6 ) );
  layout.addView( Iins );
  Idel = new del();
- Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 136,60,340,8 ) );
+ Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 202,62,212,6 ) );
  layout.addView( Idel );
  Iprev = new prev();
  Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( 74,280,2,76 ) );
@@ -511,7 +511,7 @@ ACTIVITY.setTitle("音声キーボード設定");
  Icode.setLayoutParams( new AbsoluteLayout.LayoutParams( 498,68,142,728 ) );
  layout.addView( Icode );
  Iresult = new result();
- Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 646,70,0,802 ) );
+ Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 256,70,180,800 ) );
  layout.addView( Iresult );
  ILABEL10 = new LABEL10();
  ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( 116,66,8,370 ) );
@@ -617,7 +617,7 @@ STATE2 = STATE;
 parent.ISetter.result_is(t);
 }
 private void _Ocreate_in(){
-if( STATE2 != 432064631 ) return;
+if( STATE2 != 676807206 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -629,7 +629,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 432064631;
+STATE = 676807206;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -2486,7 +2486,7 @@ STATE2 = STATE;
 parent.Isetter.climit_length_created(e);
 }
 private void _Ocreate_in(){
-if( STATE2 != 1580861234 ) return;
+if( STATE2 != 939467323 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2498,7 +2498,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1580861234;
+STATE = 939467323;
 }
 GUI( config pnt ){
  parent = pnt;
@@ -2807,7 +2807,7 @@ STATE2 = STATE;
 parent._O8_in();
 }
 private void _Ocreate_in(){
-if( STATE2 != 1542723393 ) return;
+if( STATE2 != 1450115927 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2819,7 +2819,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1542723393;
+STATE = 1450115927;
 }
 GUI( Equalizer pnt ){
  parent = pnt;
