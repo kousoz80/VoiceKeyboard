@@ -469,10 +469,10 @@ ACTIVITY.setTitle("音声キーボード設定");
  Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,60,424,6 ) );
  layout.addView( Iconfig );
  Ilearn_o = new learn_o();
- Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 172,72,0,800 ) );
+ Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 306,72,0,880 ) );
  layout.addView( Ilearn_o );
  Ilearn_x = new learn_x();
- Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 192,72,442,798 ) );
+ Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 304,72,326,880 ) );
  layout.addView( Ilearn_x );
  Iins = new ins();
  Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 198,62,2,6 ) );
@@ -511,7 +511,7 @@ ACTIVITY.setTitle("音声キーボード設定");
  Icode.setLayoutParams( new AbsoluteLayout.LayoutParams( 498,68,142,728 ) );
  layout.addView( Icode );
  Iresult = new result();
- Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 256,70,180,800 ) );
+ Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 634,70,0,804 ) );
  layout.addView( Iresult );
  ILABEL10 = new LABEL10();
  ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( 116,66,8,370 ) );
@@ -617,7 +617,7 @@ STATE2 = STATE;
 parent.ISetter.result_is(t);
 }
 private void _Ocreate_in(){
-if( STATE2 != 676807206 ) return;
+if( STATE2 != 758137336 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -629,7 +629,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 676807206;
+STATE = 758137336;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -2486,7 +2486,7 @@ STATE2 = STATE;
 parent.Isetter.climit_length_created(e);
 }
 private void _Ocreate_in(){
-if( STATE2 != 939467323 ) return;
+if( STATE2 != 1390904155 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2498,7 +2498,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 939467323;
+STATE = 1390904155;
 }
 GUI( config pnt ){
  parent = pnt;
@@ -2807,7 +2807,7 @@ STATE2 = STATE;
 parent._O8_in();
 }
 private void _Ocreate_in(){
-if( STATE2 != 1450115927 ) return;
+if( STATE2 != 91191269 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2819,7 +2819,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1450115927;
+STATE = 91191269;
 }
 GUI( Equalizer pnt ){
  parent = pnt;

@@ -5624,8 +5624,8 @@ fafmncebafbafeebafbafeebafbafeebafhappjn</image>
 </relation>
 <aobject>
 <ID>_A88</ID>
-<x0>140</x0>
-<y0>238</y0>
+<x0>137</x0>
+<y0>240</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
@@ -6152,10 +6152,10 @@ ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
  Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,60,424,6 ) );
  layout.addView( Iconfig );
  Ilearn_o = new learn_o();
- Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 172,72,0,800 ) );
+ Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 306,72,0,880 ) );
  layout.addView( Ilearn_o );
  Ilearn_x = new learn_x();
- Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 192,72,442,798 ) );
+ Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 304,72,326,880 ) );
  layout.addView( Ilearn_x );
  Iins = new ins();
  Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 198,62,2,6 ) );
@@ -6194,7 +6194,7 @@ ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
  Icode.setLayoutParams( new AbsoluteLayout.LayoutParams( 498,68,142,728 ) );
  layout.addView( Icode );
  Iresult = new result();
- Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 256,70,180,800 ) );
+ Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 634,70,0,804 ) );
  layout.addView( Iresult );
  ILABEL10 = new LABEL10();
  ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( 116,66,8,370 ) );
@@ -6229,8 +6229,8 @@ ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
 248
 xxscale=2
 BUTTON;config;CONFIG;212;3;109;30;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;learn_o;O;0;400;86;36;5;3;0;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;learn_x;X;221;399;96;36;51;51;51;193;189;189;Dialog;12;null;0;0;1;0;1;Button;
+BUTTON;learn_o;O;0;440;153;36;5;3;0;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;learn_x;X;163;440;152;36;51;51;51;193;189;189;Dialog;12;null;0;0;1;0;1;Button;
 BUTTON;ins;INS;1;3;99;31;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;del;DEL;106;3;101;31;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;prev;&lt;;1;38;37;140;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
@@ -6243,7 +6243,7 @@ LABEL;seimon;null;163;38;118;141;51;51;51;0;0;0;Dialog;12;null;4;0;1;1;1;TextVie
 TEXTFIELD;text;null;70;291;251;32;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
 TEXTFIELD;weight;null;70;327;250;32;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
 TEXTFIELD;code;0;71;364;249;34;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
-LABEL;result;null;90;400;128;35;51;51;51;255;255;204;Dialog;20;null;0;0;1;1;0;TextView;
+LABEL;result;null;0;402;317;35;51;51;51;255;255;204;Dialog;20;null;0;0;1;1;0;TextView;
 LABEL;LABEL10;No.;4;185;58;33;51;51;51;255;255;255;Dialog;14;null;0;0;1;0;0;TextView;
 LABEL;LABEL11;Bright;2;221;59;34;51;51;51;255;255;255;Dialog;14;null;0;0;1;0;0;TextView;
 LABEL;LABEL18;CODE;0;364;65;33;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
