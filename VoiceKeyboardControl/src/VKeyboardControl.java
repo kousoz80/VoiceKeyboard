@@ -617,7 +617,7 @@ STATE2 = STATE;
 parent.ISetter.result_is(t);
 }
 private void _Ocreate_in(){
-if( STATE2 != 758137336 ) return;
+if( STATE2 != 1580861234 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -629,7 +629,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 758137336;
+STATE = 1580861234;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -2486,7 +2486,7 @@ STATE2 = STATE;
 parent.Isetter.climit_length_created(e);
 }
 private void _Ocreate_in(){
-if( STATE2 != 1390904155 ) return;
+if( STATE2 != 1542723393 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2498,7 +2498,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1390904155;
+STATE = 1542723393;
 }
 GUI( config pnt ){
  parent = pnt;
@@ -2807,7 +2807,7 @@ STATE2 = STATE;
 parent._O8_in();
 }
 private void _Ocreate_in(){
-if( STATE2 != 91191269 ) return;
+if( STATE2 != 633770947 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2819,7 +2819,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 91191269;
+STATE = 633770947;
 }
 GUI( Equalizer pnt ){
  parent = pnt;
