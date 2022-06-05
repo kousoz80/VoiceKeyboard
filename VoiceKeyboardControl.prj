@@ -6,7 +6,7 @@
 <y0>0</y0>
 <width>200</width>
 <height>100</height>
-<ID_maker>171</ID_maker>
+<ID_maker>172</ID_maker>
 <objectname>VoiceKeyboardControl</objectname>
 <description>新規のアプリケーション</description>
 <codeclip>
@@ -33,7 +33,7 @@
 <x0>436</x0>
 <y0>280</y0>
 <width>193</width>
-<height>91</height>
+<height>85</height>
 <objectname>Control</objectname>
 <description></description>
 <codeclip>
@@ -550,9 +550,9 @@ record_thread.start();
 <y0>255</y0>
 <width>81</width>
 <height>29</height>
-<text>learn_o()</text>
+<text>learn()</text>
 <px>5</px>
-<py>29</py>
+<py>34</py>
 </pin>
 <operation>
 <ID>_O93</ID>
@@ -578,12 +578,12 @@ record_thread.start();
 <outpinheight>20</outpinheight>
 <inpinlinkcount>1</inpinlinkcount>
 <description></description>
-<codetext>// 録音した音声を学習する(報酬)
+<codetext>// 録音した音声を学習する
 
 
 if(tsize &gt; 0){
-  double[] u =((VoiceTemplate)(voice_template.get(voice_no))).voice;
   double[] v = new double[tsize];
+  double[] u =((VoiceTemplate)(voice_template.get(voice_no))).voice;
   for(int i = 0; i &lt; v.length; i++){
   if(i &lt; u.length) v[i] = u[i]; else v[i] = 0;
   }
@@ -593,6 +593,20 @@ if(tsize &gt; 0){
     v[i] = ((learn_param_o - 1.0) * v[i] + d) / learn_param_o;
   }
   ((VoiceTemplate)(voice_template.get(voice_no))).voice = v;
+
+  if(voice_no0 &gt;= 0 &amp;&amp; voice_no0 != voice_no){
+    u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
+    for(int i = 0; i &lt; v.length; i++){
+    if(i &lt; u.length) v[i] = u[i]; else v[i] = 0;
+    }
+    for(int i = 0; i &lt; v.length; i++){
+      double d = 0;
+      if(i &lt; voice.length) d = voice[i];
+      v[i] = ((learn_param_x - 1.0) * v[i] - d) / learn_param_x;
+    }
+    ((VoiceTemplate)(voice_template.get(voice_no0))).voice = v;
+  }
+
   update_display();
 }
 </codetext>
@@ -629,8 +643,8 @@ double[][] sin_table, cos_table;
 <width>60</width>
 <height>30</height>
 <text>ins()</text>
-<px>10</px>
-<py>59</py>
+<px>7</px>
+<py>49</py>
 </pin>
 <pin>
 <ID>_P112</ID>
@@ -639,8 +653,8 @@ double[][] sin_table, cos_table;
 <width>60</width>
 <height>30</height>
 <text>del()</text>
-<px>10</px>
-<py>75</py>
+<px>6</px>
+<py>66</py>
 </pin>
 <pin>
 <ID>_P113</ID>
@@ -776,64 +790,6 @@ record_thread.join();
 <ID>_R119</ID>
 <pin1name>_P113</pin1name>
 <pin2name>_O118</pin2name>
-</relation>
-<pin>
-<ID>_P121</ID>
-<x0>456</x0>
-<y0>241</y0>
-<width>75</width>
-<height>30</height>
-<text>learn_x()</text>
-<px>6</px>
-<py>45</py>
-</pin>
-<operation>
-<ID>_O122</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>553</x0>
-<y0>255</y0>
-<width>268</width>
-<height>48</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in()</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>28</inpiny0>
-<inpinwidth>40</inpinwidth>
-<inpinheight>20</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>// 録音した音声を学習する(ペナルティ)
-
-
-if(tsize &gt; 0 &amp;&amp; voice_no0 &gt;= 0){
-  double[] u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
-  double[] v = new double[tsize];
-  for(int i = 0; i &lt; v.length; i++){
-  if(i &lt; u.length) v[i] = u[i]; else v[i] = 0;
-  }
-  for(int i = 0; i &lt; v.length; i++){
-    double d = 0;
-    if(i &lt; voice.length) d = voice[i];
-    v[i] = ((learn_param_x - 1.0) * v[i] - d) / learn_param_x;
-  }
-  ((VoiceTemplate)(voice_template.get(voice_no0))).voice = v;
-  update_display();
-}
-</codetext>
-</operation>
-<relation>
-<ID>_R123</ID>
-<pin1name>_P121</pin1name>
-<pin2name>_O122</pin2name>
 </relation>
 <codeclip>
 <ID>_C124</ID>
@@ -1070,8 +1026,8 @@ try{
 </xobject>
 <xobject>
 <ID>_X92</ID>
-<x0>435</x0>
-<y0>373</y0>
+<x0>434</x0>
+<y0>367</y0>
 <width>178</width>
 <height>191</height>
 <ID_maker>44</ID_maker>
@@ -2058,7 +2014,7 @@ dprint(&quot;update display\n&quot;);
 <xobject>
 <ID>_X_G130</ID>
 <x0>651</x0>
-<y0>526</y0>
+<y0>524</y0>
 <width>177</width>
 <height>112</height>
 <objectname>Setter</objectname>
@@ -5613,19 +5569,14 @@ fafmncebafbafeebafbafeebafbafeebafhappjn</image>
 <pin2name>_X91(_P1)</pin2name>
 </relation>
 <relation>
-<ID>_R169</ID>
-<pin1name>_A88(_PAlearn_o)</pin1name>
+<ID>_R171</ID>
+<pin1name>_A88(_PAlearn)</pin1name>
 <pin2name>_X_G87(_P91)</pin2name>
-</relation>
-<relation>
-<ID>_R170</ID>
-<pin1name>_A88(_PAlearn_x)</pin1name>
-<pin2name>_X_G87(_P121)</pin2name>
 </relation>
 <aobject>
 <ID>_A88</ID>
-<x0>137</x0>
-<y0>240</y0>
+<x0>136</x0>
+<y0>256</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
@@ -5704,174 +5655,164 @@ XGUI x = new XGUI();
 <py>72</py>
 </pin>
 <pin>
-<ID>_PAlearn_o</ID>
+<ID>_PAlearn</ID>
 <x0>0</x0>
 <y0>138</y0>
 <width>200</width>
 <height>26</height>
-<text>learn_o_clicked()</text>
+<text>learn_clicked()</text>
 <px>0</px>
 <py>90</py>
 </pin>
 <pin>
-<ID>_PAlearn_x</ID>
+<ID>_PAins</ID>
 <x0>0</x0>
 <y0>166</y0>
 <width>200</width>
 <height>26</height>
-<text>learn_x_clicked()</text>
+<text>ins_clicked()</text>
 <px>0</px>
 <py>108</py>
 </pin>
 <pin>
-<ID>_PAins</ID>
+<ID>_PAdel</ID>
 <x0>0</x0>
 <y0>194</y0>
 <width>200</width>
 <height>26</height>
-<text>ins_clicked()</text>
+<text>del_clicked()</text>
 <px>0</px>
 <py>126</py>
 </pin>
 <pin>
-<ID>_PAdel</ID>
+<ID>_PAprev</ID>
 <x0>0</x0>
 <y0>222</y0>
 <width>200</width>
 <height>26</height>
-<text>del_clicked()</text>
+<text>prev_clicked()</text>
 <px>0</px>
 <py>144</py>
 </pin>
 <pin>
-<ID>_PAprev</ID>
+<ID>_PAnext</ID>
 <x0>0</x0>
 <y0>250</y0>
 <width>200</width>
 <height>26</height>
-<text>prev_clicked()</text>
+<text>next_clicked()</text>
 <px>0</px>
 <py>162</py>
 </pin>
 <pin>
-<ID>_PAnext</ID>
+<ID>_PAvoice_no</ID>
 <x0>0</x0>
 <y0>278</y0>
 <width>200</width>
 <height>26</height>
-<text>next_clicked()</text>
+<text>voice_no_changed(int val)</text>
 <px>0</px>
 <py>180</py>
 </pin>
 <pin>
-<ID>_PAvoice_no</ID>
+<ID>_PAbright</ID>
 <x0>0</x0>
 <y0>306</y0>
 <width>200</width>
 <height>26</height>
-<text>voice_no_changed(int val)</text>
+<text>bright_changed(int val)</text>
 <px>0</px>
 <py>198</py>
 </pin>
 <pin>
-<ID>_PAbright</ID>
+<ID>_PAlength</ID>
 <x0>0</x0>
 <y0>334</y0>
 <width>200</width>
 <height>26</height>
-<text>bright_changed(int val)</text>
+<text>length_changed(int val)</text>
 <px>0</px>
 <py>216</py>
 </pin>
 <pin>
-<ID>_PAlength</ID>
+<ID>_Pseimon0</ID>
 <x0>0</x0>
 <y0>362</y0>
 <width>200</width>
 <height>26</height>
-<text>length_changed(int val)</text>
+<text>seimon0_created(TextView t)</text>
 <px>0</px>
 <py>234</py>
 </pin>
 <pin>
-<ID>_Pseimon0</ID>
+<ID>_PPseimon0</ID>
 <x0>0</x0>
 <y0>390</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon0_created(TextView t)</text>
+<text>seimon0_paint(Canvas g)</text>
 <px>0</px>
 <py>252</py>
 </pin>
 <pin>
-<ID>_PPseimon0</ID>
+<ID>_Pseimon</ID>
 <x0>0</x0>
 <y0>418</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon0_paint(Canvas g)</text>
+<text>seimon_created(TextView t)</text>
 <px>0</px>
 <py>270</py>
 </pin>
 <pin>
-<ID>_Pseimon</ID>
+<ID>_PPseimon</ID>
 <x0>0</x0>
 <y0>446</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon_created(TextView t)</text>
+<text>seimon_paint(Canvas g)</text>
 <px>0</px>
 <py>288</py>
 </pin>
 <pin>
-<ID>_PPseimon</ID>
+<ID>_Ptext</ID>
 <x0>0</x0>
 <y0>474</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon_paint(Canvas g)</text>
+<text>text_created(EditText e)</text>
 <px>0</px>
 <py>306</py>
 </pin>
 <pin>
-<ID>_Ptext</ID>
+<ID>_Pweight</ID>
 <x0>0</x0>
 <y0>502</y0>
 <width>200</width>
 <height>26</height>
-<text>text_created(EditText e)</text>
+<text>weight_created(EditText e)</text>
 <px>0</px>
 <py>324</py>
 </pin>
 <pin>
-<ID>_Pweight</ID>
+<ID>_Pcode</ID>
 <x0>0</x0>
 <y0>530</y0>
 <width>200</width>
 <height>26</height>
-<text>weight_created(EditText e)</text>
+<text>code_created(EditText e)</text>
 <px>0</px>
 <py>342</py>
 </pin>
 <pin>
-<ID>_Pcode</ID>
+<ID>_Presult</ID>
 <x0>0</x0>
 <y0>558</y0>
 <width>200</width>
 <height>26</height>
-<text>code_created(EditText e)</text>
-<px>0</px>
-<py>360</py>
-</pin>
-<pin>
-<ID>_Presult</ID>
-<x0>0</x0>
-<y0>586</y0>
-<width>200</width>
-<height>26</height>
 <text>result_created(TextView t)</text>
 <px>0</px>
-<py>378</py>
+<py>360</py>
 </pin>
 <codeclip>
 <ID>_CXSTART</ID>
@@ -5892,28 +5833,16 @@ config Iconfig;
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {config_clicked();}} );
 }
 }
-learn_o Ilearn_o;
- class learn_o extends Button{
- learn_o(){
+learn Ilearn;
+ class learn extends Button{
+ learn(){
  super(ACTIVITY);
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 5, 3, 0 ));
  setBackgroundColor( Color.rgb( 193, 189, 189 ));
- setText( &quot;O&quot; );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_o_clicked();}} );
-}
-}
-learn_x Ilearn_x;
- class learn_x extends Button{
- learn_x(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 193, 189, 189 ));
- setText( &quot;X&quot; );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_x_clicked();}} );
+ setText( &quot;LEARN&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_clicked();}} );
 }
 }
 ins Iins;
@@ -6151,12 +6080,9 @@ ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
  Iconfig = new config();
  Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,60,424,6 ) );
  layout.addView( Iconfig );
- Ilearn_o = new learn_o();
- Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 306,72,0,880 ) );
- layout.addView( Ilearn_o );
- Ilearn_x = new learn_x();
- Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 304,72,326,880 ) );
- layout.addView( Ilearn_x );
+ Ilearn = new learn();
+ Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( 306,72,144,882 ) );
+ layout.addView( Ilearn );
  Iins = new ins();
  Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 198,62,2,6 ) );
  layout.addView( Iins );
@@ -6219,8 +6145,8 @@ ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
 }
 </codetext>
 </codeclip>
-<ID_maker>38</ID_maker>
-<height>400</height>
+<ID_maker>37</ID_maker>
+<height>382</height>
 <レイアウト>音声キーボード設定
 392
 526
@@ -6229,8 +6155,7 @@ ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
 248
 xxscale=2
 BUTTON;config;CONFIG;212;3;109;30;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;learn_o;O;0;440;153;36;5;3;0;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;learn_x;X;163;440;152;36;51;51;51;193;189;189;Dialog;12;null;0;0;1;0;1;Button;
+BUTTON;learn;LEARN;72;441;153;36;5;3;0;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;ins;INS;1;3;99;31;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;del;DEL;106;3;101;31;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;prev;&lt;;1;38;37;140;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
