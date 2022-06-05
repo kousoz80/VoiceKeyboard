@@ -598,7 +598,7 @@ STATE2 = STATE;
 parent.ISetter.result_is(t);
 }
 private void _Ocreate_in(){
-if( STATE2 != 358211891 ) return;
+if( STATE2 != 1499670570 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -610,7 +610,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 358211891;
+STATE = 1499670570;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -1111,15 +1111,11 @@ if(tsize > 0){
 
   if(voice_no0 >= 0 && voice_no0 != voice_no){
     u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
-    for(int i = 0; i < v.length; i++){
-    if(i < u.length) v[i] = u[i]; else v[i] = 0;
-    }
-    for(int i = 0; i < v.length; i++){
+    for(int i = 0; i < u.length; i++){
       double d = 0;
-      if(i < voice.length) d = voice[i];
-      v[i] = ((learn_param_x - 1.0) * v[i] - d) / learn_param_x;
+      if(i < tsize) d = voice[i];
+      u[i] = ((learn_param_x - 1.0) * u[i] - d) / learn_param_x;
     }
-    ((VoiceTemplate)(voice_template.get(voice_no0))).voice = v;
   }
 
   update_display();
@@ -2458,7 +2454,7 @@ STATE2 = STATE;
 parent.Isetter.climit_length_created(e);
 }
 private void _Ocreate_in(){
-if( STATE2 != 1542723393 ) return;
+if( STATE2 != 1977056418 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2470,7 +2466,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1542723393;
+STATE = 1977056418;
 }
 GUI( config pnt ){
  parent = pnt;
@@ -2779,7 +2775,7 @@ STATE2 = STATE;
 parent._O8_in();
 }
 private void _Ocreate_in(){
-if( STATE2 != 633770947 ) return;
+if( STATE2 != 94675961 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2791,7 +2787,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 633770947;
+STATE = 94675961;
 }
 GUI( Equalizer pnt ){
  parent = pnt;
