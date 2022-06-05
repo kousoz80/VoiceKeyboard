@@ -302,12 +302,13 @@ dprint("start rec thread\n");
             state = OFF;
 
             // 認識処理開始
-            handler.post(new Runnable() {
-              @Override
-              public void run(){
+            new Thread(new Runnable() {
+	          @Override
+	          public void run() {
                 recognize(voice);
-              }
-            });
+	          }
+	        }).start();
+
           }
         }
         break;
