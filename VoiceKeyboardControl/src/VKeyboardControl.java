@@ -209,28 +209,16 @@ config Iconfig;
  setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {config_clicked();}} );
 }
 }
-learn_o Ilearn_o;
- class learn_o extends Button{
- learn_o(){
+learn Ilearn;
+ class learn extends Button{
+ learn(){
  super(ACTIVITY);
  setGravity(Gravity.CENTER|Gravity.CENTER);
  setPadding(1, 1, 1, 1);
  setTextSize( 16f ); setTextColor( Color.rgb( 5, 3, 0 ));
  setBackgroundColor( Color.rgb( 193, 189, 189 ));
- setText( "O" );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_o_clicked();}} );
-}
-}
-learn_x Ilearn_x;
- class learn_x extends Button{
- learn_x(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 193, 189, 189 ));
- setText( "X" );
- setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_x_clicked();}} );
+ setText( "LEARN" );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {learn_clicked();}} );
 }
 }
 ins Iins;
@@ -468,12 +456,9 @@ ACTIVITY.setTitle("音声キーボード設定");
  Iconfig = new config();
  Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,60,424,6 ) );
  layout.addView( Iconfig );
- Ilearn_o = new learn_o();
- Ilearn_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 306,72,0,880 ) );
- layout.addView( Ilearn_o );
- Ilearn_x = new learn_x();
- Ilearn_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 304,72,326,880 ) );
- layout.addView( Ilearn_x );
+ Ilearn = new learn();
+ Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( 306,72,144,882 ) );
+ layout.addView( Ilearn );
  Iins = new ins();
  Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 198,62,2,6 ) );
  layout.addView( Iins );
@@ -548,13 +533,9 @@ public void config_clicked(){
 STATE2 = STATE;
 parent.Iconfig.config();
 }
-public void learn_o_clicked(){
+public void learn_clicked(){
 STATE2 = STATE;
-parent.IControl.learn_o();
-}
-public void learn_x_clicked(){
-STATE2 = STATE;
-parent.IControl.learn_x();
+parent.IControl.learn();
 }
 public void ins_clicked(){
 STATE2 = STATE;
@@ -617,7 +598,7 @@ STATE2 = STATE;
 parent.ISetter.result_is(t);
 }
 private void _Ocreate_in(){
-if( STATE2 != 1580861234 ) return;
+if( STATE2 != 358211891 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -629,7 +610,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1580861234;
+STATE = 358211891;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -1050,7 +1031,7 @@ int voice_no0;
 public void start(){
 _O89_in();
 }
-public void learn_o(){
+public void learn(){
 _O93_in();
 }
 public void result(String s){
@@ -1064,9 +1045,6 @@ _O116_in();
 }
 public void exit(){
 _O118_in();
-}
-public void learn_x(){
-_O122_in();
 }
 private void _O89_in(){
 // 初期設定
@@ -1115,12 +1093,12 @@ record_thread.start();
 
 }
 private void _O93_in(){
-// 録音した音声を学習する(報酬)
+// 録音した音声を学習する
 
 
 if(tsize > 0){
-  double[] u =((VoiceTemplate)(voice_template.get(voice_no))).voice;
   double[] v = new double[tsize];
+  double[] u =((VoiceTemplate)(voice_template.get(voice_no))).voice;
   for(int i = 0; i < v.length; i++){
   if(i < u.length) v[i] = u[i]; else v[i] = 0;
   }
@@ -1130,6 +1108,20 @@ if(tsize > 0){
     v[i] = ((learn_param_o - 1.0) * v[i] + d) / learn_param_o;
   }
   ((VoiceTemplate)(voice_template.get(voice_no))).voice = v;
+
+  if(voice_no0 >= 0 && voice_no0 != voice_no){
+    u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
+    for(int i = 0; i < v.length; i++){
+    if(i < u.length) v[i] = u[i]; else v[i] = 0;
+    }
+    for(int i = 0; i < v.length; i++){
+      double d = 0;
+      if(i < voice.length) d = voice[i];
+      v[i] = ((learn_param_x - 1.0) * v[i] - d) / learn_param_x;
+    }
+    ((VoiceTemplate)(voice_template.get(voice_no0))).voice = v;
+  }
+
   update_display();
 }
 
@@ -1173,26 +1165,6 @@ try{
 is_running = false;
 record_thread.join();
 } catch(Exception e){}
-
-}
-private void _O122_in(){
-// 録音した音声を学習する(ペナルティ)
-
-
-if(tsize > 0 && voice_no0 >= 0){
-  double[] u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
-  double[] v = new double[tsize];
-  for(int i = 0; i < v.length; i++){
-  if(i < u.length) v[i] = u[i]; else v[i] = 0;
-  }
-  for(int i = 0; i < v.length; i++){
-    double d = 0;
-    if(i < voice.length) d = voice[i];
-    v[i] = ((learn_param_x - 1.0) * v[i] - d) / learn_param_x;
-  }
-  ((VoiceTemplate)(voice_template.get(voice_no0))).voice = v;
-  update_display();
-}
 
 }
 Control( VoiceKeyboardControl pnt ){
