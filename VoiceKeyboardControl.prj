@@ -598,7 +598,7 @@ if(tsize &gt; 0){
     u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
     for(int i = 0; i &lt; u.length; i++){
       double d = 0;
-      if(i &lt; tsize) d = voice[i];
+      if(i &lt; voice.length &amp;&amp; i &lt; tsize) d = voice[i];
       u[i] = ((learn_param_x - 1.0) * u[i] - d) / learn_param_x;
     }
   }

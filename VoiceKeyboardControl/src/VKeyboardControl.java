@@ -1113,7 +1113,7 @@ if(tsize > 0){
     u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
     for(int i = 0; i < u.length; i++){
       double d = 0;
-      if(i < tsize) d = voice[i];
+      if(i < voice.length && i < tsize) d = voice[i];
       u[i] = ((learn_param_x - 1.0) * u[i] - d) / learn_param_x;
     }
   }
