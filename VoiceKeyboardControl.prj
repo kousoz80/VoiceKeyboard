@@ -582,6 +582,8 @@ record_thread.start();
 
 
 if(tsize &gt; 0){
+
+  // 報酬学習
   double[] v = new double[tsize];
   double[] u =((VoiceTemplate)(voice_template.get(voice_no))).voice;
   for(int i = 0; i &lt; v.length; i++){
@@ -594,6 +596,7 @@ if(tsize &gt; 0){
   }
   ((VoiceTemplate)(voice_template.get(voice_no))).voice = v;
 
+  // ペナルティ学習
   if(voice_no0 &gt;= 0 &amp;&amp; voice_no0 != voice_no){
     u =((VoiceTemplate)(voice_template.get(voice_no0))).voice;
     for(int i = 0; i &lt; u.length; i++){

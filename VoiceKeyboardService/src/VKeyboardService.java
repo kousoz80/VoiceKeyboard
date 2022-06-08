@@ -658,7 +658,7 @@ int key;
 
 
 // 認識に失敗したときは学習データを破棄して終了
-if(v == null){
+if(i < 0){
   learn_voice_no = -1;
   learn_voice = null;
   return;
@@ -680,10 +680,10 @@ else{
       notifManager.notify(R.string.app_name, notif);
     }
 
-    // 無効になったら通知OFFしてデータを保存する
+    // 無効になったら通知OFFして自動学習の場合はデータを保存する
     else{
       notifManager.cancel(R.string.app_name);
-      save();
+      if(auto_learn) save();
     }
     
     // 学習データを破棄して終了
@@ -739,8 +739,8 @@ else{
       }
     }
 
-    // タイプするキーコードをセットする
-    key = vt.code;
+    // タイプするキーコードをセットする(ただしキーコードがマイナスの場合は無効)
+    if((key = vt.code) < 0) return;
   }
 }
 
