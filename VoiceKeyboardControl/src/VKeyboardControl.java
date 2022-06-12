@@ -94,7 +94,8 @@ class VoiceTemplate{
 // 各種パラメータ
 boolean flog_scale = false; // 周波数スケール
 boolean alog_scale = false; // 振幅スケール
-boolean auto_learn=false;
+boolean auto_learn=false; // 自動学習
+boolean writable=false; // 書き込み可能
 int startup_time = 300;
 double sound_filter = 150.0;
 double thresh_trigger_on = 2;
@@ -107,6 +108,7 @@ double acompress = 0.3;  // 振幅圧縮係数
 double learn_param_o = 8;  // 学習パラメータ
 double learn_param_x =128; // 学習パラメータ
 double limit_length = 1.1; // 音声の長さ比較用
+double enhance = 0;  // 強調パラメータ
 
 
 // 音声テンプレートファイル
@@ -146,9 +148,11 @@ dprint("update display\n");
     public void run() {
       seimon0.invalidate();
       seimon.invalidate();
-      text.setText( ((VoiceTemplate)(voice_template.get(voice_no))).text );
-      weight.setText( ""+((VoiceTemplate)(voice_template.get(voice_no))).weight );
-      code.setText( ""+((VoiceTemplate)(voice_template.get(voice_no))).code );
+      if( voice_no < voice_template.size()){
+        text.setText( ((VoiceTemplate)(voice_template.get(voice_no))).text );
+        weight.setText( ""+((VoiceTemplate)(voice_template.get(voice_no))).weight );
+        code.setText( ""+((VoiceTemplate)(voice_template.get(voice_no))).code );
+      }
     }
   });
 }
@@ -598,7 +602,7 @@ STATE2 = STATE;
 parent.ISetter.result_is(t);
 }
 private void _Ocreate_in(){
-if( STATE2 != 164746660 ) return;
+if( STATE2 != 908321943 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -610,7 +614,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 164746660;
+STATE = 908321943;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -875,7 +879,7 @@ class RecordThread extends Thread {
   public void run() {
     int i, j, k, len, width, height, state, offset, count;
     int start_point, end_point;
-    double   a, u, v, x, y, trigger, pow;
+    double   a, u, v, x, y, t, p, trigger, power;
 
 dprint("start rec thread\n");
 
@@ -909,37 +913,50 @@ dprint("start rec thread\n");
       audioRec.read(sound_buffer, 0, SOUND_DFT_SIZE);
 
       // 取り込んだ聴覚データをDFTして開けておいたところにセットする
-      // 振幅が対数スケールの場合
+
+      // 振幅がlogスケールの場合
       if(alog_scale){
-        trigger = 0.0;
+        trigger = power = 0.0;
         for( i = 0; i < HEARING_HEIGHT; i++ ){
           for( x = y = 0.0, j = 0; j < SOUND_DFT_SIZE; j++ ){
             a = (double)sound_buffer[j];
             x += a * cos_table[i][j];
             y += a * sin_table[i][j];
           }
-          pow = Math.log((x * x + y * y) + bias);       // 微小なノイズを抑制するためバイアスをかける
-          hearing_buffer[i + offset] = pow * hosei[i];  // 必要ならば人間の聴覚に合わせて補正をかける
-          sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + pow) / sound_filter;
-          pow /= sound_av[i];
-          if(pow > trigger) trigger = pow;
+          // log尺度のパワー値を得る(同時に周波数補正をかける)
+          p = hearing_buffer[i + offset] = Math.log((x * x + y * y) + bias) * hosei[i];
+          sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + p) / sound_filter;
+          t = p / sound_av[i];
+          if(t > trigger) trigger = t;
+          power += p;
+        }
+        // 強調処理
+        a = Math.pow(power/HEARING_HEIGHT/SOUND_DFT_SIZE, enhance);
+        for( i = 0; i < HEARING_HEIGHT; i++ ){
+          hearing_buffer[i + offset] *= a;
         }
       }
 
       // 振幅がリニアスケールの場合
       else{
-        trigger = 0.0;
+        trigger = power = 0.0;
         for( i = 0; i < HEARING_HEIGHT; i++ ){
           for( x = y = 0.0, j = 0; j < SOUND_DFT_SIZE; j++ ){
             a = (double)sound_buffer[j];
             x += a * cos_table[i][j];
             y += a * sin_table[i][j];
           }
-          pow = Math.pow( (x * x + y * y), acompress );
-          hearing_buffer[i + offset] = pow * hosei[i];  // 必要ならば人間の聴覚に合わせて補正をかける
-          sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + pow) / sound_filter;
-          pow /= sound_av[i];
-          if(pow > trigger) trigger = pow;
+          // リニア(べき乗)尺度のパワー値を得る(同時に周波数補正をかける)
+          p = hearing_buffer[i + offset] = Math.pow( (x * x + y * y), acompress ) * hosei[i];
+          sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + p) / sound_filter;
+          t = p / sound_av[i];
+          if(t > trigger) trigger = t;
+          power += p;
+        }
+        // 強調処理
+        a = Math.pow(power/HEARING_HEIGHT/SOUND_DFT_SIZE, enhance);
+        for( i = 0; i < HEARING_HEIGHT; i++ ){
+          hearing_buffer[i + offset] *= a;
         }
       }
       
@@ -999,12 +1016,13 @@ dprint("start rec thread\n");
             state = OFF;
 
             // 認識処理開始
-            handler.post(new Runnable() {
-              @Override
-              public void run(){
+            new Thread(new Runnable() {
+	          @Override
+	          public void run() {
                 recognize(voice);
-              }
-            });
+	          }
+	        }).start();
+
           }
         }
         break;
@@ -1216,6 +1234,8 @@ while(true){
   if( line.equals("debug_mode=false"))        debug_mode=false;
   if( line.equals("auto_learn=true"))         auto_learn=true;
   if( line.equals("auto_learn=false"))        auto_learn=false;
+  if( line.equals("writable=true"))           writable=true;
+  if( line.equals("writable=false"))          writable=false;
   if( line.equals("flog_scale=true"))         flog_scale=true;
   if( line.equals("flog_scale=false"))        flog_scale=false;
   if( line.equals("alog_scale=true"))         alog_scale=true;
@@ -1232,6 +1252,7 @@ while(true){
   if( line.startsWith("learn_param_o="))      learn_param_o=Double.parseDouble(line.substring(14));
   if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
+  if( line.startsWith("enhance="))            enhance=Double.parseDouble(line.substring(8));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -1274,9 +1295,10 @@ try{
   BufferedWriter dout = new BufferedWriter( new FileWriter(voice_data_file) );
   
   // 変数を保存する
-  dout.write("auto_learn=" + auto_learn + "\n");
   dout.write("flog_scale=" + flog_scale + "\n");
   dout.write("alog_scale=" + alog_scale + "\n");
+  dout.write("auto_learn=" + auto_learn + "\n");
+  dout.write("writable=" + writable + "\n");
   dout.write("startup_time=" + startup_time + "\n");
   dout.write("sound_filter=" + sound_filter + "\n");
   dout.write("thresh_trigger_on=" + thresh_trigger_on + "\n");
@@ -1289,6 +1311,7 @@ try{
   dout.write("learn_param_o=" + learn_param_o + "\n");
   dout.write("learn_param_x=" + learn_param_x + "\n");
   dout.write("limit_length=" + limit_length + "\n");
+  dout.write("enhance=" + enhance + "\n");
   dout.write("\n");
 
   for(int i = 0; i < HEARING_HEIGHT; i++){
@@ -1357,6 +1380,7 @@ private void _O6_in(Canvas g){
 
 dprint("display template\n");
 
+if(voice_no >= voice_template.size()) return;
 double[] v = ((VoiceTemplate)(voice_template.get(voice_no))).voice;
 if( v == null ) return;
 double e = Math.exp( (80.0 - (double)bright) / 4 );
@@ -1534,6 +1558,7 @@ File backup_file = new File( Environment.getExternalStorageDirectory(),"VKeyboae
 CheckBox cflog_scale;
 CheckBox calog_scale;
 CheckBox cauto_learn;
+CheckBox cwritable;
 EditText csound_filter;
 EditText cstartup_time;
 EditText cthresh_trigger_on;
@@ -1546,6 +1571,7 @@ EditText cacompress;
 EditText clearn_param_o;
 EditText clearn_param_x;
 EditText climit_length;
+EditText cenhance;
 
   // EditTextから数値を得る
   public int get_int( EditText e ){
@@ -1597,6 +1623,7 @@ private void _O12_in(){
   cflog_scale.setChecked(flog_scale);
   calog_scale.setChecked(alog_scale);
   cauto_learn.setChecked(auto_learn);
+  cwritable.setChecked(writable);
   cstartup_time.setText("" + startup_time);
   csound_filter.setText("" + sound_filter);
   cthresh_trigger_on.setText("" + thresh_trigger_on);
@@ -1609,6 +1636,7 @@ private void _O12_in(){
   clearn_param_o.setText("" + learn_param_o);
   clearn_param_x.setText("" + learn_param_x);
   climit_length.setText("" + limit_length);
+  cenhance.setText("" + enhance);
   ACTIVITY.setContentView(config_container);
   
 
@@ -1620,6 +1648,7 @@ private void _O19_in(){
   flog_scale=cflog_scale.isChecked();
   alog_scale=calog_scale.isChecked();
   auto_learn=cauto_learn.isChecked();
+  writable=cwritable.isChecked();
   startup_time=get_int(cstartup_time);
   sound_filter=get_double(csound_filter);
   thresh_trigger_on=get_double(cthresh_trigger_on);
@@ -1632,6 +1661,7 @@ private void _O19_in(){
   learn_param_o=get_double(clearn_param_o);
   learn_param_x=get_double(clearn_param_x);
   limit_length=get_double(climit_length);
+  enhance=get_double(cenhance);
 
   ACTIVITY.setContentView(main_container);
   
@@ -1669,6 +1699,8 @@ while(true){
   if( line.equals("alog_scale=false"))        alog_scale=false;
   if( line.equals("auto_learn=true"))         auto_learn=true;
   if( line.equals("auto_learn=false"))        auto_learn=false;
+  if( line.equals("writable=true"))           writable=true;
+  if( line.equals("writable=false"))          writable=false;
   if( line.startsWith("startup_time="))       startup_time=Integer.parseInt(line.substring(13));
   if( line.startsWith("sound_filter="))       sound_filter=Double.parseDouble(line.substring(13));
   if( line.startsWith("thresh_trigger_on="))  thresh_trigger_on=Double.parseDouble(line.substring(18));
@@ -1681,6 +1713,7 @@ while(true){
   if( line.startsWith("learn_param_o="))      learn_param_o=Double.parseDouble(line.substring(14));
   if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
+  if( line.startsWith("enhance="))            enhance=Double.parseDouble(line.substring(8));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -1732,6 +1765,7 @@ try{
   dout.write("flog_scale=" + flog_scale + "\n");
   dout.write("alog_scale=" + alog_scale + "\n");
   dout.write("auto_learn=" + auto_learn + "\n");
+  dout.write("writable=" + writable + "\n");
   dout.write("startup_time=" + startup_time + "\n");
   dout.write("sound_filter=" + sound_filter + "\n");
   dout.write("thresh_trigger_on=" + thresh_trigger_on + "\n");
@@ -1744,6 +1778,7 @@ try{
   dout.write("learn_param_o=" + learn_param_o + "\n");
   dout.write("learn_param_x=" + learn_param_x + "\n");
   dout.write("limit_length=" + limit_length + "\n");
+  dout.write("enhance=" + enhance + "\n");
   dout.write("\n");
 
   for(int i = 0; i < HEARING_HEIGHT; i++){
@@ -1814,6 +1849,8 @@ while(true){
   if( line.equals("alog_scale=false"))        alog_scale=false;
   if( line.equals("auto_learn=true"))         auto_learn=true;
   if( line.equals("auto_learn=false"))        auto_learn=false;
+  if( line.equals("writable=true"))           writable=true;
+  if( line.equals("writable=false"))          writable=false;
   if( line.startsWith("startup_time="))       startup_time=Integer.parseInt(line.substring(13));
   if( line.startsWith("sound_filter="))       sound_filter=Double.parseDouble(line.substring(13));
   if( line.startsWith("thresh_trigger_on="))  thresh_trigger_on=Double.parseDouble(line.substring(18));
@@ -1826,6 +1863,7 @@ while(true){
   if( line.startsWith("learn_param_o="))      learn_param_o=Double.parseDouble(line.substring(14));
   if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
+  if( line.startsWith("enhance="))            enhance=Double.parseDouble(line.substring(8));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -1965,6 +2003,16 @@ cauto_learn Icauto_learn;
  setTextColor( Color.rgb( 51, 51, 51 ));
  setBackgroundColor( Color.rgb( 238, 238, 238 ));
  cauto_learn_created( this );
+}
+}
+cwritable Icwritable;
+ class cwritable extends CheckBox{
+ cwritable(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 238, 238, 238 ));
+ cwritable_created( this );
 }
 }
 csound_filter Icsound_filter;
@@ -2253,6 +2301,39 @@ LABEL33 ILABEL33;
  setText( "learn_param_x" );
 }
 }
+LABEL35 ILABEL35;
+ class LABEL35 extends TextView{
+ LABEL35(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "enhance" );
+}
+}
+cenhance Icenhance;
+ class cenhance extends EditText{
+ cenhance(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ cenhance_created( this );
+}
+}
+LABEL37 ILABEL37;
+ class LABEL37 extends TextView{
+ LABEL37(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "writable" );
+}
+}
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
 layout.setBackgroundColor(Color.rgb( 217, 255, 253));
@@ -2285,84 +2366,96 @@ ACTIVITY.setTitle("VKeyboard設定");
  Icauto_learn = new cauto_learn();
  Icauto_learn.setLayoutParams( new AbsoluteLayout.LayoutParams( 54,46,298,268 ) );
  layout.addView( Icauto_learn );
+ Icwritable = new cwritable();
+ Icwritable.setLayoutParams( new AbsoluteLayout.LayoutParams( 50,46,298,320 ) );
+ layout.addView( Icwritable );
  Icsound_filter = new csound_filter();
- Icsound_filter.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,376 ) );
+ Icsound_filter.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,424 ) );
  layout.addView( Icsound_filter );
  ILABEL11 = new LABEL11();
  ILABEL11.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,48,0,214 ) );
  layout.addView( ILABEL11 );
  ILABEL12 = new LABEL12();
- ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,54,0,320 ) );
+ ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,54,0,366 ) );
  layout.addView( ILABEL12 );
  Icstartup_time = new cstartup_time();
- Icstartup_time.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,54,298,320 ) );
+ Icstartup_time.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,54,298,368 ) );
  layout.addView( Icstartup_time );
  ILABEL14 = new LABEL14();
- ILABEL14.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,50,0,378 ) );
+ ILABEL14.setLayoutParams( new AbsoluteLayout.LayoutParams( 292,50,0,424 ) );
  layout.addView( ILABEL14 );
  ILABEL15 = new LABEL15();
- ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 292,48,0,432 ) );
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,0,478 ) );
  layout.addView( ILABEL15 );
  ILABEL16 = new LABEL16();
- ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,484 ) );
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,530 ) );
  layout.addView( ILABEL16 );
  ILABEL17 = new LABEL17();
- ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,536 ) );
+ ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,582 ) );
  layout.addView( ILABEL17 );
  ILABEL18 = new LABEL18();
- ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,588 ) );
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,634 ) );
  layout.addView( ILABEL18 );
  ILABEL19 = new LABEL19();
- ILABEL19.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,640 ) );
+ ILABEL19.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,686 ) );
  layout.addView( ILABEL19 );
  ILABEL20 = new LABEL20();
- ILABEL20.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,42,0,688 ) );
+ ILABEL20.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,42,0,734 ) );
  layout.addView( ILABEL20 );
  ILABEL21 = new LABEL21();
- ILABEL21.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,734 ) );
+ ILABEL21.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,780 ) );
  layout.addView( ILABEL21 );
  ILABEL22 = new LABEL22();
- ILABEL22.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,782 ) );
+ ILABEL22.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,828 ) );
  layout.addView( ILABEL22 );
  ILABEL23 = new LABEL23();
- ILABEL23.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,880 ) );
+ ILABEL23.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,926 ) );
  layout.addView( ILABEL23 );
  Icthresh_trigger_on = new cthresh_trigger_on();
- Icthresh_trigger_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,430 ) );
+ Icthresh_trigger_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,478 ) );
  layout.addView( Icthresh_trigger_on );
  Icthresh_trigger_off = new cthresh_trigger_off();
- Icthresh_trigger_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,302,484 ) );
+ Icthresh_trigger_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,302,530 ) );
  layout.addView( Icthresh_trigger_off );
  Icthresh_count_on = new cthresh_count_on();
- Icthresh_count_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,302,538 ) );
+ Icthresh_count_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,302,584 ) );
  layout.addView( Icthresh_count_on );
  Icthresh_count_off = new cthresh_count_off();
- Icthresh_count_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,588 ) );
+ Icthresh_count_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,634 ) );
  layout.addView( Icthresh_count_off );
  Icthresh_recognize = new cthresh_recognize();
- Icthresh_recognize.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,638 ) );
+ Icthresh_recognize.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,684 ) );
  layout.addView( Icthresh_recognize );
  Icbias = new cbias();
- Icbias.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,686 ) );
+ Icbias.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,734 ) );
  layout.addView( Icbias );
  Icacompress = new cacompress();
- Icacompress.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,734 ) );
+ Icacompress.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,782 ) );
  layout.addView( Icacompress );
  Iclearn_param_o = new clearn_param_o();
- Iclearn_param_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,782 ) );
+ Iclearn_param_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,830 ) );
  layout.addView( Iclearn_param_o );
  Iclearn_param_x = new clearn_param_x();
- Iclearn_param_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,832 ) );
+ Iclearn_param_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,878 ) );
  layout.addView( Iclearn_param_x );
  Iclimit_length = new climit_length();
- Iclimit_length.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,48,300,880 ) );
+ Iclimit_length.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,48,300,926 ) );
  layout.addView( Iclimit_length );
  ILABEL31 = new LABEL31();
  ILABEL31.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,46,0,268 ) );
  layout.addView( ILABEL31 );
  ILABEL33 = new LABEL33();
- ILABEL33.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,832 ) );
+ ILABEL33.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,878 ) );
  layout.addView( ILABEL33 );
+ ILABEL35 = new LABEL35();
+ ILABEL35.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,44,0,976 ) );
+ layout.addView( ILABEL35 );
+ Icenhance = new cenhance();
+ Icenhance.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,46,300,976 ) );
+ layout.addView( Icenhance );
+ ILABEL37 = new LABEL37();
+ ILABEL37.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,44,0,318 ) );
+ layout.addView( ILABEL37 );
  GUI_created( layout );
 }
 }
@@ -2407,6 +2500,10 @@ parent.Isetter.calog_scale_created(c);
 public void cauto_learn_created(CheckBox c){
 STATE2 = STATE;
 parent.Isetter.cauto_learn_created(c);
+}
+public void cwritable_created(CheckBox c){
+STATE2 = STATE;
+parent.Isetter.cwritable_created(c);
 }
 public void csound_filter_created(EditText e){
 STATE2 = STATE;
@@ -2456,8 +2553,12 @@ public void climit_length_created(EditText e){
 STATE2 = STATE;
 parent.Isetter.climit_length_created(e);
 }
+public void cenhance_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.cenhance_created(e);
+}
 private void _Ocreate_in(){
-if( STATE2 != 847486048 ) return;
+if( STATE2 != 831090708 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2469,7 +2570,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 847486048;
+STATE = 831090708;
 }
 GUI( config pnt ){
  parent = pnt;
@@ -2778,7 +2879,7 @@ STATE2 = STATE;
 parent._O8_in();
 }
 private void _Ocreate_in(){
-if( STATE2 != 1030626352 ) return;
+if( STATE2 != 1770775548 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2790,7 +2891,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1030626352;
+STATE = 1770775548;
 }
 GUI( Equalizer pnt ){
  parent = pnt;
@@ -2916,6 +3017,12 @@ _O42_in(e);
 public void cauto_learn_created(CheckBox c){
 _O44_in(c);
 }
+public void cenhance_created(EditText e){
+_O47_in(e);
+}
+public void cwritable_created(CheckBox c){
+_O49_in(c);
+}
 private void _O13_in(CheckBox c){
 cflog_scale=c;
 
@@ -2974,6 +3081,14 @@ clearn_param_x=e;
 }
 private void _O44_in(CheckBox c){
 cauto_learn=c;
+
+}
+private void _O47_in(EditText e){
+cenhance=e;
+
+}
+private void _O49_in(CheckBox c){
+cwritable=c;
 
 }
 setter( config pnt ){
