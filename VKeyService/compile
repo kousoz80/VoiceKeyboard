@@ -1,0 +1,17 @@
+echo aapt:
+aapt p -f -v -M AndroidManifest.xml -F build/resources.res -I android.jar -S res/ -J src
+
+echo javac:
+javac -classpath android.jar -d classes ./src/ServiceStartActivity.java ./src/VKeyboardService.java ./src/R.java 
+
+echo dx:
+dx --dex --verbose --no-strict --output=classes.dex classes/com
+
+echo build apk:
+aapt package -f -M AndroidManifest.xml -S res/ -I android.jar -F VKeyboardService.apk
+aapt add VKeyboardService.apk classes.dex
+
+echo signer:
+jarsigner -verbose -keystore debug.keystore -storepass android -sigalg MD5withRSA -digestalg SHA1 VKeyboardService.apk androiddebugkey
+
+echo compile end
