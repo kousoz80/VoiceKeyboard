@@ -44,6 +44,8 @@ import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.os.Environment;
 import android.content.Intent;
+import android.graphics.Point;
+import android.view.Window;
 
 public class VKeyboardControl extends Activity {
   VoiceKeyboardControl ap;
@@ -62,12 +64,12 @@ public class VKeyboardControl extends Activity {
          try{
            ap.dbg.close();
          } catch(Exception e){}
-         ap.save();
-         ap.purge();
+        if(!ap.service_start){
+          ap.save();
+          ap.purge();
+        }
       }
       super.onStop();
-      finish();
-      System.exit(0);
     }
 
 }
@@ -106,7 +108,7 @@ double learn_param_o = 8;  // 学習パラメータ
 double learn_param_x =128; // 学習パラメータ
 double limit_length = 1.2; // 音声の長さ比較用
 double enhance = 0;  // 強調パラメータ
-
+int trigger_margin = 3;// トリガタイミング余裕
 
 // 音声テンプレートファイル
 File voice_data_file = new File( "/sdcard/VoiceData.txt" );
@@ -119,9 +121,6 @@ File voice_data_file = new File( "/sdcard/VoiceData.txt" );
 static final int SAMPLING_RATE = 16000;
 static final int HEARING_HEIGHT = 128;
 static final int SOUND_DFT_SIZE = 256;
-static final double SCALE = 0.16;
-
-static final int TRIGGER_MARGIN = 2;
 
 // デバッグオブジェクト
 boolean debug_mode = false;
@@ -167,6 +166,7 @@ double[] hosei;      // 周波数補正係数
 int voice_no = 0;  // 音声番号
 int tsize = 0;       // テンプレートのサイズ
 boolean is_running = false; // 実行中フラグ
+boolean service_start = false;
 
 public void Start(){
 IGUI.Start();
@@ -190,6 +190,22 @@ handler.post(new Runnable() {
 
 
 update_display();
+
+}
+private void _O176_in(){
+// サービス起動
+// して終了
+
+
+service_start = true;
+save();
+purge();
+try{
+Intent intent = new Intent(); 
+intent.setClassName("com.example.vkeyboard_service", "com.example.vkeyboard_service.VKeyboardService"); 
+ACTIVITY.startService(intent);
+} catch(Exception e){dprint(e+"\n");}
+ACTIVITY.finish();
 
 }
 GUI IGUI;
@@ -283,20 +299,6 @@ voice_no Ivoice_no;
  });
 }
 }
-level Ilevel;
- class level extends SeekBar{
- level(){
- super(ACTIVITY);
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setProgress( 0 );
- setMax( 100 );
- setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
- public void onStopTrackingTouch(SeekBar seekBar) {}
- public void onStartTrackingTouch(SeekBar seekBar) {}
- public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { level_changed( progress ); }
- });
-}
-}
 length Ilength;
  class length extends SeekBar{
  length(){
@@ -382,17 +384,6 @@ LABEL10 ILABEL10;
  setText( "No." );
 }
 }
-LABEL11 ILABEL11;
- class LABEL11 extends TextView{
- LABEL11(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 255, 255, 255 ));
- setText( "Level" );
-}
-}
 LABEL18 ILABEL18;
  class LABEL18 extends TextView{
  LABEL18(){
@@ -426,68 +417,84 @@ LABEL15 ILABEL15;
  setText( "Length" );
 }
 }
+start_service Istart_service;
+ class start_service extends Button{
+ start_service(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "START SERVICE" );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {start_service_clicked();}} );
+}
+}
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+ double scale=0.0;
 layout.setBackgroundColor(Color.rgb( 223, 253, 248));
 ACTIVITY.setContentView(layout);
+ int content_top = 150;
+ Point size = new Point();
+ ACTIVITY.getWindowManager().getDefaultDisplay().getSize(size);
+ double wscl=(double)size.x/337;
+ double hscl=(double)(size.y-content_top)/415;
+ scale = wscl<hscl? wscl:hscl;
 ACTIVITY.setTitle("音声キーボード設定");
  Iconfig = new config();
- Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,60,424,6 ) );
+ Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*109),(int)(scale*30),(int)(scale*212),(int)(scale*3)));
  layout.addView( Iconfig );
  Ilearn = new learn();
- Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( 334,70,130,810 ) );
+ Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*137),(int)(scale*38),(int)(scale*0),(int)(scale*370)));
  layout.addView( Ilearn );
  Iins = new ins();
- Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 198,62,2,6 ) );
+ Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*99),(int)(scale*31),(int)(scale*1),(int)(scale*3)));
  layout.addView( Iins );
  Idel = new del();
- Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 202,62,212,6 ) );
+ Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*101),(int)(scale*31),(int)(scale*106),(int)(scale*3)));
  layout.addView( Idel );
  Iprev = new prev();
- Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( 74,280,2,76 ) );
+ Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*37),(int)(scale*140),(int)(scale*1),(int)(scale*38)));
  layout.addView( Iprev );
  Inext = new next();
- Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,282,566,76 ) );
+ Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*39),(int)(scale*141),(int)(scale*283),(int)(scale*38)));
  layout.addView( Inext );
  Ivoice_no = new voice_no();
- Ivoice_no.setLayoutParams( new AbsoluteLayout.LayoutParams( 496,70,166,368 ) );
+ Ivoice_no.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*248),(int)(scale*35),(int)(scale*83),(int)(scale*184)));
  layout.addView( Ivoice_no );
- Ilevel = new level();
- Ilevel.setLayoutParams( new AbsoluteLayout.LayoutParams( 492,68,168,442 ) );
- layout.addView( Ilevel );
  Ilength = new length();
- Ilength.setLayoutParams( new AbsoluteLayout.LayoutParams( 500,62,166,514 ) );
+ Ilength.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*250),(int)(scale*31),(int)(scale*83),(int)(scale*224)));
  layout.addView( Ilength );
  Iseimon0 = new seimon0();
- Iseimon0.setLayoutParams( new AbsoluteLayout.LayoutParams( 238,280,80,76 ) );
+ Iseimon0.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*119),(int)(scale*140),(int)(scale*40),(int)(scale*38)));
  layout.addView( Iseimon0 );
  Iseimon = new seimon();
- Iseimon.setLayoutParams( new AbsoluteLayout.LayoutParams( 236,282,326,76 ) );
+ Iseimon.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*118),(int)(scale*141),(int)(scale*163),(int)(scale*38)));
  layout.addView( Iseimon );
  Itext = new text();
- Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 502,64,168,582 ) );
+ Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*251),(int)(scale*32),(int)(scale*84),(int)(scale*259)));
  layout.addView( Itext );
  Icommand = new command();
- Icommand.setLayoutParams( new AbsoluteLayout.LayoutParams( 502,68,168,650 ) );
+ Icommand.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*251),(int)(scale*34),(int)(scale*84),(int)(scale*294)));
  layout.addView( Icommand );
  Iresult = new result();
- Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 668,70,0,726 ) );
+ Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*334),(int)(scale*35),(int)(scale*0),(int)(scale*331)));
  layout.addView( Iresult );
  ILABEL10 = new LABEL10();
- ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( 152,66,8,370 ) );
+ ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*76),(int)(scale*33),(int)(scale*4),(int)(scale*185)));
  layout.addView( ILABEL10 );
- ILABEL11 = new LABEL11();
- ILABEL11.setLayoutParams( new AbsoluteLayout.LayoutParams( 158,68,4,442 ) );
- layout.addView( ILABEL11 );
  ILABEL18 = new LABEL18();
- ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 160,66,0,652 ) );
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*80),(int)(scale*33),(int)(scale*0),(int)(scale*291)));
  layout.addView( ILABEL18 );
  ILABEL16 = new LABEL16();
- ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 160,64,0,580 ) );
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*80),(int)(scale*32),(int)(scale*0),(int)(scale*256)));
  layout.addView( ILABEL16 );
  ILABEL15 = new LABEL15();
- ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 160,62,0,514 ) );
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*80),(int)(scale*31),(int)(scale*0),(int)(scale*222)));
  layout.addView( ILABEL15 );
+ Istart_service = new start_service();
+ Istart_service.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*191),(int)(scale*37),(int)(scale*142),(int)(scale*371)));
+ layout.addView( Istart_service );
  GUI_created( layout );
 }
 }
@@ -529,10 +536,6 @@ public void voice_no_changed(int val){
 STATE2 = STATE;
 parent.IDisplay.voice_no_set(val);
 }
-public void level_changed(int val){
-STATE2 = STATE;
-parent.IDisplay.level_set(val);
-}
 public void length_changed(int val){
 STATE2 = STATE;
 parent.IDisplay.length_set(val);
@@ -565,8 +568,12 @@ public void result_created(TextView t){
 STATE2 = STATE;
 parent.ISetter.result_is(t);
 }
+public void start_service_clicked(){
+STATE2 = STATE;
+parent._O176_in();
+}
 private void _Ocreate_in(){
-if( STATE2 != 2065372977 ) return;
+if( STATE2 != 2082835285 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -578,7 +585,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 2065372977;
+STATE = 2082835285;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -593,7 +600,7 @@ public void recognize( double[] voice) {
     
   int maxi = 0;
   double r = 0.0, max = 0.0;
-  for( int i = 0; i < voice_template.size(); i++ ){
+  for(int i = 0; i < voice_template.size(); i++ ){
 
     // テンプレートの音声
     double[] ref = ((VoiceTemplate)(voice_template.get(i))).voice;
@@ -602,22 +609,11 @@ public void recognize( double[] voice) {
     double p = (double)ref.length / voice.length;
     if(p < limit_length && 1/p < limit_length){
 
-      // テンプレートと録音した音声の相関値を計算する(トリガタイミングの誤差を考慮して少しずつずらして比較して一番大きいのをとる)
-      r = compare_voice( ref, voice, -2 );
-      if(r > max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, -1 );
-      if(r > max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 0  );
-      if(r > max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 1  ); 
-      if(r > max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 2  );
-      if(r > max){ max = r; maxi = i; }
-
+      // テンプレートと録音した音声の相関値を計算する(トリガタイミングの誤差を考慮して少しずつずらして比較して一番大きい値をとる)
+      for(int j = -trigger_margin; j <= trigger_margin; j++){
+        r = compare_voice( ref, voice, j );
+        if(r > max){ max = r; maxi = i; }
+      }
     }
   }
       
@@ -840,7 +836,7 @@ class RecordThread extends Thread {
   public void run() {
     int i, j, k, len, width, height, state, offset, count;
     int start_point, end_point;
-    double   a, u, v, x, y, t, p, trigger, power;
+    double   a, x, y, u, v, t, p, trigger;
 
 dprint("start rec thread\n");
 
@@ -874,7 +870,8 @@ dprint("start rec thread\n");
       audioRec.read(sound_buffer, 0, SOUND_DFT_SIZE);
 
       // 取り込んだ聴覚データをDFTして開けておいたところにセットする
-      trigger = power = 0.0;
+      double pw  = 0;
+      double pw0 = 1; //初期値は１なのはゼロ除算対策
       for( i = 0; i < HEARING_HEIGHT; i++ ){
         for( x = y = 0.0, j = 0; j < SOUND_DFT_SIZE; j++ ){
           a = (double)sound_buffer[j];
@@ -882,14 +879,15 @@ dprint("start rec thread\n");
           y += a * sin_table[i][j];
         }
         // パワー値を得る(同時に周波数補正をかける)
-        p = hearing_buffer[i + offset] = Math.pow( (x * x + y * y), acompress ) * hosei[i];
-        sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + p) / sound_filter;
-        t = p / sound_av[i];
-        if(t > trigger) trigger = t;
-        power += p;
+        u = hearing_buffer[i + offset] = Math.pow( (x * x + y * y), acompress ) * hosei[i];
+        v = sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + u) / sound_filter;
+        pw  += (u - v) * (u - v); // DFTスペクトルをベクトルに見立てて距離を求める
+        pw0 += v * v;             // 平均化されたDFTベクトルの長さを求める
       }
-      // 強調処理
-      a = Math.pow(power/HEARING_HEIGHT/SOUND_DFT_SIZE, enhance);
+      trigger = pw / pw0; // 正規化したDFT距離をトリガ条件とする
+
+      // トリガの大きさに応じて強調処理をかける
+      a = Math.pow(trigger, enhance);
       for( i = 0; i < HEARING_HEIGHT; i++ ){
         hearing_buffer[i + offset] *= a;
       }
@@ -909,7 +907,7 @@ dprint("start rec thread\n");
       case OFF:
         if(trigger > thresh_trigger_on){
           state = SENS_ON;
-          start_point = offset - TRIGGER_MARGIN*HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
+          start_point = offset - trigger_margin*HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
           if(start_point < 0) start_point += HEARING_BUFFER_SIZE;
           count = 0;
         }
@@ -927,7 +925,7 @@ dprint("start rec thread\n");
       case ON:
         if(trigger < thresh_trigger_off){
           state = SENS_OFF;
-          end_point = offset + TRIGGER_MARGIN*HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
+          end_point = offset + trigger_margin*HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
           if(end_point >= HEARING_BUFFER_SIZE) end_point -= HEARING_BUFFER_SIZE;
           count = 0;
         }
@@ -1175,6 +1173,7 @@ while(true){
   if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
   if( line.startsWith("enhance="))            enhance=Double.parseDouble(line.substring(8));
+  if( line.startsWith("trigger_margin="))     trigger_margin=Integer.parseInt(line.substring(15));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -1230,6 +1229,7 @@ try{
   dout.write("learn_param_x=" + learn_param_x + "\n");
   dout.write("limit_length=" + limit_length + "\n");
   dout.write("enhance=" + enhance + "\n");
+  dout.write("trigger_margin=" + trigger_margin + "\n");
   dout.write("\n");
 
   for(int i = 0; i < HEARING_HEIGHT; i++){
@@ -1278,9 +1278,6 @@ _O21_in(g);
 }
 public void paint0(Canvas g){
 _O6_in(g);
-}
-public void level_set(int v){
-_O28_in(v);
 }
 public void seimon0_is(TextView t){
 _O36_in(t);
@@ -1396,14 +1393,6 @@ dprint("display voice end\n");
 
 
 }
-private void _O28_in(int v){
-// 輝度を調節
-
-
-level = 1 / Math.exp((80.0 - v) / 4);
-update_display();
-
-}
 private void _O36_in(TextView t){
 seimon0 = t;
 
@@ -1481,6 +1470,7 @@ EditText clearn_param_x;
 EditText climit_length;
 EditText cenhance;
 EditText clevel;
+EditText ctrigger_margin;
 
   // EditTextから数値を得る
   public int get_int( EditText e ){
@@ -1544,6 +1534,7 @@ private void _O12_in(){
   climit_length.setText("" + limit_length);
   cenhance.setText("" + enhance);
   clevel.setText("" + level);
+  ctrigger_margin.setText("" + trigger_margin);
   ACTIVITY.setContentView(config_container);
   
 
@@ -1567,6 +1558,7 @@ private void _O19_in(){
   limit_length=get_double(climit_length);
   enhance=get_double(cenhance);
   level=get_double(clevel);
+  trigger_margin=get_int(ctrigger_margin);
 
   ACTIVITY.setContentView(main_container);
   
@@ -1615,6 +1607,7 @@ while(true){
   if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
   if( line.startsWith("enhance="))            enhance=Double.parseDouble(line.substring(8));
+  if( line.startsWith("trigger_margin="))     trigger_margin=Integer.parseInt(line.substring(15));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -1676,6 +1669,7 @@ try{
   dout.write("learn_param_x=" + learn_param_x + "\n");
   dout.write("limit_length=" + limit_length + "\n");
   dout.write("enhance=" + enhance + "\n");
+  dout.write("trigger_margin=" + trigger_margin + "\n");
   dout.write("\n");
 
   for(int i = 0; i < HEARING_HEIGHT; i++){
@@ -1756,6 +1750,7 @@ while(true){
   if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
   if( line.startsWith("enhance="))            enhance=Double.parseDouble(line.substring(8));
+  if( line.startsWith("trigger_margin="))     trigger_margin=Integer.parseInt(line.substring(15));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -2182,116 +2177,151 @@ clevel Iclevel;
  clevel_created( this );
 }
 }
+LABEL35x ILABEL35x;
+ class LABEL35x extends TextView{
+ LABEL35x(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( "trigger_margin" );
+}
+}
+ctrigger_margin Ictrigger_margin;
+ class ctrigger_margin extends EditText{
+ ctrigger_margin(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( "" );
+ ctrigger_margin_created( this );
+}
+}
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+ double scale=0.0;
 layout.setBackgroundColor(Color.rgb( 217, 255, 253));
 ACTIVITY.setContentView(layout);
+ int content_top = 150;
+ Point size = new Point();
+ ACTIVITY.getWindowManager().getDefaultDisplay().getSize(size);
+ double wscl=(double)size.x/300;
+ double hscl=(double)(size.y-content_top)/504;
+ scale = wscl<hscl? wscl:hscl;
 ACTIVITY.setTitle("VKeyboard設定");
  Iequalizer = new equalizer();
- Iequalizer.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,76,232,80 ) );
+ Iequalizer.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*109),(int)(scale*38),(int)(scale*116),(int)(scale*40)));
  layout.addView( Iequalizer );
  Iclose = new close();
- Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,152,462,2 ) );
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*65),(int)(scale*76),(int)(scale*231),(int)(scale*1)));
  layout.addView( Iclose );
  Ibackup = new backup();
- Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( 216,74,4,0 ) );
+ Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*108),(int)(scale*37),(int)(scale*2),(int)(scale*0)));
  layout.addView( Ibackup );
  Irestore = new restore();
- Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,72,232,0 ) );
+ Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*109),(int)(scale*36),(int)(scale*116),(int)(scale*0)));
  layout.addView( Irestore );
  Iclear = new clear();
- Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( 214,74,4,82 ) );
+ Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*107),(int)(scale*37),(int)(scale*2),(int)(scale*41)));
  layout.addView( Iclear );
  Icauto_learn = new cauto_learn();
- Icauto_learn.setLayoutParams( new AbsoluteLayout.LayoutParams( 54,46,298,160 ) );
+ Icauto_learn.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*27),(int)(scale*23),(int)(scale*149),(int)(scale*80)));
  layout.addView( Icauto_learn );
  Icwritable = new cwritable();
- Icwritable.setLayoutParams( new AbsoluteLayout.LayoutParams( 56,46,298,212 ) );
+ Icwritable.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*28),(int)(scale*23),(int)(scale*149),(int)(scale*106)));
  layout.addView( Icwritable );
  Icsound_filter = new csound_filter();
- Icsound_filter.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,318 ) );
+ Icsound_filter.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*26),(int)(scale*150),(int)(scale*159)));
  layout.addView( Icsound_filter );
  ILABEL12 = new LABEL12();
- ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,54,0,260 ) );
+ ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*145),(int)(scale*27),(int)(scale*0),(int)(scale*130)));
  layout.addView( ILABEL12 );
  Icstartup_time = new cstartup_time();
- Icstartup_time.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,54,298,262 ) );
+ Icstartup_time.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*27),(int)(scale*149),(int)(scale*131)));
  layout.addView( Icstartup_time );
  ILABEL14 = new LABEL14();
- ILABEL14.setLayoutParams( new AbsoluteLayout.LayoutParams( 292,50,0,318 ) );
+ ILABEL14.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*146),(int)(scale*25),(int)(scale*0),(int)(scale*159)));
  layout.addView( ILABEL14 );
  ILABEL15 = new LABEL15();
- ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,0,372 ) );
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*24),(int)(scale*0),(int)(scale*186)));
  layout.addView( ILABEL15 );
  ILABEL16 = new LABEL16();
- ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,424 ) );
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*24),(int)(scale*0),(int)(scale*212)));
  layout.addView( ILABEL16 );
  ILABEL17 = new LABEL17();
- ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,476 ) );
+ ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*24),(int)(scale*0),(int)(scale*238)));
  layout.addView( ILABEL17 );
  ILABEL18 = new LABEL18();
- ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,528 ) );
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*24),(int)(scale*0),(int)(scale*264)));
  layout.addView( ILABEL18 );
  ILABEL19 = new LABEL19();
- ILABEL19.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,580 ) );
+ ILABEL19.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*22),(int)(scale*0),(int)(scale*290)));
  layout.addView( ILABEL19 );
  ILABEL21 = new LABEL21();
- ILABEL21.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,628 ) );
+ ILABEL21.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*22),(int)(scale*0),(int)(scale*314)));
  layout.addView( ILABEL21 );
  ILABEL22 = new LABEL22();
- ILABEL22.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,676 ) );
+ ILABEL22.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*23),(int)(scale*0),(int)(scale*338)));
  layout.addView( ILABEL22 );
  ILABEL23 = new LABEL23();
- ILABEL23.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,774 ) );
+ ILABEL23.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*23),(int)(scale*0),(int)(scale*387)));
  layout.addView( ILABEL23 );
  Icthresh_trigger_on = new cthresh_trigger_on();
- Icthresh_trigger_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,370 ) );
+ Icthresh_trigger_on.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*26),(int)(scale*150),(int)(scale*185)));
  layout.addView( Icthresh_trigger_on );
  Icthresh_trigger_off = new cthresh_trigger_off();
- Icthresh_trigger_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,302,424 ) );
+ Icthresh_trigger_off.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*26),(int)(scale*151),(int)(scale*212)));
  layout.addView( Icthresh_trigger_off );
  Icthresh_count_on = new cthresh_count_on();
- Icthresh_count_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,302,478 ) );
+ Icthresh_count_on.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*24),(int)(scale*151),(int)(scale*239)));
  layout.addView( Icthresh_count_on );
  Icthresh_count_off = new cthresh_count_off();
- Icthresh_count_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,528 ) );
+ Icthresh_count_off.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*149),(int)(scale*24),(int)(scale*150),(int)(scale*264)));
  layout.addView( Icthresh_count_off );
  Icthresh_recognize = new cthresh_recognize();
- Icthresh_recognize.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,578 ) );
+ Icthresh_recognize.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*149),(int)(scale*24),(int)(scale*150),(int)(scale*289)));
  layout.addView( Icthresh_recognize );
  Icacompress = new cacompress();
- Icacompress.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,628 ) );
+ Icacompress.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*23),(int)(scale*151),(int)(scale*314)));
  layout.addView( Icacompress );
  Iclearn_param_o = new clearn_param_o();
- Iclearn_param_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,676 ) );
+ Iclearn_param_o.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*23),(int)(scale*151),(int)(scale*338)));
  layout.addView( Iclearn_param_o );
  Iclearn_param_x = new clearn_param_x();
- Iclearn_param_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,724 ) );
+ Iclearn_param_x.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*149),(int)(scale*23),(int)(scale*150),(int)(scale*362)));
  layout.addView( Iclearn_param_x );
  Iclimit_length = new climit_length();
- Iclimit_length.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,48,300,772 ) );
+ Iclimit_length.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*150),(int)(scale*24),(int)(scale*150),(int)(scale*386)));
  layout.addView( Iclimit_length );
  ILABEL31 = new LABEL31();
- ILABEL31.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,46,0,162 ) );
+ ILABEL31.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*144),(int)(scale*23),(int)(scale*0),(int)(scale*81)));
  layout.addView( ILABEL31 );
  ILABEL33 = new LABEL33();
- ILABEL33.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,726 ) );
+ ILABEL33.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*22),(int)(scale*0),(int)(scale*363)));
  layout.addView( ILABEL33 );
  ILABEL35 = new LABEL35();
- ILABEL35.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,44,0,824 ) );
+ ILABEL35.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*22),(int)(scale*0),(int)(scale*412)));
  layout.addView( ILABEL35 );
  Icenhance = new cenhance();
- Icenhance.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,46,300,824 ) );
+ Icenhance.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*150),(int)(scale*23),(int)(scale*150),(int)(scale*412)));
  layout.addView( Icenhance );
  ILABEL37 = new LABEL37();
- ILABEL37.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,44,0,212 ) );
+ ILABEL37.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*145),(int)(scale*22),(int)(scale*0),(int)(scale*106)));
  layout.addView( ILABEL37 );
  ILABEL36 = new LABEL36();
- ILABEL36.setLayoutParams( new AbsoluteLayout.LayoutParams( 292,40,0,872 ) );
+ ILABEL36.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*146),(int)(scale*20),(int)(scale*0),(int)(scale*436)));
  layout.addView( ILABEL36 );
  Iclevel = new clevel();
- Iclevel.setLayoutParams( new AbsoluteLayout.LayoutParams( 302,42,296,872 ) );
+ Iclevel.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*151),(int)(scale*21),(int)(scale*148),(int)(scale*436)));
  layout.addView( Iclevel );
+ ILABEL35x = new LABEL35x();
+ ILABEL35x.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*146),(int)(scale*20),(int)(scale*0),(int)(scale*458)));
+ layout.addView( ILABEL35x );
+ Ictrigger_margin = new ctrigger_margin();
+ Ictrigger_margin.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*151),(int)(scale*22),(int)(scale*148),(int)(scale*458)));
+ layout.addView( Ictrigger_margin );
  GUI_created( layout );
 }
 }
@@ -2385,8 +2415,12 @@ public void clevel_created(EditText e){
 STATE2 = STATE;
 parent.Isetter.clevel_created(e);
 }
+public void ctrigger_margin_created(EditText e){
+STATE2 = STATE;
+parent.Isetter.ctrigger_margin_created(e);
+}
 private void _Ocreate_in(){
-if( STATE2 != 2099346879 ) return;
+if( STATE2 != 165919761 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2398,7 +2432,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 2099346879;
+STATE = 165919761;
 }
 GUI( config pnt ){
  parent = pnt;
@@ -2624,38 +2658,45 @@ close Iclose;
 }
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+ double scale=0.0;
 layout.setBackgroundColor(Color.rgb( 210, 252, 253));
 ACTIVITY.setContentView(layout);
+ int bars_height=100;
+ Point size = new Point();
+ ACTIVITY.getWindowManager().getDefaultDisplay().getRealSize(size);
+ double wscl=(double)size.x/335;
+ double hscl=(double)(size.y-bars_height)/400;
+ scale = wscl<hscl? wscl:hscl;
 ACTIVITY.setTitle("VKeyboard設定");
  ILABEL0 = new LABEL0();
- ILABEL0.setLayoutParams( new AbsoluteLayout.LayoutParams( 562,88,0,8 ) );
+ ILABEL0.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*281),(int)(scale*44),(int)(scale*0),(int)(scale*4)));
  layout.addView( ILABEL0 );
  Ie0 = new e0();
- Ie0.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,2,112 ) );
+ Ie0.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*33),(int)(scale*1),(int)(scale*56)));
  layout.addView( Ie0 );
  Ie1 = new e1();
- Ie1.setLayoutParams( new AbsoluteLayout.LayoutParams( 672,72,0,194 ) );
+ Ie1.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*336),(int)(scale*36),(int)(scale*0),(int)(scale*97)));
  layout.addView( Ie1 );
  Ie2 = new e2();
- Ie2.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,74,0,282 ) );
+ Ie2.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*37),(int)(scale*0),(int)(scale*141)));
  layout.addView( Ie2 );
  Ie3 = new e3();
- Ie3.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,72,0,370 ) );
+ Ie3.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*36),(int)(scale*0),(int)(scale*185)));
  layout.addView( Ie3 );
  Ie4 = new e4();
- Ie4.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,0,458 ) );
+ Ie4.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*33),(int)(scale*0),(int)(scale*229)));
  layout.addView( Ie4 );
  Ie5 = new e5();
- Ie5.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,68,0,544 ) );
+ Ie5.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*34),(int)(scale*0),(int)(scale*272)));
  layout.addView( Ie5 );
  Ie6 = new e6();
- Ie6.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,0,630 ) );
+ Ie6.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*33),(int)(scale*0),(int)(scale*315)));
  layout.addView( Ie6 );
  Ie7 = new e7();
- Ie7.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,74,0,714 ) );
+ Ie7.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*37),(int)(scale*0),(int)(scale*357)));
  layout.addView( Ie7 );
  Iclose = new close();
- Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 96,98,570,0 ) );
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*48),(int)(scale*49),(int)(scale*285),(int)(scale*0)));
  layout.addView( Iclose );
  GUI_created( layout );
 }
@@ -2707,7 +2748,7 @@ STATE2 = STATE;
 parent._O8_in();
 }
 private void _Ocreate_in(){
-if( STATE2 != 758054839 ) return;
+if( STATE2 != 1908783047 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2719,7 +2760,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 758054839;
+STATE = 1908783047;
 }
 GUI( Equalizer pnt ){
  parent = pnt;
@@ -2845,6 +2886,9 @@ _O49_in(c);
 public void clevel_created(EditText e){
 _O53_in(e);
 }
+public void ctrigger_margin_created(EditText e){
+_O56_in(e);
+}
 private void _O17_in(EditText e){
 csound_filter=e;
 
@@ -2903,6 +2947,10 @@ cwritable=c;
 }
 private void _O53_in(EditText e){
 clevel=e;
+
+}
+private void _O56_in(EditText e){
+ctrigger_margin=e;
 
 }
 setter( config pnt ){

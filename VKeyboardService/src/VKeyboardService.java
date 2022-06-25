@@ -124,6 +124,7 @@ double learn_param_o = 8;   // 学習パラメータ
 double learn_param_x =128; // 学習パラメータ
 double limit_length = 1.2; // 音声の長さ比較用
 double enhance = 0; // 強調パラメータ
+int trigger_margin = 3;// トリガタイミングの余裕度
 int  priority = -8; // 録音スレッドの優先順位
 // 音声テンプレート
 Vector voice_template;
@@ -142,8 +143,9 @@ class VoiceTemplate{
 // 音声テンプレートファイル
 File voice_data_file = new File( Environment.getExternalStorageDirectory(),"VoiceData.txt" );
 
-// 音声キーボードサービスプログラム for android  ver 0.2.6
+// 音声キーボードサービスプログラム for android  ver 0.2.7
 // 変更点：
+// 音声サンプリングのトリガ条件を変更
 // データ構造を変更
 // 音声認識アルゴリズムを改良(クリップ処理を追加)
 // 音声認識アルゴリズムを改良(強調パラメータを追加)
@@ -390,7 +392,7 @@ public void recognize( double[] voice) {
     
   int maxi = 0;
   double r = 0.0, max = 0.0;
-  for( int i = 0; i < voice_template.size(); i++ ){
+  for(int i = 0; i < voice_template.size(); i++ ){
 
     // テンプレートの音声
     double[] ref = ((VoiceTemplate)(voice_template.get(i))).voice;
@@ -399,26 +401,15 @@ public void recognize( double[] voice) {
     double p = (double)ref.length / voice.length;
     if(p < limit_length && 1/p < limit_length){
 
-      // テンプレートと録音した音声の相関値を計算する(トリガタイミングの誤差を考慮して少しずつずらして比較して一番大きいのをとる)
-      r = compare_voice( ref, voice, -2 );
-      if(r > max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, -1 );
-      if(r > max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 0  );
-      if(r > max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 1  ); 
-      if(r > max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 2  );
-      if(r > max){ max = r; maxi = i; }
-
+      // テンプレートと録音した音声の相関値を計算する(トリガタイミングの誤差を考慮して少しずつずらして比較して一番大きい値をとる)
+      for(int j = -trigger_margin; j <= trigger_margin; j++){
+        r = compare_voice( ref, voice, j );
+        if(r > max){ max = r; maxi = i; }
+      }
     }
   }
       
-  // 認識が成功したとき
+  // 認識結果を送る
   if( max > thresh_recognize ){
 
     VoiceTemplate vt = (VoiceTemplate)(voice_template.get(maxi));
@@ -560,28 +551,30 @@ dprint("start rec thread\n");
     double[] sound_av       = new double[HEARING_HEIGHT];
     double[] hearing_buffer = new double[HEARING_BUFFER_SIZE];
 
-    while(is_running){       
+    while(is_running){
 
       // 録音データを読み込む(SOUND_DFT_SIZEは配列要素の数)
       audioRec.read(sound_buffer, 0, SOUND_DFT_SIZE);
 
       // 取り込んだ聴覚データをDFTして開けておいたところにセットする
-      trigger = power = 0.0;
+      double pw  = 0;
+      double pw0 = 1; //初期値は１なのはゼロ除算対策
       for( i = 0; i < HEARING_HEIGHT; i++ ){
         for( x = y = 0.0, j = 0; j < SOUND_DFT_SIZE; j++ ){
           a = (double)sound_buffer[j];
           x += a * cos_table[i][j];
           y += a * sin_table[i][j];
         }
-        // リニア(べき乗)尺度のパワー値を得る(同時に周波数補正をかける)
-        p = hearing_buffer[i + offset] = Math.pow( (x * x + y * y), acompress ) * hosei[i];
-        sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + p) / sound_filter;
-        t = p / sound_av[i];
-        if(t > trigger) trigger = t;
-        power += p;
+        // パワー値を得る(同時に周波数補正をかける)
+        u = hearing_buffer[i + offset] = Math.pow( (x * x + y * y), acompress ) * hosei[i];
+        v = sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + u) / sound_filter;
+        pw  += (u - v) * (u - v); // DFTスペクトルをベクトルに見立てて距離を求める
+        pw0 += v * v;             // 平均化されたDFTベクトルの長さを求める
       }
-      // 強調処理
-      a = Math.pow(power/HEARING_HEIGHT/SOUND_DFT_SIZE, enhance);
+      trigger = pw / pw0; // 正規化したDFT距離をトリガ条件とする
+
+      // トリガの大きさに応じて強調処理をかける
+      a = Math.pow(trigger, enhance);
       for( i = 0; i < HEARING_HEIGHT; i++ ){
         hearing_buffer[i + offset] *= a;
       }
@@ -600,7 +593,7 @@ dprint("start rec thread\n");
       case OFF:
         if(trigger > thresh_trigger_on){
           state = SENS_ON;
-          start_point = offset - TRIGGER_MARGIN*HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
+          start_point = offset - trigger_margin*HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
           if(start_point < 0) start_point += HEARING_BUFFER_SIZE;
           count = 0;
         }
@@ -618,7 +611,7 @@ dprint("start rec thread\n");
       case ON:
         if(trigger < thresh_trigger_off){
           state = SENS_OFF;
-          end_point = offset + TRIGGER_MARGIN*HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
+          end_point = offset + trigger_margin*HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
           if(end_point >= HEARING_BUFFER_SIZE) end_point -= HEARING_BUFFER_SIZE;
           count = 0;
         }
@@ -1008,12 +1001,25 @@ parent.IControl.start();
 }
 private void _O13_in(){
 
-//音声テンプレートを読み込む(無い場合は終了する)
+//音声テンプレートを読み込む(無い場合は作成する)
 
 
 try{
 
 dbg = new FileWriter(new File(Environment.getExternalStorageDirectory(), DEBUG_FILE));
+
+if(!voice_data_file.exists()){
+  int cnt = 0;
+  InputStream is = SERVICE.getResources().openRawResource(R.raw.voicedata);
+  while (is.read()!=-1) cnt++;
+  byte[] b = new byte[cnt];
+  is.reset();
+  is.read(b);
+  is.close();
+  FileOutputStream os = new FileOutputStream(voice_data_file);
+  os.write(b);
+  os.close();
+}
 
 String line = null;
 BufferedReader din = new BufferedReader(new FileReader(voice_data_file));
@@ -1041,6 +1047,7 @@ while(true){
   if( line.startsWith("learn_param_x="))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith("limit_length="))       limit_length=Double.parseDouble(line.substring(13));
   if( line.startsWith("enhance="))            enhance=Double.parseDouble(line.substring(8));
+  if( line.startsWith("trigger_margin="))     trigger_margin=Integer.parseInt(line.substring(15));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -1102,6 +1109,7 @@ try{
   dout.write("learn_param_x=" + learn_param_x + "\n");
   dout.write("limit_length=" + limit_length + "\n");
   dout.write("enhance=" + enhance + "\n");
+  dout.write("trigger_margin=" + trigger_margin + "\n");
   dout.write("\n");
 
   for(int i = 0; i < HEARING_HEIGHT; i++){

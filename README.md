@@ -75,6 +75,11 @@ ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"�
   
   それとプログラムの起動のためのパソコンが必要となります。
   
+## ・動画  
+Youtubeで動画が公開されています  
+
+https://www.youtube.com/watch?v=hC1wJNmLYdg
+  
   
 ## ・謝辞
    

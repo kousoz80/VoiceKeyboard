@@ -6,7 +6,7 @@
 <y0>0</y0>
 <width>200</width>
 <height>100</height>
-<ID_maker>176</ID_maker>
+<ID_maker>178</ID_maker>
 <objectname>VoiceKeyboardControl</objectname>
 <description>新規のアプリケーション</description>
 <codeclip>
@@ -47,7 +47,7 @@ public void recognize( double[] voice) {
     
   int maxi = 0;
   double r = 0.0, max = 0.0;
-  for( int i = 0; i &lt; voice_template.size(); i++ ){
+  for(int i = 0; i &lt; voice_template.size(); i++ ){
 
     // テンプレートの音声
     double[] ref = ((VoiceTemplate)(voice_template.get(i))).voice;
@@ -56,22 +56,11 @@ public void recognize( double[] voice) {
     double p = (double)ref.length / voice.length;
     if(p &lt; limit_length &amp;&amp; 1/p &lt; limit_length){
 
-      // テンプレートと録音した音声の相関値を計算する(トリガタイミングの誤差を考慮して少しずつずらして比較して一番大きいのをとる)
-      r = compare_voice( ref, voice, -2 );
-      if(r &gt; max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, -1 );
-      if(r &gt; max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 0  );
-      if(r &gt; max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 1  ); 
-      if(r &gt; max){ max = r; maxi = i; }
-
-      r = compare_voice( ref, voice, 2  );
-      if(r &gt; max){ max = r; maxi = i; }
-
+      // テンプレートと録音した音声の相関値を計算する(トリガタイミングの誤差を考慮して少しずつずらして比較して一番大きい値をとる)
+      for(int j = -trigger_margin; j &lt;= trigger_margin; j++){
+        r = compare_voice( ref, voice, j );
+        if(r &gt; max){ max = r; maxi = i; }
+      }
     }
   }
       
@@ -308,7 +297,7 @@ class RecordThread extends Thread {
   public void run() {
     int i, j, k, len, width, height, state, offset, count;
     int start_point, end_point;
-    double   a, u, v, x, y, t, p, trigger, power;
+    double   a, x, y, u, v, t, p, trigger;
 
 dprint(&quot;start rec thread\n&quot;);
 
@@ -342,7 +331,8 @@ dprint(&quot;start rec thread\n&quot;);
       audioRec.read(sound_buffer, 0, SOUND_DFT_SIZE);
 
       // 取り込んだ聴覚データをDFTして開けておいたところにセットする
-      trigger = power = 0.0;
+      double pw  = 0;
+      double pw0 = 1; //初期値は１なのはゼロ除算対策
       for( i = 0; i &lt; HEARING_HEIGHT; i++ ){
         for( x = y = 0.0, j = 0; j &lt; SOUND_DFT_SIZE; j++ ){
           a = (double)sound_buffer[j];
@@ -350,14 +340,15 @@ dprint(&quot;start rec thread\n&quot;);
           y += a * sin_table[i][j];
         }
         // パワー値を得る(同時に周波数補正をかける)
-        p = hearing_buffer[i + offset] = Math.pow( (x * x + y * y), acompress ) * hosei[i];
-        sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + p) / sound_filter;
-        t = p / sound_av[i];
-        if(t &gt; trigger) trigger = t;
-        power += p;
+        u = hearing_buffer[i + offset] = Math.pow( (x * x + y * y), acompress ) * hosei[i];
+        v = sound_av[i] = ((sound_filter - 1.0) * sound_av[i] + u) / sound_filter;
+        pw  += (u - v) * (u - v); // DFTスペクトルをベクトルに見立てて距離を求める
+        pw0 += v * v;             // 平均化されたDFTベクトルの長さを求める
       }
-      // 強調処理
-      a = Math.pow(power/HEARING_HEIGHT/SOUND_DFT_SIZE, enhance);
+      trigger = pw / pw0; // 正規化したDFT距離をトリガ条件とする
+
+      // トリガの大きさに応じて強調処理をかける
+      a = Math.pow(trigger, enhance);
       for( i = 0; i &lt; HEARING_HEIGHT; i++ ){
         hearing_buffer[i + offset] *= a;
       }
@@ -377,7 +368,7 @@ dprint(&quot;start rec thread\n&quot;);
       case OFF:
         if(trigger &gt; thresh_trigger_on){
           state = SENS_ON;
-          start_point = offset - TRIGGER_MARGIN*HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
+          start_point = offset - trigger_margin*HEARING_HEIGHT;  // スレッショルドを越える直前をサンプリング開始位置とする
           if(start_point &lt; 0) start_point += HEARING_BUFFER_SIZE;
           count = 0;
         }
@@ -395,7 +386,7 @@ dprint(&quot;start rec thread\n&quot;);
       case ON:
         if(trigger &lt; thresh_trigger_off){
           state = SENS_OFF;
-          end_point = offset + TRIGGER_MARGIN*HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
+          end_point = offset + trigger_margin*HEARING_HEIGHT; // スレッショルドを下回った所をサンプリング終了位置とする
           if(end_point &gt;= HEARING_BUFFER_SIZE) end_point -= HEARING_BUFFER_SIZE;
           count = 0;
         }
@@ -884,6 +875,7 @@ while(true){
   if( line.startsWith(&quot;learn_param_x=&quot;))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
   if( line.startsWith(&quot;enhance=&quot;))            enhance=Double.parseDouble(line.substring(8));
+  if( line.startsWith(&quot;trigger_margin=&quot;))     trigger_margin=Integer.parseInt(line.substring(15));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -962,6 +954,7 @@ try{
   dout.write(&quot;learn_param_x=&quot; + learn_param_x + &quot;\n&quot;);
   dout.write(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
   dout.write(&quot;enhance=&quot; + enhance + &quot;\n&quot;);
+  dout.write(&quot;trigger_margin=&quot; + trigger_margin + &quot;\n&quot;);
   dout.write(&quot;\n&quot;);
 
   for(int i = 0; i &lt; HEARING_HEIGHT; i++){
@@ -999,8 +992,8 @@ try{
 <ID>_X92</ID>
 <x0>434</x0>
 <y0>367</y0>
-<width>178</width>
-<height>191</height>
+<width>177</width>
+<height>180</height>
 <ID_maker>44</ID_maker>
 <objectname>Display</objectname>
 <description></description>
@@ -1041,8 +1034,8 @@ try{
 <width>115</width>
 <height>23</height>
 <text>paint(Canvas g)</text>
-<px>1</px>
-<py>174</py>
+<px>0</px>
+<py>159</py>
 </pin>
 <operation>
 <ID>_O6</ID>
@@ -1234,7 +1227,7 @@ update_display();
 <height>22</height>
 <text>paint0(Canvas g)</text>
 <px>0</px>
-<py>137</py>
+<py>122</py>
 </pin>
 <operation>
 <ID>_O21</ID>
@@ -1309,57 +1302,11 @@ dprint(&quot;display voice end\n&quot;);
 <pin2name>_O21</pin2name>
 </relation>
 <operation>
-<ID>_O28</ID>
-<state1>_SINIT</state1>
-<state2>_SINIT</state2>
-<x0>187</x0>
-<y0>399</y0>
-<width>117</width>
-<height>51</height>
-<inconnectx0>0</inconnectx0>
-<inconnecty0>40</inconnecty0>
-<outconnectx0>0</outconnectx0>
-<outconnecty0>40</outconnecty0>
-<inpintext>in(int v)</inpintext>
-<inpinx0>0</inpinx0>
-<inpiny0>29</inpiny0>
-<inpinwidth>69</inpinwidth>
-<inpinheight>21</inpinheight>
-<outpintext>out()</outpintext>
-<outpinx0>90</outpinx0>
-<outpiny0>40</outpiny0>
-<outpinwidth>40</outpinwidth>
-<outpinheight>20</outpinheight>
-<inpinlinkcount>1</inpinlinkcount>
-<description></description>
-<codetext>// 輝度を調節
-
-
-level = 1 / Math.exp((80.0 - v) / 4);
-update_display();
-</codetext>
-</operation>
-<pin>
-<ID>_P29</ID>
-<x0>14</x0>
-<y0>398</y0>
-<width>106</width>
-<height>29</height>
-<text>level_set(int v)</text>
-<px>0</px>
-<py>77</py>
-</pin>
-<relation>
-<ID>_R30</ID>
-<pin1name>_P29</pin1name>
-<pin2name>_O28</pin2name>
-</relation>
-<operation>
 <ID>_O36</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>185</x0>
-<y0>473</y0>
+<x0>180</x0>
+<y0>375</y0>
 <width>148</width>
 <height>55</height>
 <inconnectx0>0</inconnectx0>
@@ -1385,8 +1332,8 @@ update_display();
 <ID>_O35</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>195</x0>
-<y0>551</y0>
+<x0>192</x0>
+<y0>452</y0>
 <width>148</width>
 <height>55</height>
 <inconnectx0>0</inconnectx0>
@@ -1411,22 +1358,22 @@ update_display();
 <pin>
 <ID>_P34</ID>
 <x0>0</x0>
-<y0>480</y0>
+<y0>398</y0>
 <width>154</width>
 <height>28</height>
 <text>seimon0_is(TextView t)</text>
 <px>0</px>
-<py>117</py>
+<py>102</py>
 </pin>
 <pin>
 <ID>_P33</ID>
 <x0>0</x0>
-<y0>571</y0>
+<y0>473</y0>
 <width>154</width>
 <height>28</height>
 <text>seimon_is(TextView t)</text>
 <px>0</px>
-<py>158</py>
+<py>144</py>
 </pin>
 <relation>
 <ID>_R38</ID>
@@ -1449,20 +1396,20 @@ update_display();
 </codeclip>
 <pin>
 <ID>_P41</ID>
-<x0>391</x0>
-<y0>129</y0>
+<x0>0</x0>
+<y0>561</y0>
 <width>119</width>
 <height>30</height>
 <text>length_set(int v)</text>
 <px>0</px>
-<py>98</py>
+<py>80</py>
 </pin>
 <operation>
 <ID>_O42</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>528</x0>
-<y0>129</y0>
+<x0>187</x0>
+<y0>542</y0>
 <width>210</width>
 <height>56</height>
 <inconnectx0>0</inconnectx0>
@@ -1506,8 +1453,8 @@ update_display();
 </relation>
 <codeclip>
 <ID>_C103</ID>
-<x0>0</x0>
-<y0>94</y0>
+<x0>4</x0>
+<y0>75</y0>
 <width>357</width>
 <height>117</height>
 <codetext>// 音声テンプレート
@@ -1530,8 +1477,8 @@ class VoiceTemplate{
 <ID>_C104</ID>
 <x0>685</x0>
 <y0>0</y0>
-<width>309</width>
-<height>247</height>
+<width>308</width>
+<height>261</height>
 <codetext>// 各種パラメータ
 boolean auto_learn=false; // 自動学習
 boolean writable=false; // 書き込み可能
@@ -1548,7 +1495,7 @@ double learn_param_o = 8;  // 学習パラメータ
 double learn_param_x =128; // 学習パラメータ
 double limit_length = 1.2; // 音声の長さ比較用
 double enhance = 0;  // 強調パラメータ
-
+int trigger_margin = 3;// トリガタイミング余裕
 </codetext>
 </codeclip>
 <relation>
@@ -1632,15 +1579,12 @@ update_display();
 <ID>_C121</ID>
 <x0>4</x0>
 <y0>0</y0>
-<width>281</width>
-<height>81</height>
+<width>280</width>
+<height>67</height>
 <codetext>// 定数
 static final int SAMPLING_RATE = 16000;
 static final int HEARING_HEIGHT = 128;
 static final int SOUND_DFT_SIZE = 256;
-static final double SCALE = 0.16;
-
-static final int TRIGGER_MARGIN = 2;
 </codetext>
 </codeclip>
 <プロパティ>
@@ -1814,6 +1758,8 @@ import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.os.Environment;
 import android.content.Intent;
+import android.graphics.Point;
+import android.view.Window;
 
 public class HelloWorld extends Activity {
   %AppName% ap;
@@ -1832,12 +1778,12 @@ public class HelloWorld extends Activity {
          try{
            ap.dbg.close();
          } catch(Exception e){}
-         ap.save();
-         ap.purge();
+        if(!ap.service_start){
+          ap.save();
+          ap.purge();
+        }
       }
       super.onStop();
-      finish();
-      System.exit(0);
     }
 
 }
@@ -1988,8 +1934,8 @@ dprint(&quot;update display\n&quot;);
 </relation>
 <xobject>
 <ID>_X_G130</ID>
-<x0>651</x0>
-<y0>524</y0>
+<x0>624</x0>
+<y0>534</y0>
 <width>180</width>
 <height>102</height>
 <objectname>Setter</objectname>
@@ -2136,8 +2082,8 @@ dprint(&quot;update display\n&quot;);
 <ID>_C148</ID>
 <x0>383</x0>
 <y0>8</y0>
-<width>284</width>
-<height>191</height>
+<width>283</width>
+<height>200</height>
 <codetext>// 変数
 Handler handler = new Handler();
 TextView seimon;   // 録音した音声の声紋
@@ -2150,12 +2096,13 @@ double[] hosei;      // 周波数補正係数
 int voice_no = 0;  // 音声番号
 int tsize = 0;       // テンプレートのサイズ
 boolean is_running = false; // 実行中フラグ
+boolean service_start = false;
 </codetext>
 </codeclip>
 <pin>
 <ID>_P149</ID>
-<x0>678</x0>
-<y0>355</y0>
+<x0>663</x0>
+<y0>337</y0>
 <width>58</width>
 <height>26</height>
 <text>purge()</text>
@@ -2198,7 +2145,7 @@ boolean is_running = false; // 実行中フラグ
 <y0>281</y0>
 <width>107</width>
 <height>68</height>
-<ID_maker>57</ID_maker>
+<ID_maker>58</ID_maker>
 <objectname>config</objectname>
 <description></description>
 <pin>
@@ -2355,6 +2302,7 @@ ACTIVITY.setContentView(main_container);
   climit_length.setText(&quot;&quot; + limit_length);
   cenhance.setText(&quot;&quot; + enhance);
   clevel.setText(&quot;&quot; + level);
+  ctrigger_margin.setText(&quot;&quot; + trigger_margin);
   ACTIVITY.setContentView(config_container);
   
 </codetext>
@@ -2406,6 +2354,7 @@ ACTIVITY.setContentView(main_container);
   limit_length=get_double(climit_length);
   enhance=get_double(cenhance);
   level=get_double(clevel);
+  trigger_margin=get_int(ctrigger_margin);
 
   ACTIVITY.setContentView(main_container);
   
@@ -2482,6 +2431,7 @@ while(true){
   if( line.startsWith(&quot;learn_param_x=&quot;))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
   if( line.startsWith(&quot;enhance=&quot;))            enhance=Double.parseDouble(line.substring(8));
+  if( line.startsWith(&quot;trigger_margin=&quot;))     trigger_margin=Integer.parseInt(line.substring(15));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -2571,6 +2521,7 @@ try{
   dout.write(&quot;learn_param_x=&quot; + learn_param_x + &quot;\n&quot;);
   dout.write(&quot;limit_length=&quot; + limit_length + &quot;\n&quot;);
   dout.write(&quot;enhance=&quot; + enhance + &quot;\n&quot;);
+  dout.write(&quot;trigger_margin=&quot; + trigger_margin + &quot;\n&quot;);
   dout.write(&quot;\n&quot;);
 
   for(int i = 0; i &lt; HEARING_HEIGHT; i++){
@@ -2679,6 +2630,7 @@ while(true){
   if( line.startsWith(&quot;learn_param_x=&quot;))      learn_param_x=Double.parseDouble(line.substring(14));
   if( line.startsWith(&quot;limit_length=&quot;))       limit_length=Double.parseDouble(line.substring(13));
   if( line.startsWith(&quot;enhance=&quot;))            enhance=Double.parseDouble(line.substring(8));
+  if( line.startsWith(&quot;trigger_margin=&quot;))     trigger_margin=Integer.parseInt(line.substring(15));
 }
 
 hosei = new double[HEARING_HEIGHT];
@@ -3368,7 +3320,7 @@ ACTIVITY.setContentView(main_container);
 </relation>
 <aobject>
 <ID>_A2</ID>
-<x0>120</x0>
+<x0>112</x0>
 <y0>164</y0>
 <width>280</width>
 <objectname>GUI</objectname>
@@ -3639,38 +3591,45 @@ close Iclose;
 }
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+ double scale=0.0;
 layout.setBackgroundColor(Color.rgb( 210, 252, 253));
 ACTIVITY.setContentView(layout);
+ int bars_height=100;
+ Point size = new Point();
+ ACTIVITY.getWindowManager().getDefaultDisplay().getRealSize(size);
+ double wscl=(double)size.x/335;
+ double hscl=(double)(size.y-bars_height)/400;
+ scale = wscl&lt;hscl? wscl:hscl;
 ACTIVITY.setTitle(&quot;VKeyboard設定&quot;);
  ILABEL0 = new LABEL0();
- ILABEL0.setLayoutParams( new AbsoluteLayout.LayoutParams( 562,88,0,8 ) );
+ ILABEL0.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*281),(int)(scale*44),(int)(scale*0),(int)(scale*4)));
  layout.addView( ILABEL0 );
  Ie0 = new e0();
- Ie0.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,2,112 ) );
+ Ie0.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*33),(int)(scale*1),(int)(scale*56)));
  layout.addView( Ie0 );
  Ie1 = new e1();
- Ie1.setLayoutParams( new AbsoluteLayout.LayoutParams( 672,72,0,194 ) );
+ Ie1.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*336),(int)(scale*36),(int)(scale*0),(int)(scale*97)));
  layout.addView( Ie1 );
  Ie2 = new e2();
- Ie2.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,74,0,282 ) );
+ Ie2.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*37),(int)(scale*0),(int)(scale*141)));
  layout.addView( Ie2 );
  Ie3 = new e3();
- Ie3.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,72,0,370 ) );
+ Ie3.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*36),(int)(scale*0),(int)(scale*185)));
  layout.addView( Ie3 );
  Ie4 = new e4();
- Ie4.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,0,458 ) );
+ Ie4.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*33),(int)(scale*0),(int)(scale*229)));
  layout.addView( Ie4 );
  Ie5 = new e5();
- Ie5.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,68,0,544 ) );
+ Ie5.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*34),(int)(scale*0),(int)(scale*272)));
  layout.addView( Ie5 );
  Ie6 = new e6();
- Ie6.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,66,0,630 ) );
+ Ie6.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*33),(int)(scale*0),(int)(scale*315)));
  layout.addView( Ie6 );
  Ie7 = new e7();
- Ie7.setLayoutParams( new AbsoluteLayout.LayoutParams( 674,74,0,714 ) );
+ Ie7.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*337),(int)(scale*37),(int)(scale*0),(int)(scale*357)));
  layout.addView( Ie7 );
  Iclose = new close();
- Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 96,98,570,0 ) );
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*48),(int)(scale*49),(int)(scale*285),(int)(scale*0)));
  layout.addView( Iclose );
  GUI_created( layout );
 }
@@ -3685,7 +3644,7 @@ ACTIVITY.setTitle(&quot;VKeyboard設定&quot;);
 210
 252
 253
-xxscale=2
+xxscale=0
 LABEL;LABEL0;EQUALIZER;0;4;281;44;51;51;51;254;254;254;Dialog;30;null;0;0;1;0;0;TextView;
 HSLIDER;e0;0;100;1;56;337;33;163;184;204;255;255;255;1;1;0;SeekBar;
 HSLIDER;e1;0;100;0;97;336;36;163;184;204;255;255;255;1;1;0;SeekBar;
@@ -3713,9 +3672,9 @@ BUTTON;close;X;285;0;48;49;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;1;Button;
 <ID>_X33</ID>
 <x0>662</x0>
 <y0>206</y0>
-<width>312</width>
-<height>343</height>
-<ID_maker>55</ID_maker>
+<width>307</width>
+<height>361</height>
+<ID_maker>58</ID_maker>
 <objectname>setter</objectname>
 <description></description>
 <pin>
@@ -4348,6 +4307,48 @@ BUTTON;close;X;285;0;48;49;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;1;Button;
 <pin1name>_P52</pin1name>
 <pin2name>_O53</pin2name>
 </relation>
+<pin>
+<ID>_P55</ID>
+<x0>0</x0>
+<y0>603</y0>
+<width>242</width>
+<height>25</height>
+<text>ctrigger_margin_created(EditText e)</text>
+<px>3</px>
+<py>335</py>
+</pin>
+<operation>
+<ID>_O56</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>736</x0>
+<y0>574</y0>
+<width>182</width>
+<height>50</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in(EditText e)</inpintext>
+<inpinx0>0</inpinx0>
+<inpiny0>29</inpiny0>
+<inpinwidth>106</inpinwidth>
+<inpinheight>21</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>ctrigger_margin=e;
+</codetext>
+</operation>
+<relation>
+<ID>_R57</ID>
+<pin1name>_P55</pin1name>
+<pin2name>_O56</pin2name>
+</relation>
 </xobject>
 <relation>
 <ID>_R36</ID>
@@ -4396,10 +4397,10 @@ BUTTON;close;X;285;0;48;49;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;1;Button;
 </relation>
 <codeclip>
 <ID>_C47</ID>
-<x0>38</x0>
-<y0>375</y0>
+<x0>39</x0>
+<y0>374</y0>
 <width>247</width>
-<height>242</height>
+<height>265</height>
 <codetext>//各パラメータ
 CheckBox cauto_learn;
 CheckBox cwritable;
@@ -4416,6 +4417,7 @@ EditText clearn_param_x;
 EditText climit_length;
 EditText cenhance;
 EditText clevel;
+EditText ctrigger_margin;
 </codetext>
 </codeclip>
 <codeclip>
@@ -4466,10 +4468,20 @@ EditText clevel;
 <pin1name>_A2(_Pcwritable)</pin1name>
 <pin2name>_X33(_P50)</pin2name>
 </relation>
+<relation>
+<ID>_R56</ID>
+<pin1name>_A2(_Pclevel)</pin1name>
+<pin2name>_X33(_P52)</pin2name>
+</relation>
+<relation>
+<ID>_R57</ID>
+<pin1name>_A2(_Pctrigger_margin)</pin1name>
+<pin2name>_X33(_P55)</pin2name>
+</relation>
 <aobject>
 <ID>_A2</ID>
-<x0>347</x0>
-<y0>108</y0>
+<x0>332</x0>
+<y0>101</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
@@ -4736,6 +4748,16 @@ XGUI x = new XGUI();
 <text>clevel_created(EditText e)</text>
 <px>0</px>
 <py>414</py>
+</pin>
+<pin>
+<ID>_Pctrigger_margin</ID>
+<x0>0</x0>
+<y0>670</y0>
+<width>200</width>
+<height>26</height>
+<text>ctrigger_margin_created(EditText e)</text>
+<px>0</px>
+<py>432</py>
 </pin>
 <codeclip>
 <ID>_CXSTART</ID>
@@ -5132,130 +5154,165 @@ clevel Iclevel;
  clevel_created( this );
 }
 }
+LABEL35x ILABEL35x;
+ class LABEL35x extends TextView{
+ LABEL35x(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;trigger_margin&quot; );
+}
+}
+ctrigger_margin Ictrigger_margin;
+ class ctrigger_margin extends EditText{
+ ctrigger_margin(){
+ super(ACTIVITY);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 12f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 255, 255, 255 ));
+ setText( &quot;&quot; );
+ ctrigger_margin_created( this );
+}
+}
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+ double scale=0.0;
 layout.setBackgroundColor(Color.rgb( 217, 255, 253));
 ACTIVITY.setContentView(layout);
+ int content_top = 150;
+ Point size = new Point();
+ ACTIVITY.getWindowManager().getDefaultDisplay().getSize(size);
+ double wscl=(double)size.x/300;
+ double hscl=(double)(size.y-content_top)/504;
+ scale = wscl&lt;hscl? wscl:hscl;
 ACTIVITY.setTitle(&quot;VKeyboard設定&quot;);
  Iequalizer = new equalizer();
- Iequalizer.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,76,232,80 ) );
+ Iequalizer.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*109),(int)(scale*38),(int)(scale*116),(int)(scale*40)));
  layout.addView( Iequalizer );
  Iclose = new close();
- Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( 130,152,462,2 ) );
+ Iclose.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*65),(int)(scale*76),(int)(scale*231),(int)(scale*1)));
  layout.addView( Iclose );
  Ibackup = new backup();
- Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( 216,74,4,0 ) );
+ Ibackup.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*108),(int)(scale*37),(int)(scale*2),(int)(scale*0)));
  layout.addView( Ibackup );
  Irestore = new restore();
- Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,72,232,0 ) );
+ Irestore.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*109),(int)(scale*36),(int)(scale*116),(int)(scale*0)));
  layout.addView( Irestore );
  Iclear = new clear();
- Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( 214,74,4,82 ) );
+ Iclear.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*107),(int)(scale*37),(int)(scale*2),(int)(scale*41)));
  layout.addView( Iclear );
  Icauto_learn = new cauto_learn();
- Icauto_learn.setLayoutParams( new AbsoluteLayout.LayoutParams( 54,46,298,160 ) );
+ Icauto_learn.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*27),(int)(scale*23),(int)(scale*149),(int)(scale*80)));
  layout.addView( Icauto_learn );
  Icwritable = new cwritable();
- Icwritable.setLayoutParams( new AbsoluteLayout.LayoutParams( 56,46,298,212 ) );
+ Icwritable.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*28),(int)(scale*23),(int)(scale*149),(int)(scale*106)));
  layout.addView( Icwritable );
  Icsound_filter = new csound_filter();
- Icsound_filter.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,318 ) );
+ Icsound_filter.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*26),(int)(scale*150),(int)(scale*159)));
  layout.addView( Icsound_filter );
  ILABEL12 = new LABEL12();
- ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,54,0,260 ) );
+ ILABEL12.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*145),(int)(scale*27),(int)(scale*0),(int)(scale*130)));
  layout.addView( ILABEL12 );
  Icstartup_time = new cstartup_time();
- Icstartup_time.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,54,298,262 ) );
+ Icstartup_time.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*27),(int)(scale*149),(int)(scale*131)));
  layout.addView( Icstartup_time );
  ILABEL14 = new LABEL14();
- ILABEL14.setLayoutParams( new AbsoluteLayout.LayoutParams( 292,50,0,318 ) );
+ ILABEL14.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*146),(int)(scale*25),(int)(scale*0),(int)(scale*159)));
  layout.addView( ILABEL14 );
  ILABEL15 = new LABEL15();
- ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,0,372 ) );
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*24),(int)(scale*0),(int)(scale*186)));
  layout.addView( ILABEL15 );
  ILABEL16 = new LABEL16();
- ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,424 ) );
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*24),(int)(scale*0),(int)(scale*212)));
  layout.addView( ILABEL16 );
  ILABEL17 = new LABEL17();
- ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,476 ) );
+ ILABEL17.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*24),(int)(scale*0),(int)(scale*238)));
  layout.addView( ILABEL17 );
  ILABEL18 = new LABEL18();
- ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,48,0,528 ) );
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*24),(int)(scale*0),(int)(scale*264)));
  layout.addView( ILABEL18 );
  ILABEL19 = new LABEL19();
- ILABEL19.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,580 ) );
+ ILABEL19.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*22),(int)(scale*0),(int)(scale*290)));
  layout.addView( ILABEL19 );
  ILABEL21 = new LABEL21();
- ILABEL21.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,628 ) );
+ ILABEL21.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*22),(int)(scale*0),(int)(scale*314)));
  layout.addView( ILABEL21 );
  ILABEL22 = new LABEL22();
- ILABEL22.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,676 ) );
+ ILABEL22.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*23),(int)(scale*0),(int)(scale*338)));
  layout.addView( ILABEL22 );
  ILABEL23 = new LABEL23();
- ILABEL23.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,0,774 ) );
+ ILABEL23.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*23),(int)(scale*0),(int)(scale*387)));
  layout.addView( ILABEL23 );
  Icthresh_trigger_on = new cthresh_trigger_on();
- Icthresh_trigger_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,300,370 ) );
+ Icthresh_trigger_on.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*26),(int)(scale*150),(int)(scale*185)));
  layout.addView( Icthresh_trigger_on );
  Icthresh_trigger_off = new cthresh_trigger_off();
- Icthresh_trigger_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,52,302,424 ) );
+ Icthresh_trigger_off.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*26),(int)(scale*151),(int)(scale*212)));
  layout.addView( Icthresh_trigger_off );
  Icthresh_count_on = new cthresh_count_on();
- Icthresh_count_on.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,48,302,478 ) );
+ Icthresh_count_on.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*24),(int)(scale*151),(int)(scale*239)));
  layout.addView( Icthresh_count_on );
  Icthresh_count_off = new cthresh_count_off();
- Icthresh_count_off.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,528 ) );
+ Icthresh_count_off.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*149),(int)(scale*24),(int)(scale*150),(int)(scale*264)));
  layout.addView( Icthresh_count_off );
  Icthresh_recognize = new cthresh_recognize();
- Icthresh_recognize.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,48,300,578 ) );
+ Icthresh_recognize.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*149),(int)(scale*24),(int)(scale*150),(int)(scale*289)));
  layout.addView( Icthresh_recognize );
  Icacompress = new cacompress();
- Icacompress.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,628 ) );
+ Icacompress.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*23),(int)(scale*151),(int)(scale*314)));
  layout.addView( Icacompress );
  Iclearn_param_o = new clearn_param_o();
- Iclearn_param_o.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,46,302,676 ) );
+ Iclearn_param_o.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*23),(int)(scale*151),(int)(scale*338)));
  layout.addView( Iclearn_param_o );
  Iclearn_param_x = new clearn_param_x();
- Iclearn_param_x.setLayoutParams( new AbsoluteLayout.LayoutParams( 298,46,300,724 ) );
+ Iclearn_param_x.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*149),(int)(scale*23),(int)(scale*150),(int)(scale*362)));
  layout.addView( Iclearn_param_x );
  Iclimit_length = new climit_length();
- Iclimit_length.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,48,300,772 ) );
+ Iclimit_length.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*150),(int)(scale*24),(int)(scale*150),(int)(scale*386)));
  layout.addView( Iclimit_length );
  ILABEL31 = new LABEL31();
- ILABEL31.setLayoutParams( new AbsoluteLayout.LayoutParams( 288,46,0,162 ) );
+ ILABEL31.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*144),(int)(scale*23),(int)(scale*0),(int)(scale*81)));
  layout.addView( ILABEL31 );
  ILABEL33 = new LABEL33();
- ILABEL33.setLayoutParams( new AbsoluteLayout.LayoutParams( 296,44,0,726 ) );
+ ILABEL33.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*148),(int)(scale*22),(int)(scale*0),(int)(scale*363)));
  layout.addView( ILABEL33 );
  ILABEL35 = new LABEL35();
- ILABEL35.setLayoutParams( new AbsoluteLayout.LayoutParams( 294,44,0,824 ) );
+ ILABEL35.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*147),(int)(scale*22),(int)(scale*0),(int)(scale*412)));
  layout.addView( ILABEL35 );
  Icenhance = new cenhance();
- Icenhance.setLayoutParams( new AbsoluteLayout.LayoutParams( 300,46,300,824 ) );
+ Icenhance.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*150),(int)(scale*23),(int)(scale*150),(int)(scale*412)));
  layout.addView( Icenhance );
  ILABEL37 = new LABEL37();
- ILABEL37.setLayoutParams( new AbsoluteLayout.LayoutParams( 290,44,0,212 ) );
+ ILABEL37.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*145),(int)(scale*22),(int)(scale*0),(int)(scale*106)));
  layout.addView( ILABEL37 );
  ILABEL36 = new LABEL36();
- ILABEL36.setLayoutParams( new AbsoluteLayout.LayoutParams( 292,40,0,872 ) );
+ ILABEL36.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*146),(int)(scale*20),(int)(scale*0),(int)(scale*436)));
  layout.addView( ILABEL36 );
  Iclevel = new clevel();
- Iclevel.setLayoutParams( new AbsoluteLayout.LayoutParams( 302,42,296,872 ) );
+ Iclevel.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*151),(int)(scale*21),(int)(scale*148),(int)(scale*436)));
  layout.addView( Iclevel );
+ ILABEL35x = new LABEL35x();
+ ILABEL35x.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*146),(int)(scale*20),(int)(scale*0),(int)(scale*458)));
+ layout.addView( ILABEL35x );
+ Ictrigger_margin = new ctrigger_margin();
+ Ictrigger_margin.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*151),(int)(scale*22),(int)(scale*148),(int)(scale*458)));
+ layout.addView( Ictrigger_margin );
  GUI_created( layout );
 }
 }
 </codetext>
 </codeclip>
-<ID_maker>40</ID_maker>
-<height>436</height>
+<ID_maker>41</ID_maker>
+<height>454</height>
 <レイアウト>VKeyboard設定
-303
-464
+300
+504
 217
 255
 253
-xxscale=2
+xxscale=0
 BUTTON;equalizer;EQUALIZER;116;40;109;38;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
 BUTTON;close;X;231;1;65;76;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
 BUTTON;backup;BACKUP;2;0;108;37;51;51;51;192;192;192;Dialog;14;null;0;0;1;0;1;Button;
@@ -5291,13 +5348,10 @@ TEXTFIELD;cenhance;null;150;412;150;23;51;51;51;255;255;255;Dialog;12;1;1;0;Edit
 LABEL;LABEL37;writable;0;106;145;22;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
 LABEL;LABEL36;level;0;436;146;20;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
 TEXTFIELD;clevel;null;148;436;151;21;51;51;51;255;255;255;Dialog;12;1;1;0;EditText;
+LABEL;LABEL35x;trigger_margin;0;458;146;20;51;51;51;192;192;192;Dialog;12;null;0;0;1;0;0;TextView;
+TEXTFIELD;ctrigger_margin;null;148;458;151;22;51;51;51;255;255;255;DejaVu Sans;12;1;1;0;EditText;
 </レイアウト>
 </aobject>
-<relation>
-<ID>_R56</ID>
-<pin1name>_A2(_Pclevel)</pin1name>
-<pin2name>_X33(_P52)</pin2name>
-</relation>
 </xobject>
 <relation>
 <ID>_R164</ID>
@@ -5488,15 +5542,10 @@ fafmncebafbafeebafbafeebafbafeebafhappjn</image>
 <pin1name>_A88(_Pcommand)</pin1name>
 <pin2name>_X_G130(_P144)</pin2name>
 </relation>
-<relation>
-<ID>_R175</ID>
-<pin1name>_A88(_PAlevel)</pin1name>
-<pin2name>_X92(_P29)</pin2name>
-</relation>
 <aobject>
 <ID>_A88</ID>
 <x0>136</x0>
-<y0>247</y0>
+<y0>227</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
@@ -5635,92 +5684,92 @@ XGUI x = new XGUI();
 <py>180</py>
 </pin>
 <pin>
-<ID>_PAlevel</ID>
+<ID>_PAlength</ID>
 <x0>0</x0>
 <y0>306</y0>
 <width>200</width>
 <height>26</height>
-<text>level_changed(int val)</text>
+<text>length_changed(int val)</text>
 <px>0</px>
 <py>198</py>
 </pin>
 <pin>
-<ID>_PAlength</ID>
+<ID>_Pseimon0</ID>
 <x0>0</x0>
 <y0>334</y0>
 <width>200</width>
 <height>26</height>
-<text>length_changed(int val)</text>
+<text>seimon0_created(TextView t)</text>
 <px>0</px>
 <py>216</py>
 </pin>
 <pin>
-<ID>_Pseimon0</ID>
+<ID>_PPseimon0</ID>
 <x0>0</x0>
 <y0>362</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon0_created(TextView t)</text>
+<text>seimon0_paint(Canvas g)</text>
 <px>0</px>
 <py>234</py>
 </pin>
 <pin>
-<ID>_PPseimon0</ID>
+<ID>_Pseimon</ID>
 <x0>0</x0>
 <y0>390</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon0_paint(Canvas g)</text>
+<text>seimon_created(TextView t)</text>
 <px>0</px>
 <py>252</py>
 </pin>
 <pin>
-<ID>_Pseimon</ID>
+<ID>_PPseimon</ID>
 <x0>0</x0>
 <y0>418</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon_created(TextView t)</text>
+<text>seimon_paint(Canvas g)</text>
 <px>0</px>
 <py>270</py>
 </pin>
 <pin>
-<ID>_PPseimon</ID>
+<ID>_Ptext</ID>
 <x0>0</x0>
 <y0>446</y0>
 <width>200</width>
 <height>26</height>
-<text>seimon_paint(Canvas g)</text>
+<text>text_created(EditText e)</text>
 <px>0</px>
 <py>288</py>
 </pin>
 <pin>
-<ID>_Ptext</ID>
+<ID>_Pcommand</ID>
 <x0>0</x0>
 <y0>474</y0>
 <width>200</width>
 <height>26</height>
-<text>text_created(EditText e)</text>
+<text>command_created(EditText e)</text>
 <px>0</px>
 <py>306</py>
 </pin>
 <pin>
-<ID>_Pcommand</ID>
+<ID>_Presult</ID>
 <x0>0</x0>
 <y0>502</y0>
 <width>200</width>
 <height>26</height>
-<text>command_created(EditText e)</text>
+<text>result_created(TextView t)</text>
 <px>0</px>
 <py>324</py>
 </pin>
 <pin>
-<ID>_Presult</ID>
+<ID>_PAstart_service</ID>
 <x0>0</x0>
 <y0>530</y0>
 <width>200</width>
 <height>26</height>
-<text>result_created(TextView t)</text>
+<text>start_service_clicked()</text>
 <px>0</px>
 <py>342</py>
 </pin>
@@ -5817,20 +5866,6 @@ voice_no Ivoice_no;
  });
 }
 }
-level Ilevel;
- class level extends SeekBar{
- level(){
- super(ACTIVITY);
- setBackgroundColor( Color.rgb( 238, 238, 238 ));
- setProgress( 0 );
- setMax( 100 );
- setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
- public void onStopTrackingTouch(SeekBar seekBar) {}
- public void onStartTrackingTouch(SeekBar seekBar) {}
- public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { level_changed( progress ); }
- });
-}
-}
 length Ilength;
  class length extends SeekBar{
  length(){
@@ -5916,17 +5951,6 @@ LABEL10 ILABEL10;
  setText( &quot;No.&quot; );
 }
 }
-LABEL11 ILABEL11;
- class LABEL11 extends TextView{
- LABEL11(){
- super(ACTIVITY);
- setGravity(Gravity.CENTER|Gravity.CENTER);
- setPadding(1, 1, 1, 1);
- setTextSize( 14f ); setTextColor( Color.rgb( 51, 51, 51 ));
- setBackgroundColor( Color.rgb( 255, 255, 255 ));
- setText( &quot;Level&quot; );
-}
-}
 LABEL18 ILABEL18;
  class LABEL18 extends TextView{
  LABEL18(){
@@ -5960,68 +5984,84 @@ LABEL15 ILABEL15;
  setText( &quot;Length&quot; );
 }
 }
+start_service Istart_service;
+ class start_service extends Button{
+ start_service(){
+ super(ACTIVITY);
+ setGravity(Gravity.CENTER|Gravity.CENTER);
+ setPadding(1, 1, 1, 1);
+ setTextSize( 16f ); setTextColor( Color.rgb( 51, 51, 51 ));
+ setBackgroundColor( Color.rgb( 192, 192, 192 ));
+ setText( &quot;START SERVICE&quot; );
+ setOnClickListener(new Button.OnClickListener(){ public void onClick(View v) {start_service_clicked();}} );
+}
+}
  XGUI(){
  AbsoluteLayout layout=new AbsoluteLayout(ACTIVITY);
+ double scale=0.0;
 layout.setBackgroundColor(Color.rgb( 223, 253, 248));
 ACTIVITY.setContentView(layout);
+ int content_top = 150;
+ Point size = new Point();
+ ACTIVITY.getWindowManager().getDefaultDisplay().getSize(size);
+ double wscl=(double)size.x/337;
+ double hscl=(double)(size.y-content_top)/415;
+ scale = wscl&lt;hscl? wscl:hscl;
 ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
  Iconfig = new config();
- Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( 218,60,424,6 ) );
+ Iconfig.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*109),(int)(scale*30),(int)(scale*212),(int)(scale*3)));
  layout.addView( Iconfig );
  Ilearn = new learn();
- Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( 334,70,130,810 ) );
+ Ilearn.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*137),(int)(scale*38),(int)(scale*0),(int)(scale*370)));
  layout.addView( Ilearn );
  Iins = new ins();
- Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( 198,62,2,6 ) );
+ Iins.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*99),(int)(scale*31),(int)(scale*1),(int)(scale*3)));
  layout.addView( Iins );
  Idel = new del();
- Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( 202,62,212,6 ) );
+ Idel.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*101),(int)(scale*31),(int)(scale*106),(int)(scale*3)));
  layout.addView( Idel );
  Iprev = new prev();
- Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( 74,280,2,76 ) );
+ Iprev.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*37),(int)(scale*140),(int)(scale*1),(int)(scale*38)));
  layout.addView( Iprev );
  Inext = new next();
- Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( 78,282,566,76 ) );
+ Inext.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*39),(int)(scale*141),(int)(scale*283),(int)(scale*38)));
  layout.addView( Inext );
  Ivoice_no = new voice_no();
- Ivoice_no.setLayoutParams( new AbsoluteLayout.LayoutParams( 496,70,166,368 ) );
+ Ivoice_no.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*248),(int)(scale*35),(int)(scale*83),(int)(scale*184)));
  layout.addView( Ivoice_no );
- Ilevel = new level();
- Ilevel.setLayoutParams( new AbsoluteLayout.LayoutParams( 492,68,168,442 ) );
- layout.addView( Ilevel );
  Ilength = new length();
- Ilength.setLayoutParams( new AbsoluteLayout.LayoutParams( 500,62,166,514 ) );
+ Ilength.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*250),(int)(scale*31),(int)(scale*83),(int)(scale*224)));
  layout.addView( Ilength );
  Iseimon0 = new seimon0();
- Iseimon0.setLayoutParams( new AbsoluteLayout.LayoutParams( 238,280,80,76 ) );
+ Iseimon0.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*119),(int)(scale*140),(int)(scale*40),(int)(scale*38)));
  layout.addView( Iseimon0 );
  Iseimon = new seimon();
- Iseimon.setLayoutParams( new AbsoluteLayout.LayoutParams( 236,282,326,76 ) );
+ Iseimon.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*118),(int)(scale*141),(int)(scale*163),(int)(scale*38)));
  layout.addView( Iseimon );
  Itext = new text();
- Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( 502,64,168,582 ) );
+ Itext.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*251),(int)(scale*32),(int)(scale*84),(int)(scale*259)));
  layout.addView( Itext );
  Icommand = new command();
- Icommand.setLayoutParams( new AbsoluteLayout.LayoutParams( 502,68,168,650 ) );
+ Icommand.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*251),(int)(scale*34),(int)(scale*84),(int)(scale*294)));
  layout.addView( Icommand );
  Iresult = new result();
- Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( 668,70,0,726 ) );
+ Iresult.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*334),(int)(scale*35),(int)(scale*0),(int)(scale*331)));
  layout.addView( Iresult );
  ILABEL10 = new LABEL10();
- ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( 152,66,8,370 ) );
+ ILABEL10.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*76),(int)(scale*33),(int)(scale*4),(int)(scale*185)));
  layout.addView( ILABEL10 );
- ILABEL11 = new LABEL11();
- ILABEL11.setLayoutParams( new AbsoluteLayout.LayoutParams( 158,68,4,442 ) );
- layout.addView( ILABEL11 );
  ILABEL18 = new LABEL18();
- ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( 160,66,0,652 ) );
+ ILABEL18.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*80),(int)(scale*33),(int)(scale*0),(int)(scale*291)));
  layout.addView( ILABEL18 );
  ILABEL16 = new LABEL16();
- ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( 160,64,0,580 ) );
+ ILABEL16.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*80),(int)(scale*32),(int)(scale*0),(int)(scale*256)));
  layout.addView( ILABEL16 );
  ILABEL15 = new LABEL15();
- ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( 160,62,0,514 ) );
+ ILABEL15.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*80),(int)(scale*31),(int)(scale*0),(int)(scale*222)));
  layout.addView( ILABEL15 );
+ Istart_service = new start_service();
+ Istart_service.setLayoutParams( new AbsoluteLayout.LayoutParams( (int)(scale*191),(int)(scale*37),(int)(scale*142),(int)(scale*371)));
+ layout.addView( Istart_service );
  GUI_created( layout );
 }
 }
@@ -6030,31 +6070,74 @@ ACTIVITY.setTitle(&quot;音声キーボード設定&quot;);
 <ID_maker>36</ID_maker>
 <height>364</height>
 <レイアウト>音声キーボード設定
-340
-443
+337
+415
 223
 253
 248
-xxscale=2
+xxscale=0
 BUTTON;config;CONFIG;212;3;109;30;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
-BUTTON;learn;LEARN;65;405;167;35;5;3;0;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
+BUTTON;learn;LEARN;0;370;137;38;5;3;0;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;ins;INS;1;3;99;31;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;del;DEL;106;3;101;31;51;51;51;193;189;189;Dialog;16;null;0;0;1;0;1;Button;
 BUTTON;prev;&lt;;1;38;37;140;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
 BUTTON;next;&gt;;283;38;39;141;0;0;0;238;238;238;Dialog;12;null;0;0;1;0;1;Button;
 HSLIDER;voice_no;0;100;83;184;248;35;163;184;204;238;238;238;1;0;1;SeekBar;
-HSLIDER;level;0;100;84;221;246;34;163;184;204;238;238;238;1;0;1;SeekBar;
-HSLIDER;length;0;100;83;257;250;31;163;184;204;238;238;238;1;0;1;SeekBar;
+HSLIDER;length;0;100;83;224;250;31;163;184;204;238;238;238;1;0;1;SeekBar;
 LABEL;seimon0;null;40;38;119;140;51;51;51;0;0;0;Dialog;12;null;4;0;1;1;1;TextView;
 LABEL;seimon;null;163;38;118;141;51;51;51;0;0;0;Dialog;12;null;4;0;1;1;1;TextView;
-TEXTFIELD;text;null;84;291;251;32;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
-TEXTFIELD;command;null;84;325;251;34;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
-LABEL;result;null;0;363;334;35;51;51;51;255;255;204;Dialog;20;null;0;0;1;1;0;TextView;
+TEXTFIELD;text;null;84;259;251;32;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
+TEXTFIELD;command;null;84;294;251;34;51;51;51;255;255;255;Dialog;16;1;1;0;EditText;
+LABEL;result;null;0;331;334;35;51;51;51;255;255;204;Dialog;20;null;0;0;1;1;0;TextView;
 LABEL;LABEL10;No.;4;185;76;33;51;51;51;255;255;255;Dialog;14;null;0;0;1;0;0;TextView;
-LABEL;LABEL11;Level;2;221;79;34;51;51;51;255;255;255;Dialog;14;null;0;0;1;0;0;TextView;
-LABEL;LABEL18;Command;0;326;80;33;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
-LABEL;LABEL16;Text;0;290;80;32;51;51;51;255;255;255;Dialog;12;null;0;0;1;0;0;TextView;
-LABEL;LABEL15;Length;0;257;80;31;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL18;Command;0;291;80;33;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL16;Text;0;256;80;32;51;51;51;255;255;255;Dialog;12;null;0;0;1;0;0;TextView;
+LABEL;LABEL15;Length;0;222;80;31;51;51;51;252;252;252;Dialog;12;null;0;0;1;0;0;TextView;
+BUTTON;start_service;START SERVICE;142;371;191;37;51;51;51;192;192;192;Dialog;16;null;0;0;1;0;1;Button;
 </レイアウト>
 </aobject>
+<operation>
+<ID>_O176</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>2</x0>
+<y0>525</y0>
+<width>114</width>
+<height>62</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>65</inpinx0>
+<inpiny0>41</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>90</outpinx0>
+<outpiny0>40</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// サービス起動
+// して終了
+
+
+service_start = true;
+save();
+purge();
+try{
+Intent intent = new Intent(); 
+intent.setClassName(&quot;com.example.vkeyboard_service&quot;, &quot;com.example.vkeyboard_service.VKeyboardService&quot;); 
+ACTIVITY.startService(intent);
+} catch(Exception e){dprint(e+&quot;\n&quot;);}
+ACTIVITY.finish();
+</codetext>
+</operation>
+<relation>
+<ID>_R177</ID>
+<pin1name>_A88(_PAstart_service)</pin1name>
+<pin2name>_O176</pin2name>
+</relation>
 </xobject>
