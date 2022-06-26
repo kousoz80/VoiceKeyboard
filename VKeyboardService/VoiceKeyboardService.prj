@@ -445,7 +445,7 @@ int  priority = -8; // 録音スレッドの優先順位</codetext>
 
 // 通知用変数を取得
 Intent intent = new Intent(android.content.Intent.ACTION_MAIN);
-intent.setClassName(&quot;com.example.vkeyboard&quot;, &quot;com.example.vkeyboard.VKeyboardControl&quot;); 
+intent.setClassName(&quot;com.example.vkeyboard_control&quot;, &quot;com.example.vkeyboard_control.VKeyboardControl&quot;); 
 
 PendingIntent pendingIntent
 	= PendingIntent.getActivity(

@@ -46,6 +46,8 @@ import android.os.Environment;
 import android.content.Intent;
 import android.graphics.Point;
 import android.view.Window;
+import android.app.ActivityManager;
+import android.content.Context;
 
 public class VKeyboardControl extends Activity {
   VoiceKeyboardControl ap;
@@ -207,6 +209,30 @@ ACTIVITY.startService(intent);
 } catch(Exception e){dprint(e+"\n");}
 ACTIVITY.finish();
 
+}
+private void _O178_in(){
+
+// サービス終了
+// チェック
+
+
+String pkg_name = "com.example.vkeyboard_service";
+String class_name = "com.example.vkeyboard_service.VKeyboardService";
+try{
+Intent intent = new Intent(); 
+intent.setClassName(pkg_name, class_name); 
+ACTIVITY.stopService(intent);
+
+ActivityManager manager = (ActivityManager)ACTIVITY.getSystemService(Context.ACTIVITY_SERVICE);
+for(ActivityManager.RunningServiceInfo serviceInfo : manager.getRunningServices(Integer.MAX_VALUE)){
+  while(class_name.equals(serviceInfo.service.getClassName())) {
+    Thread.sleep(100);
+  }
+}
+} catch(Exception e){dprint(e+"\n");}
+
+
+IFile_IO.load();
 }
 GUI IGUI;
 class GUI{
@@ -502,7 +528,7 @@ ACTIVITY.setTitle("音声キーボード設定");
 public void Start(){
 STATE2 = STATE;
 _Ocreate_in();
-parent.IFile_IO.load();
+parent._O178_in();
 }
 public void GUI_created(AbsoluteLayout l){
 STATE2 = STATE;
@@ -573,7 +599,7 @@ STATE2 = STATE;
 parent._O176_in();
 }
 private void _Ocreate_in(){
-if( STATE2 != 2082835285 ) return;
+if( STATE2 != 1358667354 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -585,7 +611,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 2082835285;
+STATE = 1358667354;
 }
 GUI( VoiceKeyboardControl pnt ){
  parent = pnt;
@@ -1000,16 +1026,6 @@ _O118_in();
 private void _O89_in(){
 // 初期設定
 
-
-
-
-
-// サービスが実行されていたら停止
-try{
-Intent intent = new Intent(); 
-intent.setClassName("com.example.vkeyboard_service", "com.example.vkeyboard_service.VKeyboardService"); 
-ACTIVITY.stopService(intent);
-} catch(Exception e){dprint(e+"\n");}
 
 
 
@@ -2420,7 +2436,7 @@ STATE2 = STATE;
 parent.Isetter.ctrigger_margin_created(e);
 }
 private void _Ocreate_in(){
-if( STATE2 != 165919761 ) return;
+if( STATE2 != 1729529841 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2432,7 +2448,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 165919761;
+STATE = 1729529841;
 }
 GUI( config pnt ){
  parent = pnt;
@@ -2748,7 +2764,7 @@ STATE2 = STATE;
 parent._O8_in();
 }
 private void _Ocreate_in(){
-if( STATE2 != 1908783047 ) return;
+if( STATE2 != 112512981 ) return;
 // GUIを作成する
 XGUI x = new XGUI();
 
@@ -2760,7 +2776,7 @@ _SINIT();
 
 //   InitState
 private void _SINIT(){
-STATE = 1908783047;
+STATE = 112512981;
 }
 GUI( Equalizer pnt ){
  parent = pnt;

@@ -6,7 +6,7 @@
 <y0>0</y0>
 <width>200</width>
 <height>100</height>
-<ID_maker>178</ID_maker>
+<ID_maker>184</ID_maker>
 <objectname>VoiceKeyboardControl</objectname>
 <description>新規のアプリケーション</description>
 <codeclip>
@@ -20,10 +20,10 @@
 </codeclip>
 <pin>
 <ID>_PSTART</ID>
-<x0>62</x0>
-<y0>232</y0>
-<width>55</width>
-<height>24</height>
+<x0>21</x0>
+<y0>253</y0>
+<width>56</width>
+<height>26</height>
 <text>Start()</text>
 <px>50</px>
 <py>50</py>
@@ -476,16 +476,6 @@ dprint(&quot;start rec thread\n&quot;);
 
 
 
-// サービスが実行されていたら停止
-try{
-Intent intent = new Intent(); 
-intent.setClassName(&quot;com.example.vkeyboard_service&quot;, &quot;com.example.vkeyboard_service.VKeyboardService&quot;); 
-ACTIVITY.stopService(intent);
-} catch(Exception e){dprint(e+&quot;\n&quot;);}
-
-
-
-
 // 音声認識用三角関数テーブルを作成
   sin_table = new double[HEARING_HEIGHT][SOUND_DFT_SIZE];
   cos_table = new double[HEARING_HEIGHT][SOUND_DFT_SIZE];
@@ -768,15 +758,10 @@ int voice_no0;
 </codetext>
 </codeclip>
 </xobject>
-<relation>
-<ID>_R89</ID>
-<pin1name>_PSTART</pin1name>
-<pin2name>_A88(_Pstart)</pin2name>
-</relation>
 <xobject>
 <ID>_X91</ID>
-<x0>435</x0>
-<y0>218</y0>
+<x0>437</x0>
+<y0>212</y0>
 <width>173</width>
 <height>58</height>
 <ID_maker>17</ID_maker>
@@ -784,8 +769,8 @@ int voice_no0;
 <description></description>
 <pin>
 <ID>_P1</ID>
-<x0>23</x0>
-<y0>70</y0>
+<x0>24</x0>
+<y0>165</y0>
 <width>65</width>
 <height>29</height>
 <text>save()</text>
@@ -913,8 +898,8 @@ voice_no = 0;
 <ID>_O14</ID>
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
-<x0>113</x0>
-<y0>64</y0>
+<x0>127</x0>
+<y0>146</y0>
 <width>194</width>
 <height>50</height>
 <inconnectx0>0</inconnectx0>
@@ -1475,7 +1460,7 @@ class VoiceTemplate{
 </codeclip>
 <codeclip>
 <ID>_C104</ID>
-<x0>685</x0>
+<x0>689</x0>
 <y0>0</y0>
 <width>308</width>
 <height>261</height>
@@ -1498,11 +1483,6 @@ double enhance = 0;  // 強調パラメータ
 int trigger_margin = 3;// トリガタイミング余裕
 </codetext>
 </codeclip>
-<relation>
-<ID>_R105</ID>
-<pin1name>_A88(_Pstart)</pin1name>
-<pin2name>_X91(_P12)</pin2name>
-</relation>
 <relation>
 <ID>_R106</ID>
 <pin1name>_X91(_P12)</pin1name>
@@ -1606,8 +1586,8 @@ static final int SOUND_DFT_SIZE = 256;
 <EditWiny0>0</EditWiny0>
 <EditWinWidth>676</EditWinWidth>
 <EditWinHeight>541</EditWinHeight>
-<PropWinx0>1</PropWinx0>
-<PropWiny0>1</PropWiny0>
+<PropWinx0>289</PropWinx0>
+<PropWiny0>182</PropWiny0>
 <PropWinWidth>615</PropWinWidth>
 <PropWinHeight>448</PropWinHeight>
 <DividerLocation1>2</DividerLocation1>
@@ -1760,6 +1740,8 @@ import android.os.Environment;
 import android.content.Intent;
 import android.graphics.Point;
 import android.view.Window;
+import android.app.ActivityManager;
+import android.content.Context;
 
 public class HelloWorld extends Activity {
   %AppName% ap;
@@ -2141,8 +2123,8 @@ boolean service_start = false;
 </relation>
 <xobject>
 <ID>_X160</ID>
-<x0>9</x0>
-<y0>281</y0>
+<x0>0</x0>
+<y0>306</y0>
 <width>107</width>
 <height>68</height>
 <ID_maker>58</ID_maker>
@@ -5365,8 +5347,8 @@ TEXTFIELD;ctrigger_margin;null;148;458;151;22;51;51;51;255;255;255;DejaVu Sans;1
 </relation>
 <ImgIcon>
 <ID>_I166</ID>
-<x0>844</x0>
-<y0>513</y0>
+<x0>817</x0>
+<y0>518</y0>
 <width>123</width>
 <height>125</height>
 <image>ppinppaoaaabkegejegeaabacaaaaabaaabaaaaapplnaadeaaiagagahagafaia
@@ -5519,8 +5501,8 @@ fafmncebafbafeebafbafeebafbafeebafhappjn</image>
 </ImgIcon>
 <pin>
 <ID>_P167</ID>
-<x0>625</x0>
-<y0>239</y0>
+<x0>628</x0>
+<y0>232</y0>
 <width>53</width>
 <height>30</height>
 <text>save()</text>
@@ -5544,8 +5526,8 @@ fafmncebafbafeebafbafeebafbafeebafhappjn</image>
 </relation>
 <aobject>
 <ID>_A88</ID>
-<x0>136</x0>
-<y0>227</y0>
+<x0>137</x0>
+<y0>271</y0>
 <width>280</width>
 <objectname>GUI</objectname>
 <description>GUIオブジェクト
@@ -5576,8 +5558,8 @@ fafmncebafbafeebafbafeebafbafeebafhappjn</image>
 <width>180</width>
 <height>26</height>
 <text>GUI_created(AbsoluteLayout l)</text>
-<px>0</px>
-<py>54</py>
+<px>6</px>
+<py>58</py>
 </pin>
 <action>
 <ID>_Astart</ID>
@@ -6101,7 +6083,7 @@ BUTTON;start_service;START SERVICE;142;371;191;37;51;51;51;192;192;192;Dialog;16
 <state1>_SINIT</state1>
 <state2>_SINIT</state2>
 <x0>2</x0>
-<y0>525</y0>
+<y0>565</y0>
 <width>114</width>
 <height>62</height>
 <inconnectx0>0</inconnectx0>
@@ -6139,5 +6121,65 @@ ACTIVITY.finish();
 <ID>_R177</ID>
 <pin1name>_A88(_PAstart_service)</pin1name>
 <pin2name>_O176</pin2name>
+</relation>
+<operation>
+<ID>_O178</ID>
+<state1>_SINIT</state1>
+<state2>_SINIT</state2>
+<x0>252</x0>
+<y0>201</y0>
+<width>124</width>
+<height>61</height>
+<inconnectx0>0</inconnectx0>
+<inconnecty0>40</inconnecty0>
+<outconnectx0>0</outconnectx0>
+<outconnecty0>40</outconnecty0>
+<inpintext>in()</inpintext>
+<inpinx0>1</inpinx0>
+<inpiny0>42</inpiny0>
+<inpinwidth>40</inpinwidth>
+<inpinheight>20</inpinheight>
+<outpintext>out()</outpintext>
+<outpinx0>76</outpinx0>
+<outpiny0>42</outpiny0>
+<outpinwidth>40</outpinwidth>
+<outpinheight>20</outpinheight>
+<inpinlinkcount>1</inpinlinkcount>
+<description></description>
+<codetext>// サービス終了
+// チェック
+
+
+String pkg_name = &quot;com.example.vkeyboard_service&quot;;
+String class_name = &quot;com.example.vkeyboard_service.VKeyboardService&quot;;
+try{
+Intent intent = new Intent(); 
+intent.setClassName(pkg_name, class_name); 
+ACTIVITY.stopService(intent);
+
+ActivityManager manager = (ActivityManager)ACTIVITY.getSystemService(Context.ACTIVITY_SERVICE);
+for(ActivityManager.RunningServiceInfo serviceInfo : manager.getRunningServices(Integer.MAX_VALUE)){
+  while(class_name.equals(serviceInfo.service.getClassName())) {
+    Thread.sleep(100);
+  }
+}
+} catch(Exception e){dprint(e+&quot;\n&quot;);}
+
+</codetext>
+</operation>
+<relation>
+<ID>_R181</ID>
+<pin1name>_PSTART</pin1name>
+<pin2name>_A88(_Pstart)</pin2name>
+</relation>
+<relation>
+<ID>_R182</ID>
+<pin1name>_A88(_Pstart)</pin1name>
+<pin2name>_O178</pin2name>
+</relation>
+<relation>
+<ID>_R183</ID>
+<pin1name>_O178</pin1name>
+<pin2name>_X91(_P12)</pin2name>
 </relation>
 </xobject>

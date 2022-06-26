@@ -672,7 +672,7 @@ private void _O89_in(){
 
 // 通知用変数を取得
 Intent intent = new Intent(android.content.Intent.ACTION_MAIN);
-intent.setClassName("com.example.vkeyboard", "com.example.vkeyboard.VKeyboardControl"); 
+intent.setClassName("com.example.vkeyboard_control", "com.example.vkeyboard_control.VKeyboardControl"); 
 
 PendingIntent pendingIntent
 	= PendingIntent.getActivity(
