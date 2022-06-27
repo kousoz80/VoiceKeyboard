@@ -465,13 +465,24 @@ public void recognize( double[] voice) {
               if(j < learn_voice.length) d = learn_voice[j];
               w[j] = ((learn_param_x - 1.0) * w[j] - d) / learn_param_x;
             }
+
+            // 学習したことを通知する
+            handler.post(new Runnable() {
+              @Override
+              public void run() {
+                Toast toast = Toast.makeText(SERVICE, "違う", Toast.LENGTH_SHORT);
+                toast.show();
+              }
+            });
           }
+
+          // この音声パターンは学習によって書き換えられることはない
           learn_voice_no = -1;
           learn_voice = null;
         }
 
-        // そうでない場合は報酬付きの学習をして次回の学習のためのデータを用意する
-        else{
+        // 認識結果が"ヨシ！"のときは報酬付きの学習する
+        else if(vt.text.equals("ヨシ！")){
           if(learn_voice_no >= 0 && learn_voice != null){
             double[] w =((VoiceTemplate)(voice_template.get(learn_voice_no))).voice;
             for(int j = 0; j < w.length; j++){
@@ -479,7 +490,24 @@ public void recognize( double[] voice) {
               if(j < learn_voice.length) d = learn_voice[j];
               w[j] = ((learn_param_o - 1.0) * w[j] + d) / learn_param_o;
             }
+
+            // 学習したことを通知する
+            handler.post(new Runnable() {
+              @Override
+              public void run() {
+                Toast toast = Toast.makeText(SERVICE, "ヨシ！", Toast.LENGTH_SHORT);
+                toast.show();
+              }
+            });
           }
+
+          // この音声パターンは学習によって書き換えられることはない
+          learn_voice_no = -1;
+          learn_voice = null;
+        }
+
+        // どちらでもない場合は次回の学習のためのデータを用意する
+        else{
           learn_voice_no = maxi;
           learn_voice = new double[voice.length];
           for(int j = 0; j < voice.length;j++){
@@ -498,6 +526,13 @@ public void recognize( double[] voice) {
   else{
     learn_voice_no = -1;
     learn_voice = null;
+    handler.post(new Runnable() {
+      @Override
+      public void run() {
+        Toast toast = Toast.makeText(SERVICE, "認識できません", Toast.LENGTH_SHORT);
+        toast.show();
+      }
+    });
   }
 }
 
