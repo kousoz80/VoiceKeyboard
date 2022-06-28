@@ -78,7 +78,7 @@ ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"�
 ## ・動画  
 Youtubeで動画が公開されています  
 
-https://www.youtube.com/watch?v=hC1wJNmLYdg
+https://youtu.be/GDhVQUwxKw4
   
   
 ## ・謝辞
