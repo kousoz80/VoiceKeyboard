@@ -526,13 +526,15 @@ public void recognize( double[] voice) {
   else{
     learn_voice_no = -1;
     learn_voice = null;
-    handler.post(new Runnable() {
-      @Override
-      public void run() {
-        Toast toast = Toast.makeText(SERVICE, "認識できません", Toast.LENGTH_SHORT);
-        toast.show();
-      }
-    });
+    if(is_active){
+      handler.post(new Runnable() {
+        @Override
+        public void run() {
+          Toast toast = Toast.makeText(SERVICE, "認識できません", Toast.LENGTH_SHORT);
+          toast.show();
+        }
+      });
+    }
   }
 }
 
