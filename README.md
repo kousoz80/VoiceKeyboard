@@ -92,7 +92,7 @@ ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"�
 ## ・動画  
 Youtubeで動画が公開されています  
 
-<img src="image/movie.png?raw=true" width="50%">  
+<img src="image/movie.png?raw=true" width="100%">  
   
 https://youtu.be/GDhVQUwxKw4
   
