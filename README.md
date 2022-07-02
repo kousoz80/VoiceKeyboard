@@ -16,26 +16,27 @@
   
   本ソフトウェアは２つのプログラムからなっています
   
-### １． VKeyboardControl
+## １． VKeyboardControl
   このプログラムは使用者の音声データを登録するためのものです。
     
   プログラムを起動して、しばらくしてから何か話すと右側の窓に声紋が表示されます。
   
-  そのとき"STORE"ボタンを押すと話した音声が記録されます。
   
-  そうすると登録した音声の声紋が左側の窓に表示されます。
+![enter image description here](image/config1.png?raw=true)  
   
-  "CODE"と書いてある所にキーボードのコードが表示されています。
+![enter image description here](image/config2.png?raw=true)  
   
-  全てのコードの登録が終わったら"SAVE"ボタンを押して音声データを保存して"戻る"ボタンで終了して下さい。
+![enter image description here](image/config3.png?raw=true)  
   
-  ※注意：使用者や端末を変更すると以前のデータは使えなくなります。
-  
-    
-![enter image description here](https://imgur.com/o8jn2To.jpg)
 
+パラメータ設定画面
+![enter image description here](image/properties.png?raw=true)  
+  
 
-### ２．VkeyboardService  
+イコライザ画面
+![enter image description here](image/equalizer.png?raw=true)  
+  
+## ２．VkeyboardService  
   
   本ソフトウェアの本体です。
   "VKeyboardControl"で作成した音声データを使って音声を認識してキーボードを打ちます。
@@ -45,10 +46,35 @@
   adb tcpip 5555
   
   
-  コマンドを打ち終わったらケーブルを抜いてからプログラムを起動します。
-    
+  コマンドを打ち終わったらケーブルを抜いてからプログラムを起動します。  
   
+![enter image description here](image/mukou1.png?raw=true)  
   
+![enter image description here](image/mukou2.png?raw=true)  
+  
+サービス起動直後は音声キーボードは無効になっているので  
+「ボイス」と発音すると通知アイコンが変化して音声キーボードが有効となります。  
+  
+![enter image description here](image/yuukou1.png?raw=true)  
+  
+![enter image description here](image/yuukou2.png?raw=true)  
+  
+
+音声学習について  
+  
+何か発音して結果が表示されたあと正解だったら「よし」と発音すると報酬として学習します。  
+  
+![enter image description here](image/yoshi.png?raw=true)  
+  
+不正解だったら「ちがう」と発音するとペナルティとして学習します。  
+  
+![enter image description here](image/chigau.png?raw=true)  
+  
+認識が失敗した場合にはそのように表示されます。  
+  
+![enter image description here](image/wakaran.png?raw=true)  
+  
+
 #### ・インストール方法
   
 "VkeyboardControl.apk"と"VkeyboardService.apk"をファイルマネージャ等で開くとインストールが始まります。
@@ -59,7 +85,7 @@
 #### 方法1
 ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"や"VkeyboadService.prj"  を開いてコンパイルボタンを押すとコンパイルが始まります
   
-![enter image description here](https://imgur.com/J2oDqz5.jpg)
+![enter image description here](image/compile1.png?raw=true)  
 
   
   
