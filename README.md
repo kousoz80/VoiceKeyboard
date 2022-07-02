@@ -22,10 +22,11 @@
   プログラムを起動して、しばらくしてから何か話すと右側の窓に声紋が表示されます。
   
   
-![enter image description here](image/config1.png?raw=true)  
+<img src="image/config1.png?raw=true" width="50%">  
   
-## パラメータ設定画面
-![enter image description here](image/properties.png?raw=true)  
+## パラメータ設定画面  
+  
+<img src="image/properties.png?raw=true" width="50%">  
   
 ## イコライザ画面
 <img src="image/equalizer.png?raw=true" width="50%">  
@@ -74,7 +75,7 @@
 ### 方法1
 ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"や"VkeyboadService.prj"  を開いてコンパイルボタンを押すとコンパイルが始まります
   
-![enter image description here](image/compile1.png?raw=true)  
+<img src="image/compile1.png?raw=true" width="50%">  
 
 ### 方法2
 ディレクトリ"VoiceKeyboardControl"や"VoiceKeyboardService"に入って"./compile"コマンドでコンパイルすることができます。
@@ -91,7 +92,7 @@ ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"�
 ## ・動画  
 Youtubeで動画が公開されています  
 
-![enter image description here](image/movie.png?raw=true)  
+<img src="image/movie.png?raw=true" width="50%">  
   
 https://youtu.be/GDhVQUwxKw4
   
