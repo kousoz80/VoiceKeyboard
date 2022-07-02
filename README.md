@@ -16,7 +16,7 @@
   
   本ソフトウェアは２つのプログラムからなっています
   
-## １． VKeyboardControl
+## VKeyboardControl
   このプログラムは使用者の音声データを登録するためのものです。
     
   プログラムを起動して、しばらくしてから何か話すと右側の窓に声紋が表示されます。
@@ -29,14 +29,14 @@
 ![enter image description here](image/config3.png?raw=true)  
   
 
-パラメータ設定画面
+## パラメータ設定画面
 ![enter image description here](image/properties.png?raw=true)  
   
 
-イコライザ画面
+## イコライザ画面
 ![enter image description here](image/equalizer.png?raw=true)  
   
-## ２．VkeyboardService  
+## VkeyboardService  
   
   本ソフトウェアの本体です。
   "VKeyboardControl"で作成した音声データを使って音声を認識してキーボードを打ちます。
