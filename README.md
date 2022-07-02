@@ -9,8 +9,11 @@
   端末に向かって話すとキーボードがタイプされます。
   
   
- 
+## ・インストール方法
   
+"VkeyboardControl.apk"と"VkeyboardService.apk"をファイルマネージャ等で開くとインストールが始まります。
+  
+    
 ## ・操作方法
   
   
@@ -66,11 +69,6 @@
 <img src="image/wakaran.png?raw=true" width="50%">  
   
 
-## ・インストール方法
-  
-"VkeyboardControl.apk"と"VkeyboardService.apk"をファイルマネージャ等で開くとインストールが始まります。
-  
-    
 ## ・コンパイル方法
   
 ### 方法1
