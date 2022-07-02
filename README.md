@@ -32,6 +32,10 @@
 <img src="image/properties.png?raw=true" width="100%">  
   
 ## イコライザ画面
+  
+アンプ等についているイコライザとほほ同じ機能を有します、どうしても除去できない雑音があるとき  
+該当する周波数帯のボリュームを絞ると雑音を取り除くことができます。  
+  
 <img src="image/equalizer.png?raw=true" width="50%">  
   
 ## VkeyboardService  
