@@ -28,7 +28,7 @@
 ![enter image description here](image/properties.png?raw=true)  
   
 ## イコライザ画面
-![enter image description here]<img src="image/equalizer.png?raw=true#left" width="50%">  
+<img src="image/equalizer.png?raw=true" width="50%">  
   
 ## VkeyboardService  
   
@@ -42,26 +42,26 @@
   
   コマンドを打ち終わったらケーブルを抜いてからプログラムを起動します。  
   
-![enter image description here]<img src="image/mukou1.png?raw=true#left" width="50%">  
+<img src="image/mukou1.png?raw=true" width="50%">  
   
 サービス起動直後は音声キーボードは無効になっているので  
 「ボイス」と発音すると通知アイコンが変化して音声キーボードが有効となります。  
   
-![enter image description here]<img src="image/yuukou1.png?raw=true#left" width="50%">  
+<img src="image/yuukou1.png?raw=true" width="50%">  
   
 ## 音声学習について  
   
 ### 何か発音して結果が表示されたあと正解だったら「よし」と発音すると報酬として学習します。  
   
-![enter image description here]<img src="image/yoshi.png?raw=true#left" width="50%">  
+<img src="image/yoshi.png?raw=true" width="50%">  
   
 ### 不正解だったら「ちがう」と発音するとペナルティとして学習します。  
   
-![enter image description here]<img src="image/chigau.png?raw=true#left" width="50%">  
+<img src="image/chigau.png?raw=true" width="50%">  
   
 ### 認識が失敗した場合にはそのように表示されます。  
   
-![enter image description here]<img src="image/wakaran.png?raw=true#left" width="50%">  
+<img src="image/wakaran.png?raw=true" width="50%">  
   
 
 ## ・インストール方法
