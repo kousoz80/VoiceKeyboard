@@ -24,15 +24,9 @@
   
 ![enter image description here](image/config1.png?raw=true)  
   
-![enter image description here](image/config2.png?raw=true)  
-  
-![enter image description here](image/config3.png?raw=true)  
-  
-
 ## パラメータ設定画面
 ![enter image description here](image/properties.png?raw=true)  
   
-
 ## イコライザ画面
 ![enter image description here](image/equalizer.png?raw=true)  
   
@@ -50,46 +44,39 @@
   
 ![enter image description here](image/mukou1.png?raw=true)  
   
-![enter image description here](image/mukou2.png?raw=true)  
-  
 サービス起動直後は音声キーボードは無効になっているので  
 「ボイス」と発音すると通知アイコンが変化して音声キーボードが有効となります。  
   
 ![enter image description here](image/yuukou1.png?raw=true)  
   
-![enter image description here](image/yuukou2.png?raw=true)  
+## 音声学習について  
   
-
-音声学習について  
-  
-何か発音して結果が表示されたあと正解だったら「よし」と発音すると報酬として学習します。  
+### 何か発音して結果が表示されたあと正解だったら「よし」と発音すると報酬として学習します。  
   
 ![enter image description here](image/yoshi.png?raw=true)  
   
-不正解だったら「ちがう」と発音するとペナルティとして学習します。  
+### 不正解だったら「ちがう」と発音するとペナルティとして学習します。  
   
 ![enter image description here](image/chigau.png?raw=true)  
   
-認識が失敗した場合にはそのように表示されます。  
+### 認識が失敗した場合にはそのように表示されます。  
   
 ![enter image description here](image/wakaran.png?raw=true)  
   
 
-#### ・インストール方法
+## ・インストール方法
   
 "VkeyboardControl.apk"と"VkeyboardService.apk"をファイルマネージャ等で開くとインストールが始まります。
   
     
-#### ・コンパイル方法
+## ・コンパイル方法
   
-#### 方法1
+### 方法1
 ObjectEditor](https://github.com/kousoz80/ObjectEditor)で"VkeyboadControl.prj"や"VkeyboadService.prj"  を開いてコンパイルボタンを押すとコンパイルが始まります
   
 ![enter image description here](image/compile1.png?raw=true)  
 
-  
-  
-#### 方法2
+### 方法2
 ディレクトリ"VoiceKeyboardControl"や"VoiceKeyboardService"に入って"./compile"コマンドでコンパイルすることができます。
 
 コンパイルする前にandroidプラットフォームのディレクトリからファイル"android.jar"をこのディレクトリにコピーして下さい。
